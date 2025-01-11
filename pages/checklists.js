@@ -28,7 +28,7 @@ const GuideList = ({ blok, guides }) => {
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {guides.map((guide) => (
-              <Link href={`${ROUTES.CHECKLISTS[guide.slug.toUpperCase()]}`} key={guide.uuid} className="block hover:no-underline group">
+              <Link href={`/${guide.slug}`} key={guide.uuid} className="block hover:no-underline group">
                 <Card className="h-full transition-all duration-200 group-hover:shadow-lg group-hover:scale-[1.02] group-hover:border-primary/50">
                   <CardHeader>
                     <CardTitle className="text-xl group-hover:text-primary">
