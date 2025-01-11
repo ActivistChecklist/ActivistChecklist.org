@@ -1,0 +1,320 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  IoSearch, 
+  IoMegaphone, 
+  IoChatbubbleEllipses, 
+  IoLocate,
+  IoChevronForward 
+} from "react-icons/io5";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useDebug } from '@/contexts/DebugContext';
+import { cn } from '@/lib/utils';
+import Link from '@/components/Link';
+import { SECURITY_CHECKLISTS } from '@/config/navigation';
+
+const POPULAR_SEARCHES = [
+  'phone security protest',
+  'signal secure messaging',
+  'location tracking',
+  'passcode security',
+  'high risk protection',
+];
+
+const MAX_SUB_RESULTS = 3; // Maximum number of sub-results to show per result
+const MAX_CURRENT_PAGE_SUB_RESULTS = 6; // Maximum sub-results for current page
+
+const TOP_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 4);
+
+const SearchSuggestion = ({ query, onClick }) => (
+  <button 
+    onClick={() => onClick(query)}
+    className="px-3 py-1.5 text-sm bg-muted hover:bg-muted/80 rounded-md transition-colors"
+  >
+    {query}
+  </button>
+);
+
+const GuideCard = ({ href, icon: Icon, title, description, onClose }) => (
+  <Link 
+    href={href}
+    onClick={onClose}
+    className="flex items-center text-left space-x-4 hover:bg-muted p-3 rounded-md transition-colors group"
+  >
+    <div className="p-2 rounded-lg bg-primary/10 text-primary">
+      <Icon className="h-5 w-5" />
+    </div>
+    <div className="flex-1">
+      <div className="text-sm font-medium group-hover:text-primary transition-colors">{title}</div>
+      <div className="text-xs text-muted-foreground">{description}</div>
+    </div>
+    <IoChevronForward className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+  </Link>
+);
+
+const InitialContent = ({ onSearch, onClose }) => (
+  <div className="py-8 px-2">
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">POPULAR SEARCHES</h3>
+        <div className="flex flex-wrap gap-2">
+          {POPULAR_SEARCHES.map((query, index) => (
+            <SearchSuggestion 
+              key={index}
+              query={query}
+              onClick={onSearch}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">TOP GUIDES</h3>
+        <div className="grid grid-cols-1 gap-2">
+          {TOP_GUIDES.map((guide, index) => (
+            <GuideCard 
+              key={index}
+              {...guide}
+              onClose={onClose}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="text-xs text-center text-muted-foreground">
+        Press <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border bg-muted">↵</kbd> to search
+      </div>
+    </div>
+  </div>
+);
+
+const Search = ({ variant = 'searchbar', className, ...props }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pagefind, setPagefind] = useState(null);
+  const [open, setOpen] = useState(false);
+  const { addDebugData } = useDebug();
+
+  // Initialize Pagefind
+  useEffect(() => {
+    const initPagefind = async () => {
+      try {
+        const module = await import(
+          /* webpackIgnore: true */
+          '/pagefind/pagefind.js'
+        );
+        setPagefind(module.default || module);
+      } catch (error) {
+        console.error("Error loading Pagefind:", error);
+        setPagefind({ 
+          search: () => ({ results: [] }) 
+        });
+      }
+    };
+    initPagefind();
+  }, []);
+
+  // Handle search
+  const handleSearch = async (searchQuery) => {
+    if (!pagefind || !searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const search = await pagefind.debouncedSearch(searchQuery);
+      const currentPath = window.location.pathname;
+      
+      const data = await Promise.all(
+        search.results.map(async (result) => {
+          const resultData = await result.data();
+          // Filter out sub-results that match the parent title
+          if (resultData.sub_results) {
+            const isCurrentPage = resultData.url === currentPath;
+            const maxResults = isCurrentPage ? MAX_CURRENT_PAGE_SUB_RESULTS : MAX_SUB_RESULTS;
+            
+            resultData.sub_results = resultData.sub_results
+              .filter(subResult => subResult.title !== resultData.meta?.title)
+              .slice(0, maxResults);
+              
+            // If no sub-results remain, set to undefined
+            if (resultData.sub_results.length === 0) {
+              delete resultData.sub_results;
+            }
+          }
+          return resultData;
+        })
+      );
+      setResults(data);
+      addDebugData('search_results', data);
+    } catch (error) {
+      console.error("Search error:", error);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounce search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch(query);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [query, pagefind]);
+
+  // Parse HTML content from excerpt
+  const createMarkup = (html) => {
+    return { __html: html };
+  };
+
+  // Helper function to highlight keywords in text
+  const highlightKeywords = (text, query) => {
+    if (!query.trim()) return text;
+    const keywords = query.trim().split(/\s+/);
+    let highlightedText = text;
+    
+    keywords.forEach(keyword => {
+      // Match complete words that contain the keyword
+      const regex = new RegExp(`\\w*${keyword}\\w*`, 'gi');
+      highlightedText = highlightedText.replace(regex, '<mark>$&</mark>');
+    });
+    
+    return highlightedText;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {variant === 'searchbar' ? (
+          <div className={cn("relative w-full max-w-3xl mx-auto", className)}>
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <IoSearch className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <Input
+              type="search"
+              readOnly
+              placeholder="Search..."
+              onClick={() => setOpen(true)}
+              className="pl-10 cursor-pointer"
+            />
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(true)}
+            className={cn("h-9 w-9 hover:bg-muted", className)}
+          >
+            <IoSearch className="h-5 w-5" />
+          </Button>
+        )}
+      </DialogTrigger>
+
+      <DialogContent className={cn("sm:max-w-3xl h-[80vh] flex flex-col p-0 gap-0")} {...props}>
+        <div className="p-6 pb-4 border-b pr-14">
+          <DialogTitle className="sr-only">Search Content</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search through all content on the site
+          </DialogDescription>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <IoSearch className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <Input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search..."
+              autoFocus
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-8 pt-4">
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center text-muted-foreground">
+              Searching...
+            </div>
+          )}
+
+          {/* Initial State - show when no query */}
+          {!loading && !query && (
+            <InitialContent 
+              onSearch={setQuery}
+              onClose={() => setOpen(false)}
+            />
+          )}
+
+          {/* Results */}
+          {!loading && query && results.length > 0 && (
+            <div className="divide-y divide-border">
+              {results.map((result, index) => (
+                <div key={index} className="py-2 first:pt-0 last:pb-0">
+                  {/* Main Result */}
+                  <a 
+                    href={result.url}
+                    className="block hover:bg-muted rounded-md group transition-colors p-3 -mx-3"
+                    onClick={() => setOpen(false)}
+                  >
+                    <div className="text-lg font-semibold text-primary group-hover:underline">
+                      {result.meta?.title || 'Untitled'}
+                    </div>
+                    <div 
+                      className="mt-2 text-muted-foreground"
+                      dangerouslySetInnerHTML={createMarkup(result.excerpt)}
+                    />
+                  </a>
+
+                  {/* Sub Results */}
+                  {result.sub_results && result.sub_results.length > 0 && (
+                    <div className="mt-2 space-y-3">
+                      {result.sub_results.map((subResult, subIndex) => (
+                        <a 
+                          key={subIndex} 
+                          href={subResult.url}
+                          className="block text-sm pl-10 relative before:content-['\2937'] before:absolute before:left-4 before:top-[0.5rem] before:text-primary before:text-lg hover:bg-muted rounded-md group transition-colors p-3 -mx-3"
+                          onClick={() => setOpen(false)}
+                        >
+                          <div 
+                            className="text-primary group-hover:underline font-medium"
+                            dangerouslySetInnerHTML={{ __html: highlightKeywords(subResult.title, query) }}
+                          />
+                          <div 
+                            className="mt-1 text-muted-foreground"
+                            dangerouslySetInnerHTML={createMarkup(subResult.excerpt)}
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {!loading && query && results.length === 0 && (
+            <div className="text-center text-muted-foreground">
+              No results found for "{query}"
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default Search;

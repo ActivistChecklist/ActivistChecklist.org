@@ -1,0 +1,319 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@layer base {
+  :root {
+    /* --background: 0 0% 98.08%; */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 1%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 36%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 1%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 1%;
+    --border: 0 0 85%;
+    --input: 0 0% 85%;
+    --primary: 113 80% 27%;
+    --primary-foreground: 124.53 100% 97.59%;
+    --secondary: 233.21 40.74% 40.17%;
+    --secondary-foreground: 233.21 0% 100%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 32%;
+    --ring: 113 80% 27%;
+    --chart-1: 113 80% 27%;
+    --chart-2: 233.21 40.74% 40.17%;
+    --chart-3: 0 0% 92%;
+    --chart-4: 233.21 40.74% 43.17%;
+    --chart-5: 113 83% 27%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Alert Colors - Light Mode */
+    --success: 142 76% 28%;
+    --success-foreground: 142 76% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 95%;
+    --info: 220 90% 50%;
+    --info-foreground: 220 90% 95%;
+
+    /* Semantic Grays */
+    --gray-50: 0 0% 98%;
+    --gray-100: 0 0% 96%;
+    --gray-400: 0 0% 60%;
+    --gray-500: 0 0% 50%;
+
+    /* Shadows */
+    --shadow-inset: 0 0 0 0.1;
+
+    /* Mark Colors */
+    --mark-background: 48 96% 89%;
+    --mark-foreground: inherit;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 99%;
+    --muted: 0 0% 5%;
+    --muted-foreground: 0 0% 64%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 99%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 99%;
+    --border: 113 11% 14%;
+    --input: 113 11% 14%;
+    --primary: 113 80% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 113 10% 14%;
+    --secondary-foreground: 113 10% 74%;
+    --accent: 113 10% 14%;
+    --accent-foreground: 113 10% 74%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --ring: 113 80% 27%;
+    --chart-1: 113 80% 27%;
+    --chart-2: 113 10% 14%;
+    --chart-3: 113 10% 14%;
+    --chart-4: 113 10% 17%;
+    --chart-5: 113 83% 27%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Alert Colors - Dark Mode */
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 100%;
+    --info: 220 90% 60%;
+    --info-foreground: 220 90% 100%;
+    --success: 142 76% 35%;
+    --success-foreground: 142 76% 100%;
+
+    /* Semantic Grays */
+    --gray-50: 0 0% 15%;
+    --gray-100: 0 0% 18%;
+    --gray-400: 0 0% 60%;
+    --gray-500: 0 0% 70%;
+
+    /* Shadows */
+    --shadow-inset: 255 255 255 0.05;
+
+    /* Mark Colors - Dark Mode */
+    --mark-background: 48 30% 25%;
+    --mark-foreground: inherit;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  .text-muted-foreground a {
+    @apply underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary;
+  }
+
+  mark {
+    @apply bg-amber-200 dark:bg-amber-900/50 px-0.5 rounded-sm;
+    color: inherit;
+  }
+}
+
+@layer base {
+  /* Block elements spacing for PageFind indexing */
+  h1, h2, h3, h4, h5, h6, p, section {
+    &::after {
+      content: " ";
+      display: inline;
+      visibility: hidden;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+  }
+  
+  h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl mb-6;
+  }
+
+  .text-shadow-white {
+    /* -webkit-text-stroke: 2px white;
+    text-stroke: 2px white; */
+    text-shadow: 0 0 1px hsl(var(--background)),
+                 0 0 2px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 4px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 8px hsl(var(--background)),
+                 0 0 16px hsl(var(--background)),
+                 0 0 30px hsl(var(--background)),
+                 0 0 60px hsl(var(--background)),
+                 0 0 90px hsl(var(--background)),
+                 0 24px 48px hsl(var(--background)),
+                 0 -24px 48px hsl(var(--background)),
+                 24px 0 48px hsl(var(--background)),
+                 -24px 0 48px hsl(var(--background)),
+                 0 48px 96px hsl(var(--background)),
+                 0 -48px 96px hsl(var(--background)),
+                 48px 0 96px hsl(var(--background)),
+                 -48px 0 96px hsl(var(--background)),
+                 0 96px 192px hsl(var(--background) / 0.95),
+                 0 128px 256px hsl(var(--background) / 0.9);
+  }
+
+  h2 {
+    @apply scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0;
+  }
+
+  h3 {
+    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+  }
+
+  .prose {
+    /* Headings */
+    h2 {
+      @apply mt-10 border-b pb-2;
+    }
+
+    h3 {
+      @apply mt-6;
+    }
+
+    h4 {
+      @apply font-bold mb-0 text-base tracking-tight inline-block;
+      margin-bottom: -20px;
+    }
+
+    /* Paragraphs and Lists */
+    p, ul, ol {
+      @apply mt-3 first:mt-0 text-pretty;
+    }
+
+    /* Lists */
+    ul {
+      @apply ml-6 list-disc [&>li]:mt-2;
+    }
+    
+    ol {
+      @apply ml-6 list-decimal [&>li]:mt-2;
+    }
+
+    li {
+      @apply first:mt-0;
+    }
+
+    /* Ensure consistent spacing after lists */
+    ul + p,
+    ol + p {
+      @apply mt-3;
+    }
+
+    /* Blockquotes */
+    blockquote {
+      @apply mt-6 border-l-2 pl-3 italic;
+    }
+
+    /* Links */
+    a {
+      @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
+    }
+
+    /* Make links in tools/stop sections inherit font weight */
+    .prose a,
+    .prose a {
+      font-weight: inherit;
+    }
+
+    .first-column-header {
+      & td:first-child,
+      & th:first-child {
+        @apply font-bold;
+      }
+    }
+
+    /* Tables */
+    table {
+      @apply w-full;
+      
+      td:first-child,
+      th:first-child {
+        @apply font-bold;
+      }
+    }
+
+    .equal-column-widths {
+      td, th {
+        @apply w-1/2;
+      }
+    }
+
+    .no-bold-first-column {
+      td:first-child {
+        @apply font-normal;
+      }
+    }
+
+    .table-wrapper {
+      @apply my-6 w-full overflow-y-auto;
+    }
+
+    thead tr {
+      @apply m-0 border-t p-0 even:bg-background;
+    }
+
+    th {
+      @apply border px-4 py-2 bg-foreground text-background text-left font-bold text-xs uppercase [&[align=center]]:text-center [&[align=right]]:text-right;
+    }
+
+    td {
+      @apply border px-4 py-2 text-left align-top [&[align=center]]:text-center [&[align=right]]:text-right;
+    }
+
+    tbody tr {
+      @apply m-0 border-t p-0 even:bg-background odd:bg-white dark:odd:bg-gray-900 text-sm;
+    }
+  }
+}

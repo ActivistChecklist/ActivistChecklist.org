@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Disallow: /files/
+Sitemap: https://activistchecklist.org/sitemap.xml 

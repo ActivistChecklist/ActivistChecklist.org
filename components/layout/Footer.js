@@ -1,0 +1,71 @@
+import Link from 'next/link'
+import { DarkModeToggle } from "@/components/layout/DarkModeToggle"
+import { CompactNewsletterSubscribe } from "@/components/NewsletterSubscribe"
+import { footerConfig } from '@/config/navigation'
+
+export function Footer() {
+  return (
+    <footer className="bg-gray-100 text-gray-600 py-12">
+      <div className="container max-w-6xl mx-auto px-4 md:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
+          <div className="col-span-3">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{footerConfig.branding.title}</h2>
+            <p className="mb-4 max-w-lg">{footerConfig.branding.description}</p>
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-2">Stay Updated</h3>
+              <CompactNewsletterSubscribe />
+            </div>
+          </div>
+          
+          {footerConfig.sections.map((section, index) => (
+            <div key={index}>
+              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-4">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.items.map((item) => (
+                  <li key={item.key}>
+                    <Link href={item.href} className="hover:text-gray-800">
+                      {item.title || item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t text-sm border-gray-200 pt-8 flex flex-col md:flex-row md:items-center md:justify-between">
+          <p>
+            Content available under Creative Commons{' '}
+            <Link
+              href="https://creativecommons.org/licenses/by-nc/4.0/"
+              className="hover:text-gray-800 underline underline-offset-2"
+            >
+              BY-NC 4.0
+            </Link>.{' '}
+            Code available on{' '}
+            <Link   
+              href="https://github.com/ActivistChecklist/ActivistChecklist.org"
+              className="hover:text-gray-800 underline underline-offset-2"
+            >
+              GitHub
+            </Link>.{' '}<br />
+            A project of the{" "}
+            <a 
+              href="https://neighborhoodanarchists.org/" 
+              target="_blank" 
+              rel="noreferrer nofollow" 
+              className="hover:text-gray-800 underline underline-offset-2"
+            >
+              Neighborhood Anarchist Collective
+            </a>.
+          </p>
+          <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
+            {/* <DarkModeToggle /> */}
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+export default Footer

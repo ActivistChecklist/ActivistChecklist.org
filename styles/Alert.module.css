@@ -1,0 +1,87 @@
+/* Alert styles */
+.alert {
+  @apply relative w-full rounded-md border border-l-[6px] p-4 [&:not(:first-child)]:mt-3;
+}
+
+
+.alert svg {
+  @apply h-6 w-6;
+}
+
+.alertIcon {
+  @apply absolute left-3 top-[0.9rem] text-foreground;
+}
+
+.alertTitle {
+  @apply !mb-2 !-mt-1 !text-lg font-bold leading-none tracking-tight hidden;
+}
+
+.alertContent {
+  @apply w-full;
+}
+
+.alertContentWithIcon {
+  @apply pl-7;
+}
+
+
+.alertDescription {
+  @apply text-base [&_p]:leading-relaxed;
+}
+
+:global(.checklist-item) .alert .alertDescription {
+  @apply text-sm;
+}
+
+:global(.checklist-item) .alert .alertTitle {
+  @apply !text-base;
+}
+
+:global(.checklist-item) .alert {
+  @apply border-l;
+}
+
+/* Variant styles */
+.default {
+  @apply bg-slate-100 text-foreground border-muted-foreground;
+}
+
+.default svg {
+  @apply text-muted-foreground;
+}
+
+.error {
+  @apply border-destructive bg-destructive/10;
+  /* @apply text-destructive-text; */
+}
+
+.error svg {
+  @apply text-destructive;
+}
+
+.warning {
+  @apply border-warning bg-warning/10;
+  /* @apply text-warning-text; */
+}
+
+.warning svg {
+  @apply text-warning;
+}
+
+.info {
+  @apply border-info bg-info/10;
+  /* @apply text-info-text; */
+}
+
+.info svg {
+  @apply text-info;
+}
+
+.success {
+  @apply border-success bg-success/10;
+  /* @apply text-success-text; */
+}
+
+.success svg {
+  @apply text-success;
+}
