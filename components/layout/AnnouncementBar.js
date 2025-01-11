@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { X, Bell, AlertTriangle, InfoIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -33,13 +35,15 @@ export const announcements = {
 const STORAGE_PREFIX = 'announcement_dismissed_';
 
 const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
-  const [isVisible, setIsVisible] = useState(false); // Start false to prevent flash
+  const [isVisible, setIsVisible] = useState(true);
   const announcement = announcements[announcementKey];
 
   useEffect(() => {
-    // Check localStorage on mount
+    // Only hide if explicitly dismissed
     const isDismissed = localStorage.getItem(STORAGE_PREFIX + announcementKey);
-    setIsVisible(!isDismissed);
+    if (isDismissed) {
+      setIsVisible(false);
+    }
   }, [announcementKey]);
 
   const handleDismiss = () => {
