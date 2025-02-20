@@ -135,7 +135,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     <Card
       {...(editable ? storyblokEditable(blok) : {})}
       className={cn(
-        "checklist-item",
+        "checklist-item group/checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t-1",
         "hover:z-20 relative",
         !isExpanded && "hover:bg-muted/40",
