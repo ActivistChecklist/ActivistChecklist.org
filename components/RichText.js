@@ -7,10 +7,11 @@ import { HowTo } from "@/components/guides/HowTo";
 import { Badge } from "@/components/ui/badge";
 import { ProtectionBadge } from "@/components/guides/ProtectionBadge";
 import { cn } from "@/lib/utils";
-
+import CopyButton from "@/components/CopyButton";
 const INLINE_COMPONENTS = {
   Badge,
-  ProtectionBadge
+  ProtectionBadge,
+  CopyButton
 };
 
 const parseClasses = (text) => {
