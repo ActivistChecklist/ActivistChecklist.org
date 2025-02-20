@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/Link'
 import { DarkModeToggle } from "@/components/layout/DarkModeToggle"
 import { CompactNewsletterSubscribe } from "@/components/NewsletterSubscribe"
 import { footerConfig } from '@/config/navigation'
@@ -35,13 +35,19 @@ export function Footer() {
 
         <div className="border-t text-sm border-gray-200 pt-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <p>
-            Content available under Creative Commons{' '}
+            Content available under{' '}
             <Link
-              href="https://creativecommons.org/licenses/by-nc/4.0/"
+              href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
               className="hover:text-gray-800 underline underline-offset-2"
             >
-              BY-NC 4.0
+              Creative Commons BY-NC-SA
             </Link>.{' '}
+            See our <Link
+              href="/about/#sources"
+              className="hover:text-gray-800 underline underline-offset-2"
+            >
+              sources
+            </Link>.
             Code available on{' '}
             <Link   
               href="https://github.com/ActivistChecklist/ActivistChecklist.org"
@@ -50,14 +56,12 @@ export function Footer() {
               GitHub
             </Link>.{' '}<br />
             A project of the{" "}
-            <a 
+            <Link
               href="https://neighborhoodanarchists.org/" 
-              target="_blank" 
-              rel="noreferrer nofollow" 
               className="hover:text-gray-800 underline underline-offset-2"
             >
               Neighborhood Anarchist Collective
-            </a>.
+            </Link>.
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
             {/* <DarkModeToggle /> */}

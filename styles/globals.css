@@ -10,6 +10,11 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+html {
+  scroll-padding-top: 4rem;
+  /* scroll-behavior: smooth; */
+}
+
 a {
   color: inherit;
   text-decoration: none;
