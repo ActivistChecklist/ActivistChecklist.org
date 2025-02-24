@@ -63,7 +63,9 @@ export async function getStaticProps() {
       component: {
         in: "guide"
       }
-    }
+    },
+    excluding_fields: 'body,blocks',
+    resolve_links: 'url'
   });
 
   const guides = data.stories.map((guide) => {

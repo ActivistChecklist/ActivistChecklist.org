@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Link from '@/components/Link';
-import { Shield, Users, ClipboardCheck, ArrowRight } from 'lucide-react';
+import { Shield, Users, ArrowRight, Sparkles } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ const HERO_CONTENT = {
   }
 };
 
-const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 4).map(item => ({
+const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 6).map(item => ({
   href: item.href,
   icon: item.icon,
   title: item.title,
@@ -122,7 +122,7 @@ const HomePage = () => {
           <div className="">
             <header className={cn(
               "not-prose relative left-1/2 w-dvw max-w-none -translate-x-1/2",
-              "relative mb-16 -mt-8 py-24 px-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background overflow-hidden",
+              "relative mb-16 -mt-8 py-16 px-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background overflow-hidden",
               "before:content-[''] before:fixed before:inset-0 before:bg-[linear-gradient(to_right,var(--tw-gradient-stops))] before:from-primary/10 before:via-accent/5 before:to-primary/10 before:opacity-70 before:pointer-events-none"
             )}>
               <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--tw-gradient-stops))] from-primary/10 via-accent/5 to-primary/10 opacity-70"></div>
@@ -150,6 +150,15 @@ const HomePage = () => {
                       {HERO_CONTENT.secondaryCta.text}
                     </Link>
                   </Button>
+                </div>
+                <div className="mt-8 text-muted-foreground">
+                  <span className="inline-flex items-baseline gap-1">
+                    <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
+                    New:
+                  </span>{' '}
+                  <Link href={ROUTES.CHECKLISTS.GOVERNMENT} className="hover:text-primary transition-colors">
+                    Digital Security for Government Workers
+                  </Link>
                 </div>
               </div>
             </header>
