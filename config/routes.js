@@ -8,7 +8,7 @@ export const ROUTES = {
     SIGNAL: '/signal',
     RESEARCH: '/research',
     SECONDARY_PHONE: '/secondary',
-    GOVERNMENT: '/government',
+    FEDERAL: '/federal',
   },
   // RESOURCES: {
   //   INDEX: '/list',
