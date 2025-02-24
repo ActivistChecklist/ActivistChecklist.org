@@ -57,11 +57,11 @@ export const NAV_ITEMS = {
     description: "Set up an extra phone for activism and protests.",
     icon: IoPhonePortraitOutline
   },
-  GOVERNMENT: {
-    key: 'government',
-    title: "Government workers",
-    href: ROUTES.CHECKLISTS.GOVERNMENT,
-    description: "Digital security guidance for government employees.",
+  FEDERAL: {
+    key: 'federal',
+    title: "Federal workers",
+    href: ROUTES.CHECKLISTS.FEDERAL,
+    description: "Digital security guidance for federal employees.",
     icon: Landmark
   },
   ABOUT: {
@@ -96,7 +96,7 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
     NAV_ITEMS.SECONDARY_PHONE,
-    NAV_ITEMS.GOVERNMENT,
+    NAV_ITEMS.FEDERAL,
   ],
   footerLink: {
     title: "Browse all checklists",

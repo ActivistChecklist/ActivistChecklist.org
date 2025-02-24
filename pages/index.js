@@ -156,8 +156,8 @@ const HomePage = () => {
                     <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
                     New:
                   </span>{' '}
-                  <Link href={ROUTES.CHECKLISTS.GOVERNMENT} className="hover:text-primary transition-colors">
-                    Digital Security for Government Workers
+                  <Link href={ROUTES.CHECKLISTS.FEDERAL} className="hover:text-primary transition-colors">
+                    Digital Security for Federal Workers
                   </Link>
                 </div>
               </div>
