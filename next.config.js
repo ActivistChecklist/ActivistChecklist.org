@@ -13,13 +13,6 @@ const baseConfig = {
     };
     return config;
   },
-  redirects: async () => ([
-    {
-      source: '/government',
-      destination: '/federal',
-      permanent: true,
-    }
-  ]),
 };
 
 // All of these only apply for static builds

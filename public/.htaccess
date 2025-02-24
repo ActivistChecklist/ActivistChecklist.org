@@ -1,1 +1,4 @@
 ErrorDocument 404 /404/index.html
+
+# Redirects
+Redirect 301 /government /federal
