@@ -294,7 +294,7 @@ a {
 
     /* Blockquotes */
     blockquote {
-      @apply mt-6 border-l-4 bg-border/20 p-4 pl-6 mr-12 md:mr-36 italic;
+      @apply mt-6 border-l-4 bg-border/20 p-4 pl-6 mr-4 md:mr-36;
     }
 
     /* Links */

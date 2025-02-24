@@ -6,6 +6,7 @@ import {
   IoArrowForward,
   IoPeopleOutline,
 } from "react-icons/io5"
+import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
 
 export const SITE_BRANDING = {
@@ -56,6 +57,13 @@ export const NAV_ITEMS = {
     description: "Set up an extra phone for activism and protests.",
     icon: IoPhonePortraitOutline
   },
+  GOVERNMENT: {
+    key: 'government',
+    title: "Government workers",
+    href: ROUTES.CHECKLISTS.GOVERNMENT,
+    description: "Digital security guidance for government employees.",
+    icon: Landmark
+  },
   ABOUT: {
     key: 'about',
     label: "About",
@@ -88,6 +96,7 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
     NAV_ITEMS.SECONDARY_PHONE,
+    NAV_ITEMS.GOVERNMENT,
   ],
   footerLink: {
     title: "Browse all checklists",
