@@ -17,7 +17,7 @@ export const colorSchemes = {
 };
 
 // Specify which announcement is currently active
-export const ACTIVE_ANNOUNCEMENT = 'softLaunch';
+export const ACTIVE_ANNOUNCEMENT = null; //'softLaunch';
 
 // Configure your announcements
 export const announcements = {
