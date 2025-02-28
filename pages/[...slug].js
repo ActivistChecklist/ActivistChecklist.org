@@ -11,10 +11,73 @@ import { cn } from "@/lib/utils";
 export default function Page({ story, preview }) {
   story = useStoryblokState(story);
   
+  // Get the first image from the story content if available, fallback to default
+  const getOgImage = () => {
+    // if (story?.content?.image) {
+    //   // Handle Storyblok image object or string
+    //   const imageUrl = typeof story.content.image === 'string' 
+    //     ? story.content.image 
+    //     : story.content.image.filename || story.content.image.url;
+
+    //   if (!imageUrl) {
+    //     return `${baseUrl}/images/og-image.jpg`;
+    //   }
+
+    //   // If it's already an absolute URL, return as is
+    //   if (imageUrl.startsWith('http')) {
+    //     return imageUrl;
+    //   }
+    //   // Otherwise, make it absolute
+    //   return `${baseUrl}${imageUrl}`;
+    // }
+    return `/images/og-image.png`; // Your default OG image
+  };
+
+  // Get a description from the story content if available, fallback to default
+  const getDescription = () => {
+    if (story?.content?.description) {
+      return story.content.description;
+    } else if (story?.content?.body) {
+      // If there's rich text content, try to get the first paragraph
+      const firstParagraph = story.content.body.content?.[0]?.content?.[0]?.text;
+      if (firstParagraph) {
+        return firstParagraph.substring(0, 160) + "...";
+      }
+    }
+    return "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
+  };
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://activistchecklist.org';
+  const currentPath = story?.full_slug || '';
+  const canonicalUrl = `${baseUrl}/${currentPath}`;
+  
+  // Shared metadata values
+  const pageTitle = story 
+    ? `${story.content.title || story.name} | Digital Security Checklists for Activists` 
+    : "Digital Security Checklists for Activists";
+  const pageDescription = getDescription();
+  const pageImage = getOgImage();
+  
   return (
     <div>
       <Head>
-        <title>{story ? story.name : "My Site"}</title>
+        <title key="title">{pageTitle}</title>
+        <meta name="description" content={pageDescription} key="description" />
+        <link rel="canonical" href={canonicalUrl} key="canonical" />
+        
+        {/* OpenGraph metadata */}
+        <meta property="og:url" content={canonicalUrl} key="og:url" />
+        <meta property="og:title" content={pageTitle} key="og:title" />
+        <meta property="og:description" content={pageDescription} key="og:description" />
+        <meta property="og:image" content={pageImage} key="og:image" />
+        <meta property="og:type" content="article" key="og:type" />
+        <meta property="og:site_name" content="Activist Checklist" key="og:site_name" />
+        
+        {/* Twitter metadata */}
+        <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
+        <meta name="twitter:title" content={pageTitle} key="twitter:title" />
+        <meta name="twitter:description" content={pageDescription} key="twitter:description" />
+        <meta name="twitter:image" content={pageImage} key="twitter:image" />
       </Head>
       <Layout sidebarType={story.content.component === 'guide' ? 'toc' : 'navigation'}>
           <StoryblokComponent blok={story.content} story={story} />
