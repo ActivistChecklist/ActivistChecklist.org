@@ -52,7 +52,9 @@ export default function Page({ story, preview }) {
   const canonicalUrl = `${baseUrl}/${currentPath}`;
   
   // Shared metadata values
-  const pageTitle = story ? `${story.name} | Activist Checklist` : "Activist Checklist";
+  const pageTitle = story 
+    ? `${story.content.title || story.name} | Digital Security Checklists for Activists` 
+    : "Digital Security Checklists for Activists";
   const pageDescription = getDescription();
   const pageImage = getOgImage();
   
