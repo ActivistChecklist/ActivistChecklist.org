@@ -124,7 +124,8 @@ export const navigationConfig = {
   logo: {
     href: ROUTES.HOME,
     label: SITE_BRANDING.title,
-    ariaLabel: `${SITE_BRANDING.title} Home`
+    ariaLabel: `${SITE_BRANDING.title} Home`,
+    image: "/images/logo-bg-white.png"
   },
   mainNav: [
     NAV_ITEMS.HOME,

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -128,7 +129,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
               className="flex items-center space-x-2 ml-0 font-bold text-xl" 
               aria-label={navigationConfig.logo.ariaLabel}
             >
-              {navigationConfig.logo.label}
+              <Image src={navigationConfig.logo.image} alt={navigationConfig.logo.ariaLabel} width={280} height={19} />
             </Link>
           </div>
           <div className="flex items-center gap-4">

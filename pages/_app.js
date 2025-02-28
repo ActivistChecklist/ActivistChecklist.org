@@ -51,6 +51,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <Head>
+        {/* Favicons and basic meta tags */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -58,15 +59,17 @@ function MyApp({ Component, pageProps }) {
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="utf-8" />
-        <meta name="description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Digital Security Checklists for Activists" />
-        <meta property="og:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." />
-        <meta property="og:image" content="/og-image.jpg" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Digital Security Checklists for Activists" />
-        <meta name="twitter:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." />
-        <meta name="twitter:image" content="/og-image.jpg" />
+        
+        {/* Default meta tags - these will be overridden by page-specific ones */}
+        <meta name="description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="description" />
+        <meta property="og:type" content="website" key="og:type" />
+        <meta property="og:title" content="Digital Security Checklists for Activists" key="og:title" />
+        <meta property="og:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="og:description" />
+        <meta property="og:image" content="/og-image.jpg" key="og:image" />
+        <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
+        <meta name="twitter:title" content="Digital Security Checklists for Activists" key="twitter:title" />
+        <meta name="twitter:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="twitter:description" />
+        <meta name="twitter:image" content="/og-image.jpg" key="twitter:image" />
       </Head>
       <ErrorBoundary>
         <Component key={key} {...props} />
