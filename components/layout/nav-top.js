@@ -129,7 +129,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
               className="flex items-center space-x-2 ml-0 font-bold text-xl" 
               aria-label={navigationConfig.logo.ariaLabel}
             >
-              <Image src={navigationConfig.logo.image} alt={navigationConfig.logo.ariaLabel} width={280} height={19} />
+              <Image src={navigationConfig.logo.image} alt={navigationConfig.logo.ariaLabel} width={250} height={20} />
             </Link>
           </div>
           <div className="flex items-center gap-4">
