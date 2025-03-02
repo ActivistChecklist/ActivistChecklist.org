@@ -39,7 +39,7 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
               <TopNav maxWidth={maxWidth} />
               <div className="flex-1">
                 <div className={`${maxWidth} mx-auto px-4`}>
-                  <div className={`flex gap-4 py-6 ${!sidebarType ? 'justify-center' : ''}`}>
+                  <div className={`flex gap-4 py-6 print:py-1 ${!sidebarType ? 'justify-center' : ''}`}>
                    {sidebarType === 'toc' && (
                       <aside 
                         className={`w-60 hidden md:block`}

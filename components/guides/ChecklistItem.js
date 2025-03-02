@@ -209,6 +209,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
             className={cn(
               "h-8 w-8 transition-transform duration-300 mt-1 text-neutral-500",
               "p-1 rounded-full group-hover:bg-neutral-200/60",
+              "print:hidden",
               isExpanded && "rotate-180",
               isExpanded && "group-hover:bg-neutral-300/50",
               isChecked && "text-muted-foreground",

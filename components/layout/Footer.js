@@ -5,7 +5,7 @@ import { footerConfig } from '@/config/navigation'
 
 export function Footer() {
   return (
-    <footer className="bg-gray-100 text-gray-600 py-12">
+    <footer className="print:hidden bg-gray-100 text-gray-600 py-12">
       <div className="container max-w-6xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
           <div className="col-span-3">
