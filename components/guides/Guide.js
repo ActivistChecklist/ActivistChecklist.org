@@ -24,7 +24,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
           <Button
             variant="defaultOutline"
             size="sm"
-            className="gap-2 start"
+            className="gap-2 start print:hidden"
             onClick={onToggleExpand}
           >
             {isExpanded ? (
@@ -127,7 +127,7 @@ const Guide = ({ blok }) => {
   return (
     <>
       {disableImage ? (
-        <h1 className="mb-6" {...storyblokEditable(blok)}>
+        <h1 className="mb-6 print:mb-0" {...storyblokEditable(blok)}>
           {blok.title}
         </h1>
       ) : (

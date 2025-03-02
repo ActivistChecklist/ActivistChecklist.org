@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Calendar } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function getDateMetaItem(date, label = "Last updated on") {
   return {
@@ -21,11 +22,17 @@ export const MetaBar = ({
   if (items.length === 0) return null;
   
   const valueStyle = "text-foreground font-semibold"; 
+  const [currentUrl, setCurrentUrl] = useState('');
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
 
   return (
     <div className={cn(
       "bg-muted rounded-md lg:rounded-2xl py-3 px-6 mb-6 flex flex-wrap lg:flex-nowrap items-center", 
       "gap-y-2 gap-x-6 text-sm text-muted-foreground",
+      "print:mb-0",
       className
     )}
     {...props}
@@ -46,6 +53,14 @@ export const MetaBar = ({
           </span>
         </div>
       ))}
+      <div className="hidden print:flex whitespace-normal">
+        <span>
+          View the latest guide at{' '}
+          <span className={valueStyle}>
+            {currentUrl}
+          </span>
+        </span>
+      </div>
     </div>
   );
 }; 

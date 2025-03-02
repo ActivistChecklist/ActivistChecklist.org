@@ -17,7 +17,7 @@ export function FeedbackCTA() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
-    <div className="mt-8 px-8 py-12 bg-neutral-900 text-neutral-50 rounded-xl">
+    <div className="print:hidden mt-8 px-8 py-12 bg-neutral-900 text-neutral-50 rounded-xl">
       <div className="max-w-2xl mx-auto text-center space-y-6">
         <h3 className="text-2xl font-bold">Have Questions?</h3>
         <p className="text-neutral-300 max-w-md mx-auto">

@@ -10,7 +10,8 @@ export const HowTo = ({ blok }) => {
   return (
     <div className={cn(
       "how-to-container",
-      "mt-4",
+      "print:border print:border-border print:rounded-md",
+      "mt-4 first:mt-0",
     )}>
       <div
         {...storyblokEditable(blok)}

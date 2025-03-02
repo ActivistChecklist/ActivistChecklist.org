@@ -195,6 +195,82 @@ a {
 }
 
 @layer base {
+
+    /* Print styles */
+    @media print {
+      /* Reset page margins */
+      @page {
+        margin: 0.9cm;
+      }
+      
+      /* Reduce overall text size for printing without affecting layout */
+      html, body {
+        /* Use scale transform to reduce text size without affecting layout units */
+        font-size: 16px !important; /* Keep the default font size */
+      }
+      
+      /* Target text elements only for size reduction */
+      p, li, td, th {
+        font-size: 9pt !important; /* This reduces just the text size */
+        line-height: 1.3 !important; /* Adjust line height for readability */
+      }
+
+      /* Hide navigation and interactive elements */
+      nav, 
+      .no-print,
+      [role="navigation"] {
+        display: none !important;
+      }
+
+      /* Avoid orphans and widows */
+      p, li, tr {
+        orphans: 3;
+        widows: 3;
+      }
+
+      /* Optimize links for print */
+      a {
+        text-decoration: none;
+        color: #000 !important;
+      }
+
+      /* Show URLs for links (except for internal anchor links) */
+      a[href^="http"]:after {
+        content: " (" attr(href) ")";
+        font-size: 90%;
+        font-style: italic;
+      }
+
+      /* Adjust colors for better print readability */
+      /* * {
+        background-color: transparent !important;
+        color: #000 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+      } */
+
+      /* Make images and tables fit within page */
+      img, table {
+        max-width: 100% !important;
+      }
+
+      /* Improve table readability */
+      table {
+        border-collapse: collapse !important;
+      }
+      
+      th, td {
+        border: 1px solid #ccc !important;
+      }
+      
+      /* Optimize sections and blockquotes */
+      blockquote {
+        border-left: 3px solid #ccc !important;
+        padding: 0.5em 1em !important;
+        margin: 1em 0 !important;
+      }
+    }
+  
   /* Block elements spacing for PageFind indexing */
   h1, h2, h3, h4, h5, h6, p, section {
     &::after {
@@ -296,6 +372,7 @@ a {
     blockquote {
       @apply mt-6 border-l-4 bg-border/20 p-4 pl-6 mr-4 md:mr-36;
     }
+
 
     /* Links */
     a {
