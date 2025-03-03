@@ -14,8 +14,9 @@ import AnnouncementBar from "./AnnouncementBar";
 import Script from 'next/script';
 import { extractHeaders } from "@/components/layout/TableOfContentsSidebar";
 import { cn } from "@/lib/utils";
+import { useEffect } from 'react';
 
-const LayoutContent = ({ children, className, fullWidthMain = false, searchable = true}) => {
+const LayoutContent = ({ children, className, fullWidthMain = false, searchable = true, isPrintPreview = true}) => {
   const { sidebarType } = useLayout();
   const maxWidth = "max-w-5xl";
 
@@ -27,6 +28,19 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
     tempDiv.innerHTML = content;
     initialHeaders = extractHeaders(tempDiv);
   }
+  
+  // Add print-preview class to body when needed
+  useEffect(() => {
+    if (isPrintPreview) {
+      document.body.classList.add('print-pdf-mode');
+    } else {
+      document.body.classList.remove('print-pdf-mode');
+    }
+    
+    return () => {
+      document.body.classList.remove('print-pdf-mode');
+    };
+  }, [isPrintPreview]);
 
   return (
     <ThemeProvider>
@@ -42,7 +56,7 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
                   <div className={`flex gap-4 py-6 print:py-1 ${!sidebarType ? 'justify-center' : ''}`}>
                    {sidebarType === 'toc' && (
                       <aside 
-                        className={`w-60 hidden md:block`}
+                        className={`w-60 hidden md:block print:hidden`}
                         role="complementary" 
                         aria-label="Sidebar navigation"
                       >
@@ -73,10 +87,10 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
   );
 };
 
-const Layout = ({ children, sidebarType: initialSidebarType = 'navigation', ...props }) => {
+const Layout = ({ children, sidebarType: initialSidebarType = 'navigation', isPrintPreview = true, ...props }) => {
   return (
     <LayoutProvider initialSidebarType={initialSidebarType}>
-      <LayoutContent {...props}>
+      <LayoutContent isPrintPreview={isPrintPreview} {...props}>
         {children}
       </LayoutContent>
     </LayoutProvider>

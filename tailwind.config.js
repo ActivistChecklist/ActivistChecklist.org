@@ -4,10 +4,6 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
-  screens: {
-    print: { raw: 'print' },
-    screen: { raw: 'screen' },
-  },
   theme: {
   	extend: {
   		// fontSize: {
@@ -154,6 +150,22 @@ module.exports = {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")]
+  plugins: [
+		require("tailwindcss-animate"),
+    // function({ addVariant }) {
+    //   // Make print variant work for both actual printing and print-pdf-mode class
+    //   addVariant('print', [
+    //     // '@media print', // For actual printing
+    //     'body.print-pdf-mode &' // For preview mode with class
+    //   ])
+    // },
+		function({ addVariant, e }) {
+			addVariant('printpdf', ({ container, separator }) => {
+				container.walkRules(rule => {
+					rule.selector = `.print-pdf-mode ${rule.selector}, @media print ${rule.selector}`;
+				});
+			})
+		},
+	],
 }
 

@@ -196,81 +196,113 @@ a {
 
 @layer base {
 
-    /* Print styles */
-    @media print {
-      /* Reset page margins */
-      @page {
-        margin: 0.9cm;
-      }
-      
-      /* Reduce overall text size for printing without affecting layout */
-      html, body {
-        /* Use scale transform to reduce text size without affecting layout units */
-        font-size: 16px !important; /* Keep the default font size */
-      }
-      
-      /* Target text elements only for size reduction */
-      p, li, td, th {
-        font-size: 9pt !important; /* This reduces just the text size */
-        line-height: 1.3 !important; /* Adjust line height for readability */
-      }
-
-      /* Hide navigation and interactive elements */
-      nav, 
-      .no-print,
-      [role="navigation"] {
-        display: none !important;
-      }
-
-      /* Avoid orphans and widows */
-      p, li, tr {
-        orphans: 3;
-        widows: 3;
-      }
-
-      /* Optimize links for print */
-      a {
-        text-decoration: none;
-        color: #000 !important;
-      }
-
-      /* Show URLs for links (except for internal anchor links) */
-      a[href^="http"]:after {
-        content: " (" attr(href) ")";
-        font-size: 90%;
-        font-style: italic;
-      }
-
-      /* Adjust colors for better print readability */
-      /* * {
-        background-color: transparent !important;
-        color: #000 !important;
-        text-shadow: none !important;
-        box-shadow: none !important;
-      } */
-
-      /* Make images and tables fit within page */
-      img, table {
-        max-width: 100% !important;
-      }
-
-      /* Improve table readability */
-      table {
-        border-collapse: collapse !important;
-      }
-      
-      th, td {
-        border: 1px solid #ccc !important;
-      }
-      
-      /* Optimize sections and blockquotes */
-      blockquote {
-        border-left: 3px solid #ccc !important;
-        padding: 0.5em 1em !important;
-        margin: 1em 0 !important;
-      }
+  /* Print styles */
+  @media print {
+    /* Reset page margins */
+    @page {
+      margin: 0.9cm;
+      size: A4;
     }
+    
+    /* Reduce overall text size for printing without affecting layout */
+    html, body {
+      /* Use scale transform to reduce text size without affecting layout units */
+      font-size: 16px !important; /* Keep the default font size */
+      background-color: white !important;
+      color: black !important;
+    }
+    
+    /* Target text elements only for size reduction */
+    p, li, td, th {
+      font-size: 9pt !important; /* This reduces just the text size */
+      line-height: 1.3 !important; /* Adjust line height for readability */
+    }
+
+    /* .print\:hidden {
+      display: none !important;
+    }
+
+    .print\:block {
+      display: block !important;
+    }
+    
+    .print\:absolute {
+      position: absolute !important;
+    } */
+
+    /* Avoid orphans and widows */
+    p, li, tr {
+      orphans: 3;
+      widows: 3;
+    }
+
+    /* Optimize links for print */
+    a {
+      text-decoration: none;
+      color: #000 !important;
+    }
+
+    /* Show URLs for links (except for internal anchor links) */
+    a[href^="http"]:after {
+      content: " (" attr(href) ")";
+      font-size: 90%;
+      font-style: italic;
+    }
+
+    /* Make images and tables fit within page */
+    img, table {
+      max-width: 100% !important;
+      page-break-inside: avoid;
+    }
+
+    /* Improve table readability */
+    table {
+      border-collapse: collapse !important;
+    }
+    
+    /* Ensure proper page breaks */
+    h1, h2, h3, h4 {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+    
+    /* Ensure checklist items don't break across pages */
+    .checklist-item {
+      page-break-inside: avoid;
+    }
+    
+    /* Expand all checklist items in print */
+    .checklist-item-content {
+      display: block !important;
+      height: auto !important;
+      opacity: 1 !important;
+    }
+    
+    /* Adjust main content for print */
+    main {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  }
   
+  /* body.print-pdf-mode .print\:hidden {
+    display: none !important;
+  }
+  
+  body.print-pdf-mode .print\:block {
+    display: block !important;
+  }
+  
+  body.print-pdf-mode .hidden.print\:block {
+    display: block !important;
+  }
+  
+  body.print-pdf-mode .block.print\:hidden {
+    display: none !important;
+  } */
+
   /* Block elements spacing for PageFind indexing */
   h1, h2, h3, h4, h5, h6, p, section {
     &::after {

@@ -11,7 +11,9 @@ export const Recommendations = ({ items }) => {
   return (
     <div className={cn(
       "grid gap-2 mb-2 recommendations text-sm",
-      hasMultipleItems ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+      hasMultipleItems 
+        ? "grid-cols-[repeat(auto-fit,minmax(280px,1fr))]" 
+        : "grid-cols-1"
     )}>
       {items.map((item, index) => (
         <RecommendationItem key={index} {...item} />

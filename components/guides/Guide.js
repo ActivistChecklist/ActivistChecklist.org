@@ -8,6 +8,7 @@ import { Clock, Expand as ExpandIcon, Collapse as CollapseIcon } from 'lucide-re
 import { FeedbackCTA } from "@/components/guides/FeedbackCTA";
 import { useLayout } from "@/contexts/LayoutContext";
 import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
+import SaveAsPdfButton from "@/components/SaveAsPdfButton";
 
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
@@ -127,9 +128,15 @@ const Guide = ({ blok }) => {
   return (
     <>
       {disableImage ? (
-        <h1 className="mb-6 print:mb-0" {...storyblokEditable(blok)}>
-          {blok.title}
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 print:mb-0">
+          <h1 className="mb-0" {...storyblokEditable(blok)}>
+            {blok.title}
+          </h1>
+          <SaveAsPdfButton 
+            filename={`${blok.title.replace(/\s+/g, '-').toLowerCase()}.pdf`}
+            className="self-start"
+          />
+        </div>
       ) : (
         <div className="relative w-[calc(100%+4rem)] h-[200px] mb-6 -mx-8">
           {blok.image?.filename ? (
@@ -146,10 +153,13 @@ const Guide = ({ blok }) => {
           <div className={cn(
             "absolute inset-0 bg-gradient-to-bl from-transparent via-background/80 to-background",
           )} />
-          <div className="absolute bottom-6 left-8 right-8">
-            <h1 className="text-shadow-white" {...storyblokEditable(blok)}>
+          <div className="absolute bottom-6 left-8 right-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+            <h1 className="text-shadow-white mb-0" {...storyblokEditable(blok)}>
               {blok.title}
             </h1>
+            <SaveAsPdfButton 
+              filename={`${blok.title.replace(/\s+/g, '-').toLowerCase()}.pdf`}
+            />
           </div>
         </div>
       )}
