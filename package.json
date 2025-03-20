@@ -17,7 +17,7 @@
     "checkbuild": "node scripts/check-build.mjs",
     "serve": "npx serve out",
     "start": "next start",
-    "clean": "rm -rf .next build node_modules out yarn.lock && yarn next clean && yarn cache clean && yarn install",
+    "clean": "rm -rf .next build node_modules out && yarn cache clean && yarn install",
     "deploy": "yarn buildstatic && source .env && upload",
     "release": "yarn storyblockexportcontent && git checkout main && git commit -am \"Content update: $(date '+%Y-%m-%d %H:%M:%S')\" && git push && yarn deploy",
     "api:dev": "source .env && fastify start --watch --ignore-watch '.git node_modules out .next content public scripts utils styles pages config compontents' --log-level info --pretty-logs --port ${API_PORT:-4321} api/server.js",
