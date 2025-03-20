@@ -56,10 +56,10 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
         />
       </div>
       <header className={cn(
-        "sticky top-0 w-full border-b bg-background text-foreground z-50",
+        "hidden screen:block sticky top-0 w-full border-b bg-background text-foreground z-50",
         hideOnScroll ? 'transition-transform duration-300' : '',
         visible ? 'translate-y-0' : '-translate-y-full',
-        "printpdf:hidden",
+        "",
       )}>
         {/* Normal top nav bar */}
         <div className={cn(
