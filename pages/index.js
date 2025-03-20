@@ -64,7 +64,7 @@ const COMMON_MISCONCEPTIONS = [
 ];
 
 
-const ActionGuideCard = ({ key, href, icon: Icon, title, description, gradient }) => (
+const ActionGuideCard = ({ href, icon: Icon, title, description, gradient }) => (
   <Link href={href} className="block group">
     <Card className={`h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card ${gradient}`}>
       <CardHeader>
@@ -87,8 +87,8 @@ const ActionGuideCard = ({ key, href, icon: Icon, title, description, gradient }
   </Link>
 );
 
-const TrustPoint = ({ key, icon: Icon, title, description }) => (
-  <Card key={key} className="bg-transparent border-0 shadow-none transition-all duration-300">
+const TrustPoint = ({ icon: Icon, title, description }) => (
+  <Card className="bg-transparent border-0 shadow-none transition-all duration-300">
   <CardHeader className="flex flex-row items-start gap-6 space-y-0">
     <div className="p-2 rounded-lg bg-primary/10">
       <Icon className="h-6 w-6 text-primary flex-shrink-0" />
