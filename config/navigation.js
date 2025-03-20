@@ -5,6 +5,7 @@ import {
   IoPhonePortraitOutline,
   IoArrowForward,
   IoPeopleOutline,
+  IoChatbubbleOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -57,6 +58,13 @@ export const NAV_ITEMS = {
     description: "Set up an extra phone for activism and protests.",
     icon: IoPhonePortraitOutline
   },
+  SIGNAL: {
+    key: 'signal',
+    title: "Signal Security Checklist",
+    href: ROUTES.CHECKLISTS.SIGNAL,
+    description: "Secure your Signal messaging app for safer communications.",
+    icon: IoChatbubbleOutline
+  },
   FEDERAL: {
     key: 'federal',
     title: "Federal workers",
@@ -96,6 +104,7 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
     NAV_ITEMS.SECONDARY_PHONE,
+    NAV_ITEMS.SIGNAL,
     NAV_ITEMS.FEDERAL,
   ],
   footerLink: {
