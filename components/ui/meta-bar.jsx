@@ -32,7 +32,7 @@ export const MetaBar = ({
     <div className={cn(
       "bg-muted rounded-md lg:rounded-2xl py-3 px-6 mb-6 flex flex-wrap lg:flex-nowrap items-center", 
       "gap-y-2 gap-x-6 text-sm text-muted-foreground",
-      "print:mb-0",
+      "printpdf:mb-0",
       className
     )}
     {...props}
@@ -53,7 +53,7 @@ export const MetaBar = ({
           </span>
         </div>
       ))}
-      <div className="hidden print:flex whitespace-normal">
+      <div className="hidden printpdf:flex whitespace-normal">
         <span>
           View the latest guide at{' '}
           <span className={valueStyle}>

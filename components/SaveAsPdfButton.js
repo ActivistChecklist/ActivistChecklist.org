@@ -89,7 +89,7 @@ const SaveAsPdfButton = ({
     <Button
       onClick={handleSaveAsPdf}
       disabled={isGenerating}
-      className={`gap-2 print:hidden ${className}`}
+      className={`gap-2 printpdf:hidden ${className}`}
       variant={variant}
       size={size}
     >

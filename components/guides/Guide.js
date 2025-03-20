@@ -25,7 +25,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
           <Button
             variant="defaultOutline"
             size="sm"
-            className="gap-2 start print:hidden"
+            className="gap-2 start printpdf:hidden"
             onClick={onToggleExpand}
           >
             {isExpanded ? (
@@ -128,7 +128,7 @@ const Guide = ({ blok }) => {
   return (
     <>
       {disableImage ? (
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 print:mb-0">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 printpdf:mb-0">
           <h1 className="mb-0" {...storyblokEditable(blok)}>
             {blok.title}
           </h1>

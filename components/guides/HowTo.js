@@ -10,7 +10,7 @@ export const HowTo = ({ blok }) => {
   return (
     <div className={cn(
       "how-to-container",
-      "print:border print:border-border print:rounded-md",
+      "printpdf:border printpdf:border-border printpdf:rounded-md",
       "mt-4 first:mt-0",
     )}>
       <div

@@ -46,9 +46,9 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
   return (
     <>
       {/* If printing, show the logo */}
-      <div className="hidden print:block print:relative">
+      <div className="hidden printpdf:block printpdf:relative">
         <Image 
-          className="print:absolute print:top-0 print:right-0" 
+          className="printpdf:absolute printpdf:top-0 printpdf:right-0" 
           src={navigationConfig.logo.image} 
           alt={navigationConfig.logo.ariaLabel} 
           width={250} 
@@ -59,7 +59,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
         "sticky top-0 w-full border-b bg-background text-foreground z-50",
         hideOnScroll ? 'transition-transform duration-300' : '',
         visible ? 'translate-y-0' : '-translate-y-full',
-        "print:hidden",
+        "printpdf:hidden",
       )}>
         {/* Normal top nav bar */}
         <div className={cn(
