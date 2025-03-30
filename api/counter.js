@@ -1,29 +1,43 @@
 const dotenv = require('dotenv');
 const https = require('https');
+const http = require('http'); // Added to support http if needed
+const crypto = require('crypto'); // Added for timestamp hashing
 dotenv.config();
 
 async function sendUmamiEvent(payload, userAgent) {
+  // Self-hosted configuration
   const websiteId = process.env.UMAMI_WEBSITE_ID;
-  const apiKey = process.env.UMAMI_API_KEY;
+  const userId = process.env.UMAMI_API_CLIENT_USER_ID;
+  const appSecret = process.env.UMAMI_API_CLIENT_SECRET;
+  const umamiHost = process.env.UMAMI_HOST;
+  const useHttps = umamiHost.startsWith('https://');
 
-  if (!websiteId || !apiKey) {
+  if (!websiteId || !userId || !appSecret || !umamiHost) {
     console.error('Missing required environment variables:', {
       hasWebsiteId: !!websiteId,
-      hasApiKey: !!apiKey
+      hasUserId: !!userId,
+      hasAppSecret: !!appSecret,
+      hasUmamiHost: !!umamiHost
     });
     return {
       success: false,
       error: 'Missing required configuration',
       details: {
-        message: 'UMAMI_WEBSITE_ID and UMAMI_API_KEY must be set'
+        message: 'UMAMI_WEBSITE_ID, UMAMI_API_CLIENT_USER_ID, UMAMI_API_CLIENT_SECRET, and UMAMI_HOST must be set'
       }
     };
   }
 
-  const url = "https://cloud.umami.is/api/send";
-
-  payload.website = process.env.UMAMI_WEBSITE_ID;
-
+  // Extract hostname without protocol
+  const urlObj = new URL(umamiHost);
+  const hostname = urlObj.hostname;
+  const port = urlObj.port || (useHttps ? 443 : 80);
+  
+  // Create the endpoint path
+  const endpointPath = '/api/send';
+  
+  payload.website = websiteId;
+  
   const data = {
     type: "event",
     payload
@@ -31,18 +45,31 @@ async function sendUmamiEvent(payload, userAgent) {
 
   const postData = JSON.stringify(data);
   
+  // Generate authentication header using timestamp and hash
+  const timestamp = Date.now();
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${timestamp}:${userId}:${appSecret}`)
+    .digest('hex');
+  
   return new Promise((resolve, reject) => {
     const options = {
+      hostname: hostname,
+      port: port,
+      path: endpointPath,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'x-umami-api-key': apiKey,
-        'User-Agent': userAgent || 'Mozilla/5.0 (compatible; UmamiTest/1.0)'
+        'User-Agent': userAgent || 'Mozilla/5.0 (compatible; UmamiTest/1.0)',
+        'x-umami-timestamp': timestamp.toString(),
+        'x-umami-hash': hash,
+        'x-umami-id': userId
       }
     };
 
-    const req = https.request(url, options, (res) => {
+    const requestLib = useHttps ? https : http;
+    const req = requestLib.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
@@ -75,7 +102,7 @@ async function sendUmamiEvent(payload, userAgent) {
   });
 }
 
-
+// Rest of your code remains the same
 async function sendEvent(request) {
   const userAgent = request.body.userAgent || request.headers['user-agent'] || '';
 
@@ -129,4 +156,4 @@ async function counterPlugin(fastify, options) {
   });
 }
 
-module.exports = counterPlugin; 
+module.exports = counterPlugin;
