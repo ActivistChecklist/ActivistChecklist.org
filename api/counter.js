@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 const https = require('https');
 const http = require('http'); // Added to support http if needed
 const crypto = require('crypto'); // Added for timestamp hashing
+const { createGeoPreservingAnonymousIP } = require('./utils/ip-anonymization');
 dotenv.config();
 
 async function sendUmamiEvent(payload, userAgent) {
@@ -105,6 +106,21 @@ async function sendUmamiEvent(payload, userAgent) {
 // Rest of your code remains the same
 async function sendEvent(request) {
   const userAgent = request.body.userAgent || request.headers['user-agent'] || '';
+  
+  // Get client IP from request headers
+  
+  // X-Forwarded-For contains the original client IP when behind proxies/load balancers
+  const forwardedFor = request.headers['x-forwarded-for'];
+  
+  // Extract the actual client IP address:
+  // 1. If X-Forwarded-For exists, use the first IP (original client) from the comma-separated list
+  // 2. Otherwise fall back to X-Real-IP header (used by some proxies)
+  // 3. Last resort: use the direct connecting IP (request.ip)
+  // This ensures we get the actual user's IP rather than the proxy/CDN IP
+  const clientIP = forwardedFor ? forwardedFor.split(',')[0] : request.headers['x-real-ip'] || request.ip;
+  
+  // Anonymize the IP address
+  const anonymizedIP = createGeoPreservingAnonymousIP(clientIP);
 
   const payload = {
     url: request.body.url || request.raw.url,
@@ -115,6 +131,7 @@ async function sendEvent(request) {
     screen: request.body.screen || '',
     name: request.body.name || '',
     data: request.body.data,
+    ip: anonymizedIP,
   };
 
   console.log("payload", payload);

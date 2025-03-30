@@ -1,8 +1,7 @@
 import { debugLog } from '@/contexts/DebugContext';
 import { isProd } from '@/utils/core';
 
-
-export const sendAnalytics = async (data= {}, endpoint = '/api-server/counter') => {
+export const sendAnalytics = async (data = {}, endpoint = '/api-server/counter/') => {
   // This allows us to turn logging back on in dev (which is disabled by default)
   const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_COUNTER === 'true';
   if (!isProd && !DEBUG_MODE) {
