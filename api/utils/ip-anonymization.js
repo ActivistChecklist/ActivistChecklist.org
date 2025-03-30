@@ -1,6 +1,8 @@
 function generatePrivacyPreservingId(ipAddress, salt = '') {
   const crypto = require('crypto');
-  return crypto.createHash('sha256').update(ipAddress + salt).digest('hex');
+  // Add the server-side secret key to the hash
+  const ipHashSalt = process.env.IP_HASH_SALT;
+  return crypto.createHash('sha256').update(ipAddress + salt + ipHashSalt).digest('hex');
 }
 
 function getDayKey() {
@@ -12,23 +14,31 @@ function getDayKey() {
 function createGeoPreservingAnonymousIP(originalIP) {
   if (!originalIP) return null;
 
-  // Keep the first two octets (which often correlate with geography)
+  // Parse IP address
   const ipParts = originalIP.split('.');
   if (ipParts.length !== 4) return originalIP; // Return original if not IPv4
   
-  const [prefix1, prefix2] = ipParts;
+  const [prefix1, prefix2, thirdOctet, fourthOctet] = ipParts;
   
   // Add the current day as salt to make the hash change daily
-  // This ensures the same IP gets the same anonymized version within a 24-hour period
   const dailySalt = getDayKey();
   
-  // Generate hash for the last two octets using IP + current day
+  // Generate hash for the user
   const userHash = generatePrivacyPreservingId(originalIP, dailySalt);
-  const thirdOctet = parseInt(userHash.substring(0, 4), 16) % 256;
-  const fourthOctet = parseInt(userHash.substring(4, 8), 16) % 256;
   
-  // Combine the geographic network prefix with randomized host part
-  return `${prefix1}.${prefix2}.${thirdOctet}.${fourthOctet}`;
+  // Keep first two octets intact for broad geo accuracy
+  // For the third octet, preserve some patterns by keeping the high-order bits
+  // but randomize the rest (preserves subnet groups while adding anonymity)
+  const thirdOctetInt = parseInt(thirdOctet);
+  const thirdOctetHigh = thirdOctetInt & 0xE0; // Keep top 3 bits (224 mask)
+  const thirdOctetRandom = parseInt(userHash.substring(0, 2), 16) & 0x1F; // Random 5 bits
+  const anonymizedThird = thirdOctetHigh | thirdOctetRandom;
+  
+  // Completely randomize the fourth octet
+  const anonymizedFourth = parseInt(userHash.substring(2, 6), 16) % 256;
+  
+  // Combine preserved and randomized parts
+  return `${prefix1}.${prefix2}.${anonymizedThird}.${anonymizedFourth}`;
 }
 
 module.exports = {
