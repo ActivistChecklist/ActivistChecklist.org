@@ -1,7 +1,6 @@
 const dotenv = require('dotenv');
 const cors = require('@fastify/cors');
 const helmet = require('@fastify/helmet');
-const rateLimit = require('@fastify/rate-limit');
 const contactRoutes = require('./contact');
 const counterRoutes = require('./counter');
 const subscribeRoutes = require('./subscribe');
@@ -27,11 +26,6 @@ async function app (fastify, opts) {
       includeSubDomains: true,
       preload: true
     }
-  });
-
-  await fastify.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 hour'
   });
 
   // Register CORS plugin

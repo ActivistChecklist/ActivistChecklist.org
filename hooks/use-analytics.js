@@ -1,8 +1,8 @@
 import { debugLog } from '@/contexts/DebugContext';
 import { isProd } from '@/utils/core';
 
-
-export const sendAnalytics = async (data= {}, endpoint = '/api-server/counter') => {
+// Need to not include a trailing slash in the endpoint (even though this cuases a redirect in development, it is what is needed in production)
+export const sendAnalytics = async (data = {}, endpoint = '/api-server/counter') => {
   // This allows us to turn logging back on in dev (which is disabled by default)
   const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_COUNTER === 'true';
   if (!isProd && !DEBUG_MODE) {
