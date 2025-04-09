@@ -67,34 +67,12 @@ const Contact = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <IoChatbubbleEllipsesOutline className="w-5 h-5" />
-                    Signal Group
-                  </CardTitle>
-                  <CardDescription>
-                    Message us on Signal through our group chat. Though we regularly remove members, others may see your messages.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <a 
-                    href="https://signal.group/#CjQKIMHMICdIKIjWfy-r8XOlRy9CBBMw5KGe5J4z9DmMgVa2EhDh4H3OFQxL7Jj3phBq5Ttd" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    Join Signal Group →
-                  </a>
-                </CardFooter>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
                     <IoKeyOutline className="w-5 h-5" />
                     Encrypted Email
                   </CardTitle>
                   <CardDescription>
                     Using Proton Mail? Your messages will be automatically encrypted.
-                    For other providers, you can use our PGP key.
+                    For other providers, you can use our PGP key. Or you can just email this address unencrypted.
                   </CardDescription>
                 </CardHeader>
                 <CardFooter className="flex-col items-start space-y-2">
