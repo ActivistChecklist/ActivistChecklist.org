@@ -9,12 +9,14 @@ import Page from "../components/pages/Page";
 import ChecklistItem from "../components/guides/ChecklistItem";
 import Guide, { SectionHeader } from "../components/guides/Guide";
 import ChecklistItemReference from "../components/guides/ChecklistItemReference";
+import ChecklistItemRef from "../components/guides/ChecklistItemRef";
 
 const components = {
   page: Page,
   guide: Guide,
   "checklist-item": ChecklistItem,
   "checklist-item-reference": ChecklistItemReference,
+  "checklist-item-ref": ChecklistItemRef,
   "section-header": SectionHeader,
 };
 

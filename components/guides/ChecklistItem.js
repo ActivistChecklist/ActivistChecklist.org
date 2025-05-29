@@ -10,7 +10,7 @@ import { Recommendations } from '@/components/guides/Recommendations'
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useAnalytics } from '@/hooks/use-analytics';
-
+import { randomUUID } from 'crypto';
 const InfoItemIcon = () => {
   return (
     <TooltipProvider>
@@ -39,14 +39,19 @@ const InfoItemIcon = () => {
 }
 
 const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
+  if (!blok) {
+    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: blok is undefined. Skipping');
+    return null;
+  }
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const { trackEvent } = useAnalytics();
   const hasTrackedExpansion = useRef(false);
-  const storageKey = `checklist-checked-${blok._uid}`;
-  const expandedStorageKey = `checklist-expanded-${blok._uid}`;
+  const storageKey = `checklist-checked-${blok?._uid || 111}`;
+  const expandedStorageKey = `checklist-expanded-${blok?._uid || 222}`;
   const checkedOpacity = 75;
-  
+
   const setExpandedWithStorage = (expanded) => {
     setIsExpanded(expanded);
     localStorage.setItem(expandedStorageKey, expanded);
@@ -86,7 +91,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
     // Cleanup listener
     return () => window.removeEventListener('hashchange', checkUrlHash);
-  }, [storageKey, expandedStorageKey, blok.slug, isChecked]);
+  }, [storageKey, expandedStorageKey, blok, isChecked]);
 
   // Handle expand/collapse trigger
   useEffect(() => {
