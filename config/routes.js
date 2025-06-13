@@ -4,17 +4,14 @@ export const ROUTES = {
     LIST: '/checklists',
     ESSENTIALS: '/essentials',
     PROTEST: '/protest',
+    TRAVEL: '/travel',
     ORGANIZER: '/organizing',
     SIGNAL: '/signal',
     RESEARCH: '/research',
     SECONDARY_PHONE: '/secondary',
     FEDERAL: '/federal',
   },
-  // RESOURCES: {
-  //   INDEX: '/list',
-  //   TOOLBOX: '/toolbox',
-  //   THREATS: '/threats'
-  // },
+  RESOURCES: '/resources',
   ABOUT: {
     INDEX: '/about',
     CONTACT: '/contact',
