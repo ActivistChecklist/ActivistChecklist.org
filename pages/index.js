@@ -151,15 +151,15 @@ const HomePage = () => {
                     </Link>
                   </Button>
                 </div>
-                <div className="mt-8 text-muted-foreground">
+                {/* <div className="mt-8 text-muted-foreground">
                   <span className="inline-flex items-baseline gap-1">
                     <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
-                    New:
+                    June 2025 update:
                   </span>{' '}
                   <Link href={ROUTES.CHECKLISTS.FEDERAL} className="hover:text-primary transition-colors">
                     Digital Security for Federal Workers
                   </Link>
-                </div>
+                </div> */}
               </div>
             </header>
           </div>
