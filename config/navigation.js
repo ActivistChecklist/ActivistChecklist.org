@@ -6,6 +6,7 @@ import {
   IoArrowForward,
   IoPeopleOutline,
   IoChatbubbleOutline,
+  IoAirplaneOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -36,6 +37,13 @@ export const NAV_ITEMS = {
     href: ROUTES.CHECKLISTS.PROTEST,
     description: "Digital security for anyone attending a protest.",
     icon: IoPeopleOutline
+  },
+  TRAVEL: {
+    key: 'travel',
+    title: "Travel & flight security",
+    href: ROUTES.CHECKLISTS.TRAVEL,
+    description: "Digital security practices for activists traveling.",
+    icon: IoAirplaneOutline
   },
   ORGANIZER: {
     key: 'organizer',
@@ -72,6 +80,13 @@ export const NAV_ITEMS = {
     description: "Digital security guidance for federal employees.",
     icon: Landmark
   },
+  RESOURCES: {
+    key: 'resources',
+    label: "Resources",
+    href: ROUTES.RESOURCES,
+    title: "Resources",
+    type: "link"
+  },
   ABOUT: {
     key: 'about',
     label: "About",
@@ -101,10 +116,11 @@ export const SECURITY_CHECKLISTS = {
   items: [
     NAV_ITEMS.SECURITY_ESSENTIALS,
     NAV_ITEMS.PROTEST_PREP,
+    NAV_ITEMS.SIGNAL,
+    NAV_ITEMS.TRAVEL,
+    NAV_ITEMS.SECONDARY_PHONE,
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
-    NAV_ITEMS.SECONDARY_PHONE,
-    NAV_ITEMS.SIGNAL,
     NAV_ITEMS.FEDERAL,
   ],
   footerLink: {
@@ -139,6 +155,7 @@ export const navigationConfig = {
   mainNav: [
     NAV_ITEMS.HOME,
     SECURITY_CHECKLISTS,
+    NAV_ITEMS.RESOURCES,
     ABOUT_SECTION
   ]
 }
@@ -151,6 +168,7 @@ export const footerConfig = {
       items: [
         NAV_ITEMS.HOME,
         NAV_ITEMS.SECURITY_ESSENTIALS,
+        NAV_ITEMS.RESOURCES,
         NAV_ITEMS.ABOUT,
         NAV_ITEMS.CONTACT,
         NAV_ITEMS.PRIVACY
