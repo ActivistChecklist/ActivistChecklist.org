@@ -179,4 +179,4 @@ will be rendered as:
 This repository uses dual licensing:
 
 - All source code is licensed under the [GNU General Public License v3.0](LICENSE-CODE)
-- All content, images, and other non-code assets are licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International license](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+- All content, images, and other non-code assets are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International license](https://creativecommons.org/licenses/by-sa/4.0/)

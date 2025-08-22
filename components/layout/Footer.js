@@ -37,10 +37,10 @@ export function Footer() {
           <p>
             Content available under{' '}
             <Link
-              href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+              href="https://creativecommons.org/licenses/by-sa/4.0/"
               className="hover:text-gray-800 underline underline-offset-2"
             >
-              Creative Commons BY-NC-SA
+              Creative Commons BY-SA
             </Link>.{' '}
             See our <Link
               href="/about/#sources"
