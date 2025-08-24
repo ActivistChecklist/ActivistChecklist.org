@@ -9,8 +9,17 @@ import Markdown from '../Markdown';
 import { Recommendations } from '@/components/guides/Recommendations'
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useAnalytics } from '@/hooks/use-analytics';
 import { randomUUID } from 'crypto';
+// Dictionary mapping title badge types to Badge components
+const TITLE_BADGE_TYPES = {
+  important: {
+    label: "Important",
+    variant: "destructive"
+  }
+};
+
 const InfoItemIcon = () => {
   return (
     <TooltipProvider>
@@ -195,6 +204,28 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 id={blok.slug}
                 data-slug={blok.slug} 
               >
+                {/* Render title badges inline at the beginning */}
+                {blok.title_badges && blok.title_badges.length > 0 && (
+                  <>
+                    {blok.title_badges.map((badgeType, index) => {
+                      const badgeConfig = TITLE_BADGE_TYPES[badgeType];
+                      if (!badgeConfig) return null;
+                      
+                      return (
+                        <Badge 
+                          key={index}
+                          variant={badgeConfig.variant}
+                          className={cn(
+                            "text-xs inline mr-2 align-middle",
+                            isChecked && "opacity-50"
+                          )}
+                        >
+                          {badgeConfig.label}
+                        </Badge>
+                      );
+                    })}
+                  </>
+                )}
                 {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
                 {/* <Markdown inlineOnly={true} content={blok.title} /> */}
                 {blok.title}
