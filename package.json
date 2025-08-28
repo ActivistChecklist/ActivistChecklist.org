@@ -2,7 +2,7 @@
   "name": "activistchecklist",
   "version": "1.0.0",
   "description": "ActivistChecklist.org",
-  "license": "GNU GPLv3",
+  "license": "GPL-3.0",
   "private": true,
   "scripts": {
     "dev": "concurrently -n \"API,PROXY,NEXT\" -c \"blue,yellow,green\" \"NODE_NO_WARNINGS=1 yarn api:dev\" \"NODE_NO_WARNINGS=1 local-ssl-proxy --source 3001 --target 3000\" \"yarn next dev\"",

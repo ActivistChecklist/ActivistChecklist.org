@@ -108,13 +108,23 @@ The API server is configured with PM2's ecosystem config (`ecosystem.config.js`)
 - Restarts if memory usage exceeds 500MB
 - Survives system reboots (after running `pm2 startup` and `pm2 save`)
 
-**First-time Setup for System Reboots:**
+**Optional: Auto-start after System Reboots (requires sudo access):**
+
+*Note: This only works if you have sudo/root access (not available on most shared hosting):*
 
 ```bash
-pm2 startup          # Follow the instructions this command provides
+pm2 startup          # Follow the instructions this command provides (requires sudo)
 yarn api:start       # Start your API server
 pm2 save             # Save the current process list
 ```
+
+**What happens if you skip this "auto-start after system reboots" setup:**
+
+- ✅ **Crash protection still works** - PM2 will auto-restart on crashes, memory issues, etc.
+- ❌ **Manual restart needed** - After server reboots, you'll need to manually run `yarn api:start`
+- ℹ️ **Most shared hosting** doesn't allow sudo anyway, so this is the normal setup
+
+*For shared hosting or if you can't run sudo: Simply run `yarn api:start` after any server restarts.*
 
 The API server runs on port 4321 by default (configurable via `API_PORT` environment variable) and is accessible at `/api-server/*` routes.
 
