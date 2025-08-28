@@ -75,7 +75,7 @@ yarn api:start
 You can test that it's working locally with:
 
 ```bash
-curl http://localhost:4321/api/hello
+curl http://localhost:4321/api-server/hello
 ```
 
 You'll need to configure your server to proxy API requests to the Node server. If you're using Apache, you can add these lines to your Apache configuration:
@@ -88,6 +88,43 @@ ProxyPassReverse /api-server http://localhost:4321/api-server
 This server side API needs to run in production (in our case, a LAMP server).
 
 Separately, we need to use the built-in Next.js API routes for a staging deployment on a service like Vercel so we can use Storyblok's preview mode to allow for inline editing and previews of draft content.
+
+### Interacting with API server
+
+You can interact with the API server using the following yarn commands:
+
+- `yarn api:start` - Start the API server using PM2 with auto-restart configuration
+- `yarn api:stop` - Stop the running API server
+- `yarn api:restart` - Restart the API server
+- `yarn api:status` - Check the current status of the API server
+- `yarn api:delete` - Delete the API server process from PM2
+- `yarn api:logs` - View the API server logs
+
+**Auto-Restart Features:**
+The API server is configured with PM2's ecosystem config (`ecosystem.config.js`) for robust production deployment:
+
+- Automatically restarts on crashes or unexpected exits
+- Uses exponential backoff to prevent restart storms
+- Restarts if memory usage exceeds 500MB
+- Survives system reboots (after running `pm2 startup` and `pm2 save`)
+
+**Auto-start after reboot:**
+
+If you can't use sudo but have cron access, you can set up a cron job to auto-restart after reboots and monitor the API. This will check every 5 minutes if the API is running and restart it if needed.
+
+1. Open your crontab:
+
+   ```bash
+   crontab -e
+   ```
+
+2. Add this line (replace with your actual path):
+
+   ```bash
+   */5 * * * * cd /your/full/path/to/ActivistChecklist.org && yarn api:status 2>/dev/null | grep -q "online" || yarn api:start
+   ```
+
+The API server runs on port 4321 by default (configurable via `API_PORT` environment variable) and is accessible at `/api-server/*` routes.
 
 ### Building, uploading, running
 
