@@ -75,7 +75,7 @@ yarn api:start
 You can test that it's working locally with:
 
 ```bash
-curl http://localhost:4321/api/hello
+curl http://localhost:4321/api-server/hello
 ```
 
 You'll need to configure your server to proxy API requests to the Node server. If you're using Apache, you can add these lines to your Apache configuration:
@@ -88,6 +88,35 @@ ProxyPassReverse /api-server http://localhost:4321/api-server
 This server side API needs to run in production (in our case, a LAMP server).
 
 Separately, we need to use the built-in Next.js API routes for a staging deployment on a service like Vercel so we can use Storyblok's preview mode to allow for inline editing and previews of draft content.
+
+### Interacting with API server
+
+You can interact with the API server using the following yarn commands:
+
+- `yarn api:start` - Start the API server using PM2 with auto-restart configuration
+- `yarn api:stop` - Stop the running API server
+- `yarn api:restart` - Restart the API server
+- `yarn api:status` - Check the current status of the API server
+- `yarn api:delete` - Delete the API server process from PM2
+- `yarn api:logs` - View the API server logs
+
+**Auto-Restart Features:**
+The API server is configured with PM2's ecosystem config (`ecosystem.config.js`) for robust production deployment:
+
+- Automatically restarts on crashes or unexpected exits
+- Uses exponential backoff to prevent restart storms
+- Restarts if memory usage exceeds 500MB
+- Survives system reboots (after running `pm2 startup` and `pm2 save`)
+
+**First-time Setup for System Reboots:**
+
+```bash
+pm2 startup          # Follow the instructions this command provides
+yarn api:start       # Start your API server
+pm2 save             # Save the current process list
+```
+
+The API server runs on port 4321 by default (configurable via `API_PORT` environment variable) and is accessible at `/api-server/*` routes.
 
 ### Building, uploading, running
 

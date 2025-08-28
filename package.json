@@ -22,7 +22,7 @@
     "deploy": "yarn buildstatic && source .env && upload",
     "release": "yarn storyblockexportcontent && git checkout main && git commit -am \"Content update: $(date '+%Y-%m-%d %H:%M:%S')\" && git push && yarn deploy",
     "api:dev": "source .env && fastify start --watch --ignore-watch '.git node_modules out .next content public scripts utils styles pages config compontents' --log-level info --pretty-logs --port ${API_PORT:-4321} api/server.js",
-    "api:start": "yarn run pm2 start api/start.js --name ac-api",
+    "api:start": "yarn run pm2 start ecosystem.config.js",
     "api:stop": "yarn run pm2 stop ac-api",
     "api:restart": "yarn run pm2 restart ac-api",
     "api:status": "yarn run pm2 status ac-api",
