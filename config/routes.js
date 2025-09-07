@@ -12,6 +12,7 @@ export const ROUTES = {
     FEDERAL: '/federal',
   },
   RESOURCES: '/resources',
+  MOVIES: '/movies',
   ABOUT: {
     INDEX: '/about',
     CONTACT: '/contact',
