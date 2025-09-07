@@ -80,6 +80,12 @@ export const NAV_ITEMS = {
     description: "Digital security guidance for federal employees.",
     icon: Landmark
   },
+  MOVIES: {
+    key: 'movies',
+    label: "Movies, books, & podcasts",
+    href: ROUTES.MOVIES,
+    title: "Movies, books, & podcasts"
+  },
   RESOURCES: {
     key: 'resources',
     label: "Resources",
@@ -133,6 +139,17 @@ export const SECURITY_CHECKLISTS = {
   }
 }
 
+export const RESOURCES_SECTION = {
+  key: 'resources-section',
+  label: "Resources",
+  href: ROUTES.RESOURCES,
+  type: "dropdown",
+  items: [
+    NAV_ITEMS.MOVIES,
+    NAV_ITEMS.RESOURCES
+  ]
+}
+
 export const ABOUT_SECTION = {
   key: 'about-section',
   label: "About",
@@ -155,7 +172,7 @@ export const navigationConfig = {
   mainNav: [
     NAV_ITEMS.HOME,
     SECURITY_CHECKLISTS,
-    NAV_ITEMS.RESOURCES,
+    RESOURCES_SECTION,
     ABOUT_SECTION
   ]
 }
@@ -168,6 +185,7 @@ export const footerConfig = {
       items: [
         NAV_ITEMS.HOME,
         NAV_ITEMS.SECURITY_ESSENTIALS,
+        NAV_ITEMS.MOVIES,
         NAV_ITEMS.RESOURCES,
         NAV_ITEMS.ABOUT,
         NAV_ITEMS.CONTACT,
