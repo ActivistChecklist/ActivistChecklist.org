@@ -13,7 +13,7 @@ program
   .option('-m, --mode <mode>', 'Export mode: content, images, or all', 'all')
   .option('-v, --verbose', 'Show detailed progress', false)
   .option('-c, --content <dir>', 'Content output directory', './content')
-  .option('-i, --images <dir>', 'Images output directory', './public/images')
+  .option('-i, --images <dir>', 'Images output directory', './out/images')
   .option('-d, --draft', 'Export draft versions instead of published', false)
   .option('-y, --yaml', 'Also export content as YAML', false)
   .parse(process.argv)

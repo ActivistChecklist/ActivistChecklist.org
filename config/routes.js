@@ -13,6 +13,7 @@ export const ROUTES = {
   },
   RESOURCES: '/resources',
   MOVIES: '/movies',
+  POLICE_DOOR_POSTER: '/police',
   ABOUT: {
     INDEX: '/about',
     CONTACT: '/contact',

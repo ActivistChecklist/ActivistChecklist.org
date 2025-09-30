@@ -375,13 +375,12 @@ a {
 
 
     /* Links */
-    a {
+    a:not(.button) {
       @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
     }
 
     /* Make links in tools/stop sections inherit font weight */
-    .prose a,
-    .prose a {
+    .prose a:not(.button) {
       font-weight: inherit;
     }
 

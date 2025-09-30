@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ProtectionBadge } from "@/components/guides/ProtectionBadge";
 import { cn } from "@/lib/utils";
 import CopyButton from "@/components/CopyButton";
+import ButtonEmbed from "@/components/ButtonEmbed";
+
 const INLINE_COMPONENTS = {
   Badge,
   ProtectionBadge,
@@ -93,6 +95,9 @@ const blokResolvers = {
     },
     how_to: (props) => {
       return <HowTo blok={props} {...props} />;
+    },
+    button: (props) => {
+      return <ButtonEmbed {...props} className={`my-2 mr-2 ${props.className || ''}`} />;
     }
 }
 
