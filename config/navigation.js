@@ -93,6 +93,13 @@ export const NAV_ITEMS = {
     title: "Resources",
     type: "link"
   },
+  POLICE_DOOR_POSTER: {
+    key: 'police-door-poster',
+    label: "\"Police at the door\" poster",
+    href: ROUTES.POLICE_DOOR_POSTER,
+    title: "Police at the door poster",
+    type: "link"
+  },
   ABOUT: {
     key: 'about',
     label: "About",
@@ -146,7 +153,8 @@ export const RESOURCES_SECTION = {
   type: "dropdown",
   items: [
     NAV_ITEMS.MOVIES,
-    NAV_ITEMS.RESOURCES
+    NAV_ITEMS.POLICE_DOOR_POSTER,
+    NAV_ITEMS.RESOURCES,
   ]
 }
 

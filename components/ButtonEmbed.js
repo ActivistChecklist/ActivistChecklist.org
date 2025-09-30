@@ -21,7 +21,7 @@ const DynamicIcon = ({ iconName, className, ...props }) => {
 };
 
 export const ButtonEmbed = (props) => {
-  const { title, url, variant, size, className, icon, iconPosition } = props;
+  const { title, url, variant, size, className, icon, iconPosition, download } = props;
   
   // Extract the actual URL and target from the url object
   const href = url?.cached_url || url?.url || '#';
@@ -41,6 +41,7 @@ export const ButtonEmbed = (props) => {
         href={href}
         target={target}
         rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+        {...(download && { download: '' })}
       >
         {iconElement && position === 'left' && iconElement}
         {title}
