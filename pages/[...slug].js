@@ -222,17 +222,19 @@ export async function getStaticProps({ params, preview = false }) {
 
 export async function getStaticPaths() {
   const storyblokApi = getStoryblokApi();
-  let { data } = await storyblokApi.get("cdn/links/", {
-    version: getStoryblokVersion()
+  let { data } = await storyblokApi.get("cdn/stories", {
+    version: getStoryblokVersion(),
+    excluding_fields: 'body,blocks,content'
   });
 
   let paths = [];
-  Object.keys(data.links).forEach((linkKey) => {
-    if (data.links[linkKey].is_folder || data.links[linkKey].slug === "home") {
+  data.stories.forEach((story) => {
+    // Skip folders, home page, and anything in the checklist-items folder
+    if (story.is_folder || story.slug === "home" || story.full_slug.startsWith("checklist-items/")) {
       return;
     }
 
-    const slug = data.links[linkKey].slug;
+    const slug = story.full_slug;
     let splittedSlug = slug.split("/");
 
     paths.push({ params: { slug: splittedSlug } });

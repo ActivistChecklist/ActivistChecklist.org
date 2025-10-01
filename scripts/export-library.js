@@ -148,9 +148,12 @@ export default class SbExport {
     try {
       // Fetch phase
       logger.info('\n📡 Fetching content...')
-      const stories = await this.sbClient.getAll('cdn/stories', {
+      const allStories = await this.sbClient.getAll('cdn/stories', {
         version: this.version
       })
+      
+      // Filter out stories in the checklist-items folder
+      const stories = allStories.filter(story => !story.full_slug.startsWith('checklist-items/'))
       logger.success(`Found ${stories.length} stories (${this.version} version)`)
 
       // Only write files if writeFiles is true
