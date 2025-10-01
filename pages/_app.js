@@ -10,6 +10,8 @@ import ChecklistItem from "../components/guides/ChecklistItem";
 import Guide, { SectionHeader } from "../components/guides/Guide";
 import ChecklistItemReference from "../components/guides/ChecklistItemReference";
 import ChecklistItemRef from "../components/guides/ChecklistItemRef";
+import ChangeLogEntry from "../components/ChangeLogEntry";
+import ChangeLogRecentEntries from "../components/ChangeLogRecentEntries";
 
 const components = {
   page: Page,
@@ -18,6 +20,8 @@ const components = {
   "checklist-item-reference": ChecklistItemReference,
   "checklist-item-ref": ChecklistItemRef,
   "section-header": SectionHeader,
+  "changelog-entry": ChangeLogEntry,
+  "changelog-recent-entries": ChangeLogRecentEntries,
 };
 
 storyblokInit({
