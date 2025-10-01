@@ -111,7 +111,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = () => {
+const HomePage = ({ changelogEntries = [] }) => {
   return (
     <div>
       <Head>
@@ -205,7 +205,7 @@ const HomePage = () => {
           {/* Recent Updates */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6">Recent Updates</h2>
-            <ChangeLogRecentEntries />
+            <ChangeLogRecentEntries entries={changelogEntries} />
           </section>
 
         </div>
@@ -213,5 +213,46 @@ const HomePage = () => {
     </div>
   );
 };
+
+export async function getStaticProps() {
+  try {
+    const { getStoryblokApi } = await import('@storyblok/react');
+    const { getStoryblokVersion } = await import('../utils/core');
+    
+    const storyblokApi = getStoryblokApi();
+    
+    const { data } = await storyblokApi.get('cdn/stories', {
+      version: getStoryblokVersion(),
+      filter_query: {
+        component: {
+          in: "changelog-entry"
+        }
+      },
+      sort_by: 'first_published_at:desc',
+      per_page: 5,
+      excluding_fields: 'blocks'
+    });
+
+    // Sort by first_published_at or created_at as fallback, newest first
+    const sortedEntries = (data.stories || []).sort((a, b) => {
+      const dateA = new Date(a.first_published_at || a.created_at);
+      const dateB = new Date(b.first_published_at || b.created_at);
+      return dateB - dateA; // Newest first
+    });
+
+    return {
+      props: {
+        changelogEntries: sortedEntries
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching changelog entries:', error);
+    return {
+      props: {
+        changelogEntries: []
+      }
+    };
+  }
+}
 
 export default HomePage;
