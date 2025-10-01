@@ -88,13 +88,13 @@ async function generateRSSFeed() {
       });
     });
 
-    // Write RSS file to public directory (gets copied to root in static export)
-    const publicDir = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
+    // Write RSS file to out directory (final static export destination)
+    const outDir = path.join(process.cwd(), 'out');
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
     }
     
-    const rssPath = path.join(publicDir, 'rss.xml');
+    const rssPath = path.join(outDir, 'rss.xml');
     fs.writeFileSync(rssPath, feed.rss2());
     
     console.log(`✅ RSS feed generated with ${sortedEntries.length} entries: ${rssPath}`);
