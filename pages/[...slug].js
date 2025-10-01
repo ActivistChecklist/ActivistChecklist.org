@@ -227,10 +227,31 @@ export async function getStaticPaths() {
     excluding_fields: 'body,blocks,content'
   });
 
+  // Define folders that should be excluded from static path generation
+  const excludedFolders = [
+    'checklist-items/',
+    'changelog-entries/'
+  ];
+
+  // Define specific slugs to exclude
+  const excludedSlugs = [
+    'home'
+  ];
+
   let paths = [];
   data.stories.forEach((story) => {
-    // Skip folders, home page, and anything in the checklist-items folder
-    if (story.is_folder || story.slug === "home" || story.full_slug.startsWith("checklist-items/")) {
+    // Skip folders
+    if (story.is_folder) {
+      return;
+    }
+
+    // Skip excluded slugs
+    if (excludedSlugs.includes(story.slug)) {
+      return;
+    }
+
+    // Skip stories in excluded folders
+    if (excludedFolders.some(folder => story.full_slug.startsWith(folder))) {
       return;
     }
 

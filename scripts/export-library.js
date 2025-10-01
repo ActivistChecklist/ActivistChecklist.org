@@ -21,7 +21,7 @@ export default class SbExport {
 
     // Define how different components should be handled
     this.componentTypes = {
-      yamlNested: new Set(['guide', 'page', 'section-header', 'checklist-item']),
+      yamlNested: new Set(['guide', 'page', 'section-header', 'checklist-item', 'changelog-entry']),
       markdown: new Set(['rich-text', 'markdown']),
       jsx: new Set(['Alert', 'Badge'])
     }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '../config/routes'
 import { SECURITY_CHECKLISTS } from '../config/navigation';
+import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 
 const HERO_CONTENT = {
   title: "Digital Security Checklists for Activists",
@@ -199,6 +200,12 @@ const HomePage = () => {
                 <ConcernCard key={index} {...concern} />
               ))}
             </div>
+          </section>
+
+          {/* Recent Updates */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Recent Updates</h2>
+            <ChangeLogRecentEntries />
           </section>
 
         </div>
