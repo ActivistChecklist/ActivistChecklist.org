@@ -68,7 +68,7 @@ export const NAV_ITEMS = {
   },
   SIGNAL: {
     key: 'signal',
-    title: "Signal Security Checklist",
+    title: "Signal security checklist",
     href: ROUTES.CHECKLISTS.SIGNAL,
     description: "Secure your Signal messaging app for safer communications.",
     icon: IoChatbubbleOutline
@@ -117,6 +117,12 @@ export const NAV_ITEMS = {
     label: "Privacy",
     href: ROUTES.ABOUT.PRIVACY,
     title: "Privacy"
+  },
+  CHANGELOG: {
+    key: 'changelog',
+    label: "Recent site updates",
+    href: ROUTES.CHANGELOG,
+    title: "Recent site updates"
   }
 }
 
@@ -165,6 +171,7 @@ export const ABOUT_SECTION = {
   type: "dropdown",
   items: [
     NAV_ITEMS.ABOUT,
+    NAV_ITEMS.CHANGELOG,
     NAV_ITEMS.CONTACT,
     NAV_ITEMS.PRIVACY
   ]
