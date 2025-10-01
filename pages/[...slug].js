@@ -230,7 +230,7 @@ export async function getStaticPaths() {
   // Define folders that should be excluded from static path generation
   const excludedFolders = [
     'checklist-items/',
-    'changelog-entries/'
+    'changelog/'
   ];
 
   // Define specific slugs to exclude
