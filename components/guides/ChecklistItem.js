@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import { storyblokEditable } from '@storyblok/react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { Recommendations } from '@/components/guides/Recommendations'
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAnalytics } from '@/hooks/use-analytics';
 import { randomUUID } from 'crypto';
 // Dictionary mapping title badge types to Badge components
@@ -57,6 +58,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
   const [isChecked, setIsChecked] = useState(false);
   const { trackEvent } = useAnalytics();
   const hasTrackedExpansion = useRef(false);
+  const cardRef = useRef(null);
   const storageKey = `checklist-checked-${blok?._uid || 111}`;
   const expandedStorageKey = `checklist-expanded-${blok?._uid || 222}`;
   const checkedOpacity = 75;
@@ -124,7 +126,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     }
   };
 
-  const handleCheckboxChange = async (checked) => {
+  const handleCheckboxChange = async (checked, shouldCollapseAfterDelay = false) => {
     setCheckedWithStorage(checked);
 
     if (checked) {
@@ -135,6 +137,24 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
           item_id: window.location.pathname + "#" + blok.slug,
         }
       });
+
+      // If requested, collapse after a delay to show completion state briefly
+      if (shouldCollapseAfterDelay && isExpanded) {
+
+        // Scroll to keep the collapsed item visible at the top with buffer
+        if (cardRef.current) {
+          const headerHeight = 80; // Approximate header/nav height buffer
+          const cardTop = cardRef.current.getBoundingClientRect().top + window.scrollY;
+          const targetScrollPosition = cardTop - headerHeight;
+          
+          window.scrollTo({
+            top: Math.max(0, targetScrollPosition),
+            behavior: 'smooth'
+          });
+        }
+
+        setExpandedWithStorage(false);
+      }
     }
   };
 
@@ -147,6 +167,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
   return (
     <Card
+      ref={cardRef}
       {...(editable ? storyblokEditable(blok) : {})}
       className={cn(
         "checklist-item group/checklist-item",
@@ -281,6 +302,41 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
               }
             ]} />
             <RichText document={blok.body} />
+            
+            {/* Mark as done button row */}
+            {blok.type !== 'info' && (
+              <div className={cn(
+                "pt-4 border-muted-foreground/20",
+                "flex flex-col sm:flex-row items-start sm:items-center gap-3",
+                "w-full"
+              )}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCheckboxChange(!isChecked, !isChecked); // Collapse after delay only when marking as done
+                  }}
+                  className={cn(
+                    "flex items-center justify-center sm:justify-start gap-3 transition-all duration-300",
+                    "w-full sm:w-auto sm:min-w-[140px] py-3 sm:py-2",
+                    // Primary outline styling for unchecked state
+                    !isChecked && "border-primary text-primary hover:bg-primary/10 hover:text-primary hover:border-primary",
+                    // Primary filled styling for checked state
+                    isChecked && "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:border-primary hover:text-primary-foreground"
+                  )}
+                >
+                  <Check className={cn(
+                    "h-4 w-4 transition-all duration-300 font-bold stroke-[3]",
+                    // Unchecked state - primary checkmark
+                    !isChecked && "text-primary",
+                    // Checked state - primary-foreground checkmark
+                    isChecked && "text-primary-foreground"
+                  )} />
+                  {isChecked ? "Completed" : "Mark as done"}
+                </Button>
+              </div>
+            )}
           </CardContent>
           </div>
         </div>
