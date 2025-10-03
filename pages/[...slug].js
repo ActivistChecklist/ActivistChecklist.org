@@ -228,10 +228,12 @@ export async function getStaticPaths() {
   });
 
   // Define folders that should be excluded from static path generation
-  const excludedFolders = [
+  // Only exclude these folders in static builds, allow them in development/Vercel
+  const isStaticBuild = process.env.BUILD_MODE === 'static';
+  const excludedFolders = isStaticBuild ? [
     'checklist-items/',
     'changelog/'
-  ];
+  ] : [];
 
   // Define specific slugs to exclude
   const excludedSlugs = [
