@@ -152,15 +152,22 @@ const HomePage = ({ changelogEntries = [] }) => {
                     </Link>
                   </Button>
                 </div>
-                {/* <div className="mt-8 text-muted-foreground">
+                <div className="mt-8 text-muted-foreground">
                   <span className="inline-flex items-baseline gap-1">
                     <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
-                    June 2025 update:
+                    New in October 2025:
                   </span>{' '}
-                  <Link href={ROUTES.CHECKLISTS.FEDERAL} className="hover:text-primary transition-colors">
-                    Digital Security for Federal Workers
+                  <Link href={ROUTES.CHECKLISTS.SPYWARE} className="hover:text-primary transition-colors">
+                    Protecting Against Spyware
+                  </Link>{' '}checklist •{' '}
+                  <Link href={ROUTES.MOVIES} className="hover:text-primary transition-colors">
+                    Movies and books about surveillance
                   </Link>
-                </div> */}
+                  {' '}• And a {' '}
+                  <Link href={ROUTES.POLICE_DOOR_POSTER} className="hover:text-primary transition-colors">
+                    "Police at the Door" printable poster
+                  </Link>
+                </div> 
               </div>
             </header>
           </div>
