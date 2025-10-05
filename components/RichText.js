@@ -17,29 +17,105 @@ const INLINE_COMPONENTS = {
 };
 
 const parseClasses = (text) => {
-  // Parse classes like {className}text{/}
-  const regex = /\{([^}]+)\}(.*?)\{\/\}/g;
-  let lastIndex = 0;
+  // Parse classes like {className}text{/} with support for nested braces
   const elements = [];
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      elements.push(text.slice(lastIndex, match.index));
+  let i = 0;
+  
+  while (i < text.length) {
+    const openBraceIndex = text.indexOf('{', i);
+    
+    if (openBraceIndex === -1) {
+      // No more opening braces, add the rest of the text
+      if (i < text.length) {
+        elements.push(text.slice(i));
+      }
+      break;
     }
-
-    const [_, className, content] = match;
+    
+    // Add text before the opening brace
+    if (openBraceIndex > i) {
+      elements.push(text.slice(i, openBraceIndex));
+    }
+    
+    // Find the matching closing brace for the className
+    let classNameEnd = openBraceIndex + 1;
+    let braceCount = 1;
+    
+    while (classNameEnd < text.length && braceCount > 0) {
+      if (text[classNameEnd] === '{') {
+        braceCount++;
+      } else if (text[classNameEnd] === '}') {
+        braceCount--;
+      }
+      classNameEnd++;
+    }
+    
+    if (braceCount > 0) {
+      // Unmatched opening brace, treat as literal text
+      elements.push(text[openBraceIndex]);
+      i = openBraceIndex + 1;
+      continue;
+    }
+    
+    const className = text.slice(openBraceIndex + 1, classNameEnd - 1);
+    
+    // Find the matching closing {/} tag by tracking nesting level
+    let closingTagIndex = -1;
+    let nestingLevel = 1; // We're inside one tag already
+    let searchIndex = classNameEnd;
+    
+    while (searchIndex < text.length && nestingLevel > 0) {
+      const nextOpenIndex = text.indexOf('{', searchIndex);
+      const nextCloseIndex = text.indexOf('{/}', searchIndex);
+      
+      // If no more closing tags, we're done (unmatched)
+      if (nextCloseIndex === -1) {
+        break;
+      }
+      
+      // If there's an opening tag before the next closing tag, it's a nested opening
+      if (nextOpenIndex !== -1 && nextOpenIndex < nextCloseIndex) {
+        // Check if this is a class tag (has a closing brace after it)
+        const possibleClassEnd = text.indexOf('}', nextOpenIndex + 1);
+        if (possibleClassEnd !== -1 && possibleClassEnd < nextCloseIndex) {
+          nestingLevel++;
+          searchIndex = possibleClassEnd + 1;
+        } else {
+          searchIndex = nextOpenIndex + 1;
+        }
+      } else {
+        // This is a closing tag
+        nestingLevel--;
+        if (nestingLevel === 0) {
+          closingTagIndex = nextCloseIndex;
+        }
+        searchIndex = nextCloseIndex + 3; // Move past {/}
+      }
+    }
+    
+    if (closingTagIndex === -1) {
+      // No matching closing tag found, treat as literal text
+      elements.push(text.slice(openBraceIndex, classNameEnd));
+      i = classNameEnd;
+      continue;
+    }
+    
+    // Extract content between className} and {/}
+    const content = text.slice(classNameEnd, closingTagIndex);
+    
+    // Recursively parse the content for nested tags
+    const parsedContent = parseClasses(content);
+    
     elements.push(
-      React.createElement('span', { className, key: match.index }, content)
+      React.createElement('span', { 
+        className, 
+        key: `${openBraceIndex}-${closingTagIndex}` 
+      }, parsedContent)
     );
-
-    lastIndex = regex.lastIndex;
+    
+    i = closingTagIndex + 3; // Move past {/}
   }
-
-  if (lastIndex < text.length) {
-    elements.push(text.slice(lastIndex));
-  }
-
+  
   return elements.length === 0 ? text : elements;
 };
 
