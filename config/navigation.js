@@ -7,6 +7,7 @@ import {
   IoPeopleOutline,
   IoChatbubbleOutline,
   IoAirplaneOutline,
+  IoEyeOffOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -45,6 +46,27 @@ export const NAV_ITEMS = {
     description: "Digital security practices for activists traveling.",
     icon: IoAirplaneOutline
   },
+  SIGNAL: {
+    key: 'signal',
+    title: "Signal security checklist",
+    href: ROUTES.CHECKLISTS.SIGNAL,
+    description: "Secure your Signal messaging app for safer communications.",
+    icon: IoChatbubbleOutline
+  },
+  SECONDARY_PHONE: {
+    key: 'secondary-phone',
+    title: "Secondary phone",
+    href: ROUTES.CHECKLISTS.SECONDARY_PHONE,
+    description: "Set up an extra phone for activism and protests.",
+    icon: IoPhonePortraitOutline
+  },
+  SPYWARE: {
+    key: 'spyware',
+    title: "Spyware protection",
+    href: ROUTES.CHECKLISTS.SPYWARE,
+    description: "Protect yourself from spyware and surveillance software.",
+    icon: IoEyeOffOutline
+  },
   ORGANIZER: {
     key: 'organizer',
     title: "Action organizer checklist",
@@ -58,20 +80,6 @@ export const NAV_ITEMS = {
     href: ROUTES.CHECKLISTS.RESEARCH,
     description: "How to conduct research and browse the web anonymously.",
     icon: IoGlobeOutline
-  },
-  SECONDARY_PHONE: {
-    key: 'secondary-phone',
-    title: "Secondary phone",
-    href: ROUTES.CHECKLISTS.SECONDARY_PHONE,
-    description: "Set up an extra phone for activism and protests.",
-    icon: IoPhonePortraitOutline
-  },
-  SIGNAL: {
-    key: 'signal',
-    title: "Signal security checklist",
-    href: ROUTES.CHECKLISTS.SIGNAL,
-    description: "Secure your Signal messaging app for safer communications.",
-    icon: IoChatbubbleOutline
   },
   FEDERAL: {
     key: 'federal',
@@ -138,6 +146,7 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.SIGNAL,
     NAV_ITEMS.TRAVEL,
     NAV_ITEMS.SECONDARY_PHONE,
+    NAV_ITEMS.SPYWARE,
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
     NAV_ITEMS.FEDERAL,

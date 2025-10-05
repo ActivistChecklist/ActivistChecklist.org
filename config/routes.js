@@ -7,6 +7,7 @@ export const ROUTES = {
     TRAVEL: '/travel',
     ORGANIZER: '/organizing',
     SIGNAL: '/signal',
+    SPYWARE: '/spyware',
     RESEARCH: '/research',
     SECONDARY_PHONE: '/secondary',
     FEDERAL: '/federal',
