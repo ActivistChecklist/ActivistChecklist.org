@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card"
-import { getStoryblokVersion } from "@/utils/core";
+import { getStoryblokVersion, fetchAllStories } from "@/utils/core";
 import { RichText } from '@/components/RichText';
 import { ROUTES } from '../config/routes'
 
@@ -57,7 +57,9 @@ const GuideList = ({ blok, guides }) => {
 
 export async function getStaticProps() {
   const storyblokApi = getStoryblokApi();
-  const { data } = await storyblokApi.get(`cdn/stories`, {
+  
+  // Fetch all guides with pagination support
+  const allStories = await fetchAllStories(storyblokApi, {
     version: getStoryblokVersion(),
     filter_query: {
       component: {
@@ -68,7 +70,7 @@ export async function getStaticProps() {
     resolve_links: 'url'
   });
 
-  const guides = data.stories.map((guide) => {
+  const guides = allStories.map((guide) => {
     guide.content.slug = guide.slug;
     return guide;
   });

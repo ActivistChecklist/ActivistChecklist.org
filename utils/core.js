@@ -63,3 +63,58 @@ export const slugify = (text, config = {}) => {
 
   return slug;
 };
+
+/**
+ * Fetch all stories from Storyblok with pagination support
+ * @param {Object} storyblokApi - The Storyblok API instance
+ * @param {Object} options - Query options (version, excluding_fields, etc.)
+ * @returns {Promise<Array>} Array of all stories
+ */
+export const fetchAllStories = async (storyblokApi, options = {}) => {
+  let allStories = [];
+  let page = 1;
+  let hasMore = true;
+  
+  const baseOptions = {
+    per_page: 100, // Maximum allowed per request
+    ...options
+  };
+  
+  while (hasMore) {
+    const { data } = await storyblokApi.get("cdn/stories", {
+      ...baseOptions,
+      page: page
+    });
+    
+    if (data?.stories?.length > 0) {
+      allStories = allStories.concat(data.stories);
+      
+      // If we got less than 100 stories, we've reached the end
+      hasMore = data.stories.length === 100;
+      page++;
+    } else {
+      hasMore = false;
+    }
+  }
+  
+  return allStories;
+};
+
+/**
+ * Fetch all changelog entries from Storyblok with pagination support
+ * @param {Object} storyblokApi - The Storyblok API instance
+ * @param {Object} options - Additional query options (version, sort_by, etc.)
+ * @returns {Promise<Array>} Array of all changelog entries
+ */
+export const fetchAllChangelogEntries = async (storyblokApi, options = {}) => {
+  return fetchAllStories(storyblokApi, {
+    filter_query: {
+      component: {
+        in: "changelog-entry"
+      }
+    },
+    sort_by: 'first_published_at:desc',
+    excluding_fields: 'blocks',
+    ...options
+  });
+};
