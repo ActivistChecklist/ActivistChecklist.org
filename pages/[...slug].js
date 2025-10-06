@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Layout from "../components/layout/Layout";
-import { getStoryblokVersion, getRevalidate } from "../utils/core";
+import { getStoryblokVersion, getRevalidate, fetchAllStories } from "../utils/core";
 import {
   useStoryblokState,
   getStoryblokApi,
@@ -95,7 +95,6 @@ export async function getStaticProps({ params, preview = false }) {
     version: getStoryblokVersion(preview),
     resolve_relations: 'checklist-item-ref.reference_item'
   });
-
 
   if (!data?.story) {
     return { notFound: true };
@@ -222,7 +221,9 @@ export async function getStaticProps({ params, preview = false }) {
 
 export async function getStaticPaths() {
   const storyblokApi = getStoryblokApi();
-  let { data } = await storyblokApi.get("cdn/stories", {
+  
+  // Fetch all stories with pagination support
+  const allStories = await fetchAllStories(storyblokApi, {
     version: getStoryblokVersion(),
     excluding_fields: 'body,blocks,content'
   });
@@ -241,7 +242,8 @@ export async function getStaticPaths() {
   ];
 
   let paths = [];
-  data.stories.forEach((story) => {
+  
+  allStories.forEach((story) => {
     // Skip folders
     if (story.is_folder) {
       return;

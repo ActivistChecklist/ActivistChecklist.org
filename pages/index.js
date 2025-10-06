@@ -224,24 +224,17 @@ const HomePage = ({ changelogEntries = [] }) => {
 export async function getStaticProps() {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion } = await import('../utils/core');
+    const { getStoryblokVersion, fetchAllChangelogEntries } = await import('../utils/core');
     
     const storyblokApi = getStoryblokApi();
     
-    const { data } = await storyblokApi.get('cdn/stories', {
-      version: getStoryblokVersion(),
-      filter_query: {
-        component: {
-          in: "changelog-entry"
-        }
-      },
-      sort_by: 'first_published_at:desc',
-      per_page: 5,
-      excluding_fields: 'blocks'
+    // Fetch all changelog entries with pagination support, then limit to 5
+    const allEntries = await fetchAllChangelogEntries(storyblokApi, {
+      version: getStoryblokVersion()
     });
 
     // Sort by first_published_at or created_at as fallback, newest first
-    const sortedEntries = (data.stories || []).sort((a, b) => {
+    const sortedEntries = (allEntries || []).sort((a, b) => {
       const dateA = new Date(a.first_published_at || a.created_at);
       const dateB = new Date(b.first_published_at || b.created_at);
       return dateB - dateA; // Newest first
@@ -249,7 +242,7 @@ export async function getStaticProps() {
 
     return {
       props: {
-        changelogEntries: sortedEntries
+        changelogEntries: sortedEntries.slice(0, 5) // Limit to 5 for homepage
       }
     };
   } catch (error) {

@@ -21,20 +21,14 @@ async function generateRSSFeed() {
     
     const storyblokApi = getStoryblokApi();
     
-    // Fetch changelog entries (same logic as changelog page)
-    const { data } = await storyblokApi.get('cdn/stories', {
-      version: getStoryblokVersion(),
-      filter_query: {
-        component: {
-          in: "changelog-entry"
-        }
-      },
-      sort_by: 'first_published_at:desc',
-      excluding_fields: 'blocks'
+    // Fetch all changelog entries with pagination support
+    const { fetchAllChangelogEntries } = await import('../utils/core.js');
+    const allEntries = await fetchAllChangelogEntries(storyblokApi, {
+      version: getStoryblokVersion()
     });
 
     // Sort by first_published_at or created_at as fallback, newest first
-    const sortedEntries = (data.stories || []).sort((a, b) => {
+    const sortedEntries = (allEntries || []).sort((a, b) => {
       const dateA = new Date(a.first_published_at || a.created_at);
       const dateB = new Date(b.first_published_at || b.created_at);
       return dateB - dateA; // Newest first
