@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { ROUTES } from '../config/routes'
 import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
+import GuideCard from '@/components/GuideCard';
 
 const HERO_CONTENT = {
   title: "Digital Security Checklists for Activists",
@@ -23,13 +24,7 @@ const HERO_CONTENT = {
   }
 };
 
-const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 6).map(item => ({
-  href: item.href,
-  icon: item.icon,
-  title: item.title,
-  description: item.description,
-  gradient: "to-primary/5"
-}));
+const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 6);
 
 const TRUST_POINTS = [
   {
@@ -65,28 +60,6 @@ const COMMON_MISCONCEPTIONS = [
 ];
 
 
-const ActionGuideCard = ({ href, icon: Icon, title, description, gradient }) => (
-  <Link href={href} className="block group">
-    <Card className={`h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card ${gradient}`}>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary">
-            <Icon className="h-6 w-6" />
-          </div>
-          <CardTitle>{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-lg">{description}</CardDescription>
-      </CardContent>
-      <CardFooter>
-        <span className="text-primary font-medium inline-flex items-center">
-          View checklist <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
-        </span>
-      </CardFooter>
-    </Card>
-  </Link>
-);
 
 const TrustPoint = ({ icon: Icon, title, description }) => (
   <Card className="bg-transparent border-0 shadow-none transition-all duration-300">
@@ -177,8 +150,15 @@ const HomePage = ({ changelogEntries = [] }) => {
             <h2 className="text-2xl font-bold mb-6">Digital Security Checklists</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {ACTION_GUIDES.map((guide, index) => (
-                <ActionGuideCard key={index} {...guide} />
+                <GuideCard key={index} guideItem={guide} size="large" />
               ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Button asChild variant="outline" size="lg">
+                <Link href={ROUTES.CHECKLISTS.LIST} className="group">
+                  See all checklists <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+                </Link>
+              </Button>
             </div>
           </section>
 
