@@ -174,25 +174,46 @@ async function generateNewsRSS() {
     fetchItems: fetchAllNewsItems,
     transformItem: (story) => {
       const entryDate = new Date(story.content?.date || story.first_published_at || story.created_at);
-      const { source, url, comment } = story.content || {};
+      const { source, url, has_paywall } = story.content || {};
       
       // Extract description from comment or use source
       let description = '';
-      if (comment) {
-        description = extractTextFromRichText(comment);
+      if (story.content?.comment) {
+        description = extractTextFromRichText(story.content.comment);
       } else if (source) {
         description = `News from ${source.name || source}`;
       }
       
-      // Use direct article URL if available, otherwise fallback to site link
-      const articleUrl = url?.url || `https://activistchecklist.org/news#${story.uuid}`;
+      // Generate archive.is URL if has_paywall is true
+      const archiveUrl = has_paywall && url?.url ? `https://archive.is/newest/${url.url}` : null;
+      
+      // Use archive URL for paywall articles, otherwise direct URL, fallback to site link
+      const articleUrl = has_paywall ? archiveUrl : (url?.url || `https://activistchecklist.org/news#${story.uuid}`);
+      
+      // Build enhanced description with tags and link
+      let enhancedDescription = '';
+      
+      // Add tags if available
+      if (story.tag_list && story.tag_list.length > 0) {
+        const tagsText = story.tag_list.join(', ');
+        enhancedDescription += `<strong>Tags:</strong> ${tagsText}`;
+      }
+      
+      
+      // Add "view the article here" link
+      enhancedDescription += `<br><br><a href="${articleUrl}">View the article here →</a>`;
+
+      // Add paywall information if applicable
+      if (has_paywall && url?.url) {
+        enhancedDescription += `<br><br>This link bypasses the paywall. <a href="${url.url}">See original</a>`;
+      }
       
       return {
         title: story.name || 'News Item',
         id: articleUrl,
         link: articleUrl,
-        description: description || 'News item',
-        content: description || 'News item',
+        description: enhancedDescription,
+        content: enhancedDescription,
         author: [{
           name: source?.name || "Activist Checklist",
           email: "contact@activistchecklist.org",
