@@ -46,3 +46,6 @@ public/pagefind
 
 # URL scanner
 .approved-urls.json
+
+# Backups
+buildbackups/
