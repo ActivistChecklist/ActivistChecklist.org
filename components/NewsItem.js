@@ -25,7 +25,7 @@ const NewsItem = ({ blok, story }) => {
     >
       <div className="flex flex-col md:flex-row md:gap-4">
         {/* Date container */}
-        <div className="md:w-20 md:shrink-0 mb-1 md:mb-0">
+        <div className="hidden md:block md:w-20 md:shrink-0 mb-1 md:mb-0">
           <time 
             className="text-sm text-muted-foreground"
             dateTime={dateString}
@@ -39,9 +39,12 @@ const NewsItem = ({ blok, story }) => {
         <div className="flex-1 min-w-0">
           {/* Source and Title */}
           <div className="mb-2">
+            <span className="text-sm text-muted-foreground md:hidden">
+              {formatRelativeDate(dateString)} •{' '}
+            </span>
             {source && (
               <span className="text-base text-muted-foreground">
-                {source}:{' '}
+                {source.name || source}:{' '}
               </span>
             )}
             {url.url ? (

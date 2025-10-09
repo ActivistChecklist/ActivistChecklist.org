@@ -21,6 +21,7 @@ export const ROUTES = {
     PRIVACY: '/privacy'
   },
   CHANGELOG: '/changelog',
+  NEWS: '/news',
   // BLOG: '/blog'
   PGP_KEY_FILE: '/files/publickey.contact@activistchecklist.org.asc'
 } 

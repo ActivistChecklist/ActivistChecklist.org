@@ -2,8 +2,8 @@ import React from 'react';
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
 import ChangeLogEntry from '@/components/ChangeLogEntry';
+import RSSButton from '@/components/ui/RSSButton';
 import { cn } from "@/lib/utils";
-import { Rss } from 'lucide-react';
 
 const ChangelogPage = ({ changelogEntries = [] }) => {
   // Group entries by time periods
@@ -82,7 +82,7 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
           rel="alternate" 
           type="application/rss+xml" 
           title="Activist Checklist - Recent Updates" 
-          href="/rss.xml" 
+          href="/rss/changelog.xml" 
         />
       </Head>
       <Layout>
@@ -95,14 +95,11 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
                   A history of changes to checklists, pages, and resources on the site.
                 </p>
               </div>
-              <a 
-                href="/rss.xml" 
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors border border-border rounded-lg hover:border-primary/30"
-                title="Subscribe to RSS feed"
-              >
-                <Rss className="h-4 w-4" />
-                RSS Feed
-              </a>
+              <RSSButton 
+                href="/rss/changelog.xml" 
+                variant="outline"
+                size="sm"
+              />
             </div>
           </header>
 

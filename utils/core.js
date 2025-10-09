@@ -118,3 +118,23 @@ export const fetchAllChangelogEntries = async (storyblokApi, options = {}) => {
     ...options
   });
 };
+
+/**
+ * Fetch all news items from Storyblok with pagination support
+ * @param {Object} storyblokApi - The Storyblok API instance
+ * @param {Object} options - Additional query options (version, sort_by, etc.)
+ * @returns {Promise<Array>} Array of all news items
+ */
+export const fetchAllNewsItems = async (storyblokApi, options = {}) => {
+  return fetchAllStories(storyblokApi, {
+    filter_query: {
+      component: {
+        in: "news-item"
+      }
+    },
+    sort_by: 'first_published_at:desc',
+    excluding_fields: 'blocks',
+    resolve_relations: 'news-item.source',
+    ...options
+  });
+};

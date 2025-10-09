@@ -93,7 +93,7 @@ export async function getStaticProps({ params, preview = false }) {
   // First get the main story
   let { data } = await storyblokApi.get(`cdn/stories/${slug}`, {
     version: getStoryblokVersion(preview),
-    resolve_relations: 'checklist-item-ref.reference_item'
+    resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
   });
 
   if (!data?.story) {
