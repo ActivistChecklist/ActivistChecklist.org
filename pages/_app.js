@@ -12,6 +12,7 @@ import ChecklistItemReference from "../components/guides/ChecklistItemReference"
 import ChecklistItemRef from "../components/guides/ChecklistItemRef";
 import ChangeLogEntry from "../components/ChangeLogEntry";
 import ChangeLogRecentEntries from "../components/ChangeLogRecentEntries";
+import GuideCardBlock from "../components/GuideCardBlock";
 
 const components = {
   page: Page,
@@ -22,6 +23,7 @@ const components = {
   "section-header": SectionHeader,
   "changelog-entry": ChangeLogEntry,
   "changelog-recent-entries": ChangeLogRecentEntries,
+  "guide-card-block": GuideCardBlock,
 };
 
 storyblokInit({
