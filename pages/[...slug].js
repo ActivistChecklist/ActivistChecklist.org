@@ -233,7 +233,8 @@ export async function getStaticPaths() {
   const isStaticBuild = process.env.BUILD_MODE === 'static';
   const excludedFolders = isStaticBuild ? [
     'checklist-items/',
-    'changelog/'
+    'changelog/',
+    'news/',
   ] : [];
 
   // Define specific slugs to exclude

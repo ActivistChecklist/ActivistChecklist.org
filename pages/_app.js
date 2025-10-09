@@ -14,6 +14,7 @@ import ChangeLogEntry from "../components/ChangeLogEntry";
 import ChangeLogRecentEntries from "../components/ChangeLogRecentEntries";
 import GuideCardBlock from "../components/GuideCardBlock";
 import RelatedGuides from "../components/RelatedGuides";
+import NewsItem from "../components/NewsItem";
 
 const components = {
   page: Page,
@@ -26,6 +27,7 @@ const components = {
   "changelog-recent-entries": ChangeLogRecentEntries,
   "guide-card-block": GuideCardBlock,
   "related-guides": RelatedGuides,
+  "news-item": NewsItem,
 };
 
 storyblokInit({
