@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import * as IoIcons from 'react-icons/io5';
+import { trackFileDownload } from '@/lib/download-tracker';
 
 // Dynamic icon renderer for Ionicons 5
 const DynamicIcon = ({ iconName, className, ...props }) => {
@@ -29,6 +30,13 @@ export const ButtonEmbed = (props) => {
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;
   const position = iconPosition || 'left';
+
+   // Handle download tracking
+   const handleClick = async (e) => {
+    if (download && title) {
+      await trackFileDownload(title);
+    }
+  };
   
   return (
     <Button 
@@ -41,6 +49,7 @@ export const ButtonEmbed = (props) => {
         href={href}
         target={target}
         rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+        onClick={handleClick}
         {...(download && { download: '' })}
       >
         {iconElement && position === 'left' && iconElement}
