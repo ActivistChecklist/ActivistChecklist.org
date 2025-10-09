@@ -3,10 +3,10 @@ import GuideCard from '@/components/GuideCard';
 import { SECURITY_CHECKLISTS } from '@/config/navigation';
 
 const GuideCardBlock = ({ blok }) => {
-  // Normalize URL by removing trailing slash
+  // Normalize URL by removing leading and trailing slashes
   const normalizeUrl = (url) => {
     if (!url) return null;
-    return url.endsWith('/') ? url.slice(0, -1) : url;
+    return url.replace(/^\/+|\/+$/g, '');
   };
 
   // Find the guide item by href lookup
