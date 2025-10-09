@@ -184,7 +184,12 @@ a {
     @apply bg-background text-foreground;
   }
 
-  .text-muted-foreground a {
+  /* Standard link styling */
+  .link {
+    @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2 transition-colors;
+  }
+
+  .search-dialog a {
     @apply underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary;
   }
 

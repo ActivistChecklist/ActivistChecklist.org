@@ -10,17 +10,20 @@ const NewsItem = ({ blok, story }) => {
     return null;
   }
 
-  const { date, source, url, url_bypass_paywall, comment } = blok;
+  const { date, source, url, url_bypass_paywall, has_paywall, comment } = blok;
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
   const hoverDate = new Date(dateString).toISOString().split('T')[0];
+  
+  // Generate archive.is URL if has_paywall is true
+  const archiveUrl = has_paywall && url?.url ? `https://archive.is/newest/${url.url}` : null;
 
   return (
     <div 
       {...storyblokEditable(blok)}
       className={cn(
-        "news-item mb-4"
+        "news-item mb-0 border-b border-muted pb-4"
       )}
     >
       <div className="flex flex-col md:flex-row md:gap-4">
@@ -37,58 +40,60 @@ const NewsItem = ({ blok, story }) => {
         
         {/* Content container */}
         <div className="flex-1 min-w-0">
-          {/* Source and Title */}
+          {/* Title */}
           <div className="mb-2">
-            <span className="text-sm text-muted-foreground md:hidden">
-              {formatRelativeDate(dateString)} •{' '}
-            </span>
-            {source && (
-              <span className="text-base text-muted-foreground">
-                {source.name || source}:{' '}
-              </span>
-            )}
-            {url.url ? (
+            {(has_paywall ? archiveUrl : url?.url) && (
               <Link 
-                href={url.url} 
-                className="text-base text-primary hover:text-primary/80 transition-colors underline"
+                href={has_paywall ? archiveUrl : url.url} 
+                className="link text-base"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 {story?.name || 'News Item'}
               </Link>
-            ) : (
-              <span className="text-sm">
-                {story?.name || 'News Item'}
-              </span>
-            )}
-            {url_bypass_paywall.url && (
-              <>
-                {' '}
-                <Link 
-                  href={url_bypass_paywall.url} 
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  (bypass paywall)
-                </Link>
-              </>
             )}
           </div>
           
-          {/* Tags */}
-          {story?.tag_list && story.tag_list.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {story.tag_list.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground"
+          {/* Paywall Notice */}
+          {has_paywall && url?.url && (
+            <div className="mb-2">
+              <span className="text-xs text-muted-foreground italic">
+                This link bypasses the paywall.{' '}
+                <Link 
+                  href={url.url} 
+                  className={cn("link no-underline font-light hover:underline")}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {tag}
-                </span>
-              ))}
+                  See original
+                </Link>.
+              </span>
             </div>
           )}
+          
+          {/* Source and Tags */}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="text-sm text-muted-foreground md:hidden">
+              {formatRelativeDate(dateString)} •{' '}
+            </span>
+            {source && (
+              <span className="text-sm text-muted-foreground">
+                {source.name || source}
+              </span>
+            )}
+            {story?.tag_list && story.tag_list.length > 0 && (
+              <>
+                {story.tag_list.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </>
+            )}
+          </div>
           
           {/* Comment */}
           {comment && (

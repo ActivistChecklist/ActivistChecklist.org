@@ -194,7 +194,7 @@ const Search = ({ variant = 'searchbar', className, ...props }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen} className="search-dialog">
       <DialogTrigger asChild>
         {variant === 'searchbar' ? (
           <div className={cn("relative w-full max-w-3xl mx-auto", className)}>

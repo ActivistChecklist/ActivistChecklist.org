@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
 import NewsItem from '@/components/NewsItem';
 import RSSButton from '@/components/ui/RSSButton';
+import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
 
 const NewsPage = ({ newsItems = [] }) => {
@@ -36,7 +37,7 @@ const NewsPage = ({ newsItems = [] }) => {
     return (
       <section className={cn("mb-12")}>
         <h2 className="text-2xl font-bold mb-6 text-foreground border-b pb-2">{year}</h2>
-        <div className="space-y-0">
+        <div className="space-y-6">
           {items.map((story) => (
             <NewsItem 
               key={story.uuid} 
@@ -62,7 +63,7 @@ const NewsPage = ({ newsItems = [] }) => {
               <div>
                 <h1 className="text-4xl font-bold mb-4">News</h1>
                 <p className="text-lg text-muted-foreground">
-                  Latest news about digital security, surveillance, and activism.
+                  Latest news about state surveillance and threats facing social movements.
                 </p>
               </div>
               <RSSButton 
@@ -72,6 +73,20 @@ const NewsPage = ({ newsItems = [] }) => {
               />
             </div>
           </header>
+
+          {/* News Submission Invitation */}
+          <div className="mb-8 p-4 bg-muted rounded-lg border">
+            <p className="text-sm text-muted-foreground">
+              Have news you think should be included?{' '}
+              <Link 
+                href="/contact" 
+                className="link text-sm"
+              >
+                Send us a tip
+              </Link>
+              {' '}and help keep our community informed.
+            </p>
+          </div>
 
           {newsItems.length === 0 ? (
             <div className="text-center py-12">
