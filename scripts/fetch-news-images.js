@@ -5,6 +5,7 @@ const path = require('path');
 const https = require('https');
 const { createWriteStream } = require('fs');
 const ogs = require('open-graph-scraper');
+const sharp = require('sharp');
 
 // Load environment variables
 require('dotenv').config();
@@ -12,6 +13,7 @@ require('dotenv').config();
 // Configuration
 const NEWS_IMAGES_DIR = path.join(__dirname, '..', 'public', 'files', 'news');
 const STORYBLOK_TOKEN = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN;
+
 
 if (!STORYBLOK_TOKEN) {
   console.error('❌ Missing required environment variable: NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN');
@@ -24,29 +26,41 @@ if (!fs.existsSync(NEWS_IMAGES_DIR)) {
 }
 
 // Fetch all news stories from Storyblok
-async function fetchNewsStories() {
-  const url = `https://api-us.storyblok.com/v2/cdn/stories?token=${STORYBLOK_TOKEN}&starts_with=news/&per_page=100`;
+async function fetchNewsStories(quietMode = false) {
+  // Use filter_query to get only news-item content type with proper nested parameter format
+  const filterQuery = 'filter_query[component][in]=news-item';
   
-  console.log(`🔗 Fetching from: ${url.replace(STORYBLOK_TOKEN, '[TOKEN]')}`);
+  const url = `https://api-us.storyblok.com/v2/cdn/stories?token=${STORYBLOK_TOKEN}&${filterQuery}&per_page=100`;
+  
+  log(`🔗 Fetching from: ${url.replace(STORYBLOK_TOKEN, '[TOKEN]')}`, quietMode);
   
   return new Promise((resolve, reject) => {
+    let currentRequest = null;
+    
     const makeRequest = (requestUrl) => {
-      https.get(requestUrl, (res) => {
+      currentRequest = https.get(requestUrl, {
+        timeout: 30000, // 30 second timeout
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Connection': 'close'
+        }
+      }, (res) => {
         let data = '';
         
-        console.log(`📡 Response status: ${res.statusCode}`);
+        log(`📡 Response status: ${res.statusCode}`, quietMode);
         
         // Handle redirects
         if (res.statusCode >= 300 && res.statusCode < 400) {
           const location = res.headers.location;
-          console.log(`🔄 Following redirect to: ${location}`);
+          log(`🔄 Following redirect to: ${location}`, quietMode);
+          currentRequest.destroy();
           makeRequest(location);
           return;
         }
         
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
-          console.log(`📦 Response length: ${data.length} bytes`);
+          log(`📦 Response length: ${data.length} bytes`, quietMode);
           
           if (!data.trim()) {
             reject(new Error('❌ Empty response from Storyblok API'));
@@ -76,6 +90,11 @@ async function fetchNewsStories() {
         });
       }).on('error', (error) => {
         reject(new Error(`❌ Network error: ${error.message}`));
+      }).on('timeout', () => {
+        if (currentRequest) {
+          currentRequest.destroy();
+        }
+        reject(new Error('❌ Request timeout'));
       });
     };
     
@@ -134,45 +153,135 @@ async function getSocialGraphImage(url) {
   }
 }
 
-// Download image from URL
-async function downloadImage(imageUrl, filePath) {
+// Download and process image from URL with security measures
+async function downloadImage(imageUrl, resizedFilePath, originalFilePath) {
   return new Promise((resolve, reject) => {
-    const file = createWriteStream(filePath);
+    const chunks = [];
+    let totalSize = 0;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB limit
+    const MAX_DIMENSION = 20000; // 20000px max dimension
     
-    https.get(imageUrl, (response) => {
+    // Validate URL scheme
+    try {
+      const urlObj = new URL(imageUrl);
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        reject(new Error('Invalid URL protocol'));
+        return;
+      }
+    } catch (error) {
+      reject(new Error('Invalid URL format'));
+      return;
+    }
+    
+    const request = https.get(imageUrl, {
+      timeout: 30000, // 30 second timeout
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'image/*',
+        'Connection': 'close'
+      }
+    }, (response) => {
       if (response.statusCode !== 200) {
         reject(new Error(`HTTP ${response.statusCode}`));
         return;
       }
       
-      response.pipe(file);
+      // Check content type
+      const contentType = response.headers['content-type'];
+      if (!contentType || !contentType.startsWith('image/')) {
+        reject(new Error('Invalid content type'));
+        return;
+      }
       
-      file.on('finish', () => {
-        file.close();
-        resolve();
+      // Check content length
+      const contentLength = response.headers['content-length'];
+      if (contentLength && parseInt(contentLength) > MAX_FILE_SIZE) {
+        reject(new Error('File too large'));
+        return;
+      }
+      
+      response.on('data', (chunk) => {
+        totalSize += chunk.length;
+        
+        // Check size limit during download
+        if (totalSize > MAX_FILE_SIZE) {
+          request.destroy();
+          reject(new Error('File too large'));
+          return;
+        }
+        
+        chunks.push(chunk);
       });
       
-      file.on('error', (error) => {
-        fs.unlink(filePath, () => {}); // Delete the file on error
+      response.on('end', async () => {
+        try {
+          const imageBuffer = Buffer.concat(chunks);
+          
+          // Validate image with sharp before processing
+          const metadata = await sharp(imageBuffer).metadata();
+          
+          // Check image dimensions
+          if (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION) {
+            reject(new Error('Image dimensions too large'));
+            return;
+          }
+          
+          // Process image with sharp: resize to max 720px width, convert to JPG
+          const processedBuffer = await sharp(imageBuffer)
+            .resize(720, null, {
+              withoutEnlargement: true,
+              fit: 'inside'
+            })
+            .jpeg({
+              quality: 85,
+              progressive: true,
+              mozjpeg: true // Use mozjpeg encoder for better security
+            })
+            .toBuffer();
+          
+          // Write both original and processed images to files
+          fs.writeFileSync(originalFilePath, imageBuffer);
+          fs.writeFileSync(resizedFilePath, processedBuffer);
+          resolve();
+        } catch (error) {
+          reject(new Error(`Image processing failed: ${error.message}`));
+        }
+      });
+      
+      response.on('error', (error) => {
         reject(error);
       });
-    }).on('error', (error) => {
+    });
+    
+    request.on('error', (error) => {
       reject(error);
+    });
+    
+    request.on('timeout', () => {
+      request.destroy();
+      reject(new Error('Request timeout'));
     });
   });
 }
 
-// Get file extension from URL
-function getFileExtension(url) {
-  try {
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
-    const ext = path.extname(pathname).toLowerCase();
-    
-    // Default to jpg if no extension found
-    return ext || '.jpg';
-  } catch {
-    return '.jpg';
+
+// Generate resized filename
+function getResizedFileName(storySlug) {
+  return `${storySlug}-resized.jpg`;
+}
+
+// Generate original filename
+function getOriginalFileName(storySlug, imageUrl) {
+  const url = new URL(imageUrl);
+  const pathname = url.pathname;
+  const extension = path.extname(pathname) || '.jpg';
+  return `${storySlug}-original${extension}`;
+}
+
+// Quiet mode logging helper
+function log(message, quietMode = false) {
+  if (!quietMode) {
+    console.log(message);
   }
 }
 
@@ -180,12 +289,31 @@ function getFileExtension(url) {
 async function main() {
   const args = process.argv.slice(2);
   const testMode = args.includes('--test') || args.includes('-t');
+  const forceMode = args.includes('--force') || args.includes('-f');
+  const quietMode = args.includes('--quiet') || args.includes('-q');
   
-  console.log('🔍 Fetching news stories...');
+  // Set up graceful shutdown
+  const cleanup = () => {
+    log('🛑 Cleaning up and exiting...', quietMode);
+    process.exit(0);
+  };
+  
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+  process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught exception:', error);
+    process.exit(1);
+  });
+  
+  log('🔍 Fetching news stories...', quietMode);
+  
+  if (forceMode) {
+    log('🔄 Force mode enabled - will re-download all images', quietMode);
+  }
   
   try {
-    const stories = await fetchNewsStories();
-    console.log(`📰 Found ${stories.length} news stories`);
+    const stories = await fetchNewsStories(quietMode);
+    log(`📰 Found ${stories.length} news stories`, quietMode);
     
     let processed = 0;
     let skipped = 0;
@@ -197,34 +325,25 @@ async function main() {
       const url = story.content?.url?.url;
       
       if (!url) {
-        console.log(`⏭️ Skipping story ${storyId} (${storySlug}): No URL`);
+        log(`⏭️ Skipping story ${storyId} (${storySlug}): No URL`, quietMode);
         skipped++;
         continue;
       }
       
-      // Check if image already exists
-      const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
-      let existingImage = null;
+      // Check if resized image already exists (unless force mode)
+      const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
       
-      for (const ext of possibleExtensions) {
-        const imagePath = path.join(NEWS_IMAGES_DIR, `${storySlug}${ext}`);
-        if (fs.existsSync(imagePath)) {
-          existingImage = imagePath;
-          break;
-        }
-      }
-      
-      if (existingImage) {
-        console.log(`✅ Image already exists for story ${storyId} (${storySlug})`);
+      if (!forceMode && fs.existsSync(resizedImagePath)) {
+        log(`✅ Resized image already exists for story ${storyId} (${storySlug})`, quietMode);
         skipped++;
         continue;
       }
       
-      console.log(`🖼️ Processing story ${storyId} (${storySlug}): ${url}`);
+      log(`🖼️  Processing story ${storyId} (${storySlug}): ${url}`, quietMode);
       
       // In test mode, only process the first missing image
       if (testMode) {
-        console.log('🧪 Test mode: Processing only this story');
+        log('🧪 Test mode: Processing only this story', quietMode);
       }
       
       try {
@@ -232,18 +351,20 @@ async function main() {
         const imageUrl = await getSocialGraphImage(url);
         
         if (!imageUrl) {
-          console.log(`❌ No social graph image found for story ${storyId} (${storySlug})`);
+          log(`❌ No social graph image found for story ${storyId} (${storySlug})`, quietMode);
           errors++;
           continue;
         }
         
-        // Determine file extension
-        const ext = getFileExtension(imageUrl);
-        const imagePath = path.join(NEWS_IMAGES_DIR, `${storySlug}${ext}`);
+        // Generate image paths
+        const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
+        const originalImagePath = path.join(NEWS_IMAGES_DIR, getOriginalFileName(storySlug, imageUrl));
         
-        // Download image
-        await downloadImage(imageUrl, imagePath);
-        console.log(`✅ Downloaded image for story ${storyId} (${storySlug}): ${imagePath}`);
+        // Download and process image
+        await downloadImage(imageUrl, resizedImagePath, originalImagePath);
+        log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
+        log(`   📁 Original: ${originalImagePath}`, quietMode);
+        log(`   📁 Resized: ${resizedImagePath}`, quietMode);
         processed++;
         
         // Small delay to be respectful to the API
@@ -251,7 +372,7 @@ async function main() {
         
         // In test mode, exit after processing one story
         if (testMode) {
-          console.log('🧪 Test mode: Exiting after processing one story');
+          log('🧪 Test mode: Exiting after processing one story', quietMode);
           break;
         }
         
@@ -261,7 +382,7 @@ async function main() {
         
         // In test mode, exit even on error
         if (testMode) {
-          console.log('🧪 Test mode: Exiting after error');
+          log('🧪 Test mode: Exiting after error', quietMode);
           break;
         }
       }
@@ -271,6 +392,9 @@ async function main() {
     console.log(`✅ Processed: ${processed}`);
     console.log(`⏭️ Skipped: ${skipped}`);
     console.log(`❌ Errors: ${errors}`);
+    
+    console.log('🎉 Script completed successfully!');
+    process.exit(0);
     
   } catch (error) {
     console.error('❌ Fatal error:', error.message);

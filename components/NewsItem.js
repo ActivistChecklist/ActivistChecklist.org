@@ -4,6 +4,7 @@ import { RichText } from '@/components/RichText';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
 import Image from 'next/image';
+import { IoNewspaperOutline } from 'react-icons/io5';
 
 const NewsItem = ({ blok, story }) => {
   if (!blok) {
@@ -35,30 +36,26 @@ const NewsItem = ({ blok, story }) => {
   
   const archiveUrl = getArchiveUrl(paywall_mode, url?.url);
 
-  // Check if image exists for this story
+  // Check if resized image exists for this story
   useEffect(() => {
     if (!story?.slug) return;
     
     const checkImageExists = async () => {
-      const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+      const imagePath = `/files/news/${story.slug}-resized.jpg`;
       
-      for (const ext of possibleExtensions) {
-        const imagePath = `/files/news/${story.slug}${ext}`;
-        
-        try {
-          // Try to fetch the image to see if it exists
-          const response = await fetch(imagePath, { method: 'HEAD' });
-          if (response.ok) {
-            setImageSrc(imagePath);
-            setImageExists(true);
-            return;
-          }
-        } catch (error) {
-          // Image doesn't exist, continue to next extension
+      try {
+        // Try to fetch the resized image to see if it exists
+        const response = await fetch(imagePath, { method: 'HEAD' });
+        if (response.ok) {
+          setImageSrc(imagePath);
+          setImageExists(true);
+        } else {
+          setImageExists(false);
         }
+      } catch (error) {
+        // Image doesn't exist
+        setImageExists(false);
       }
-      
-      setImageExists(false);
     };
     
     checkImageExists();
@@ -86,19 +83,23 @@ const NewsItem = ({ blok, story }) => {
         {/* Content container */}
         <div className="flex-1 min-w-0 flex flex-col md:flex-row md:gap-4">
           {/* News Image - Mobile */}
-          {imageExists && (
-            <div className="flex-shrink-0 mb-2 md:hidden">
-              <div className="w-full h-24 bg-muted rounded-md overflow-hidden">
+          <div className="flex-shrink-0 mb-2 md:hidden">
+            <div className="w-full h-36 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              {imageExists ? (
                 <Image
                   src={imageSrc}
                   alt={story?.name || 'News item'}
                   width={400}
-                  height={96}
+                  height={128}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <IoNewspaperOutline className="w-8 h-8 mb-1" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
           
           {/* Main content */}
           <div className="flex-1 min-w-0">
@@ -163,9 +164,9 @@ const NewsItem = ({ blok, story }) => {
           </div>
           
           {/* News Image - Desktop */}
-          {imageExists && (
-            <div className="hidden md:block flex-shrink-0">
-              <div className="w-32 h-20 bg-muted rounded-md overflow-hidden">
+          <div className="hidden md:block flex-shrink-0">
+            <div className="w-32 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              {imageExists ? (
                 <Image
                   src={imageSrc}
                   alt={story?.name || 'News item'}
@@ -173,9 +174,13 @@ const NewsItem = ({ blok, story }) => {
                   height={80}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <IoNewspaperOutline className="w-6 h-6 mb-1" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
