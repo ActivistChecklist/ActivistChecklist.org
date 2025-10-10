@@ -93,7 +93,7 @@ export async function getStaticProps({ params, preview = false }) {
   // First get the main story
   let { data } = await storyblokApi.get(`cdn/stories/${slug}`, {
     version: getStoryblokVersion(preview),
-    resolve_relations: 'checklist-item-ref.reference_item'
+    resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
   });
 
   if (!data?.story) {
@@ -233,7 +233,8 @@ export async function getStaticPaths() {
   const isStaticBuild = process.env.BUILD_MODE === 'static';
   const excludedFolders = isStaticBuild ? [
     'checklist-items/',
-    'changelog/'
+    'changelog/',
+    'news/',
   ] : [];
 
   // Define specific slugs to exclude

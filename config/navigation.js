@@ -131,6 +131,13 @@ export const NAV_ITEMS = {
     label: "Recent site updates",
     href: ROUTES.CHANGELOG,
     title: "Recent site updates"
+  },
+  NEWS: {
+    key: 'news',
+    label: "News",
+    href: ROUTES.NEWS,
+    title: "News",
+    type: "link"
   }
 }
 
@@ -181,6 +188,7 @@ export const ABOUT_SECTION = {
   items: [
     NAV_ITEMS.ABOUT,
     NAV_ITEMS.CHANGELOG,
+    
     NAV_ITEMS.CONTACT,
     NAV_ITEMS.PRIVACY
   ]
@@ -193,9 +201,11 @@ export const navigationConfig = {
     ariaLabel: `${SITE_BRANDING.title} Home`,
     image: "/images/logo-bg-white.png"
   },
+  // Top navigation menu bar
   mainNav: [
     NAV_ITEMS.HOME,
     SECURITY_CHECKLISTS,
+    NAV_ITEMS.NEWS,
     RESOURCES_SECTION,
     ABOUT_SECTION
   ]
@@ -209,9 +219,11 @@ export const footerConfig = {
       items: [
         NAV_ITEMS.HOME,
         NAV_ITEMS.SECURITY_ESSENTIALS,
+        NAV_ITEMS.NEWS,
+        NAV_ITEMS.ABOUT,
         NAV_ITEMS.MOVIES,
         NAV_ITEMS.RESOURCES,
-        NAV_ITEMS.ABOUT,
+        NAV_ITEMS.CHANGELOG,
         NAV_ITEMS.CONTACT,
         NAV_ITEMS.PRIVACY
       ]
