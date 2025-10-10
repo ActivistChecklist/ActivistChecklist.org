@@ -37,7 +37,7 @@ const NewsPage = ({ newsItems = [] }) => {
     return (
       <section className={cn("mb-12")}>
         <h2 className="text-2xl font-bold mb-6 text-foreground border-b pb-2">{year}</h2>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {items.map((story) => (
             <NewsItem 
               key={story.uuid} 
@@ -54,7 +54,7 @@ const NewsPage = ({ newsItems = [] }) => {
     <div>
       <Head>
         <title>News - Activist Checklist</title>
-        <meta name="description" content="Latest news abour digital security, surveillance, and activism." />
+        <meta name="description" content="Latest news about state surveillance and threats facing social movements." />
       </Head>
       <Layout>
         <div className="max-w-4xl mx-auto">
@@ -75,7 +75,7 @@ const NewsPage = ({ newsItems = [] }) => {
           </header>
 
           {/* News Submission Invitation */}
-          <div className="mb-8 p-4 bg-muted rounded-lg border">
+          <div className="mb-8 p-4 bg-muted rounded-lg border border-primary/40">
             <p className="text-sm text-muted-foreground">
               Have news you think should be included?{' '}
               <Link 

@@ -10,14 +10,27 @@ const NewsItem = ({ blok, story }) => {
     return null;
   }
 
-  const { date, source, url, url_bypass_paywall, has_paywall, comment } = blok;
+  const { date, source, url, paywall_mode = 'inactive', comment } = blok;
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
   const hoverDate = new Date(dateString).toISOString().split('T')[0];
   
-  // Generate archive.is URL if has_paywall is true
-  const archiveUrl = has_paywall && url?.url ? `https://archive.is/newest/${url.url}` : null;
+  // Generate archive URL based on paywall_mode
+  const getArchiveUrl = (mode, originalUrl) => {
+    if (!originalUrl || !mode || mode === 'inactive') return null;
+    
+    if (mode === 'wayback') {
+      return `https://web.archive.org/web/${originalUrl}`;
+    }
+    
+    // archive.is modes
+    const baseUrl = 'https://archive.is';
+    const modePath = mode === 'oldest' ? 'oldest' : 'newest';
+    return `${baseUrl}/${modePath}/${originalUrl}`;
+  };
+  
+  const archiveUrl = getArchiveUrl(paywall_mode, url?.url);
 
   return (
     <div 
@@ -42,9 +55,9 @@ const NewsItem = ({ blok, story }) => {
         <div className="flex-1 min-w-0">
           {/* Title */}
           <div className="mb-2">
-            {(has_paywall ? archiveUrl : url?.url) && (
+            {(paywall_mode !== 'inactive' ? archiveUrl : url?.url) && (
               <Link 
-                href={has_paywall ? archiveUrl : url.url} 
+                href={paywall_mode !== 'inactive' ? archiveUrl : url.url} 
                 className="link text-base"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -55,7 +68,7 @@ const NewsItem = ({ blok, story }) => {
           </div>
           
           {/* Paywall Notice */}
-          {has_paywall && url?.url && (
+          {paywall_mode !== 'inactive' && url?.url && (
             <div className="mb-2">
               <span className="text-xs text-muted-foreground italic">
                 This link bypasses the paywall.{' '}
