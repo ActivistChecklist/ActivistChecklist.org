@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
+import Image from 'next/image';
+import { IoNewspaperOutline } from 'react-icons/io5';
 
 const NewsItem = ({ blok, story }) => {
   if (!blok) {
@@ -11,6 +13,8 @@ const NewsItem = ({ blok, story }) => {
   }
 
   const { date, source, url, paywall_mode = 'inactive', comment } = blok;
+  const [imageExists, setImageExists] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
@@ -32,6 +36,31 @@ const NewsItem = ({ blok, story }) => {
   
   const archiveUrl = getArchiveUrl(paywall_mode, url?.url);
 
+  // Check if resized image exists for this story
+  useEffect(() => {
+    if (!story?.slug) return;
+    
+    const checkImageExists = async () => {
+      const imagePath = `/files/news/${story.slug}-resized.jpg`;
+      
+      try {
+        // Try to fetch the resized image to see if it exists
+        const response = await fetch(imagePath, { method: 'HEAD' });
+        if (response.ok) {
+          setImageSrc(imagePath);
+          setImageExists(true);
+        } else {
+          setImageExists(false);
+        }
+      } catch (error) {
+        // Image doesn't exist
+        setImageExists(false);
+      }
+    };
+    
+    checkImageExists();
+  }, [story?.slug]);
+
   return (
     <div 
       {...storyblokEditable(blok)}
@@ -52,7 +81,28 @@ const NewsItem = ({ blok, story }) => {
         </div>
         
         {/* Content container */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col md:flex-row md:gap-4">
+          {/* News Image - Mobile */}
+          <div className="flex-shrink-0 mb-2 md:hidden">
+            <div className="w-full h-36 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              {imageExists ? (
+                <Image
+                  src={imageSrc}
+                  alt={story?.name || 'News item'}
+                  width={400}
+                  height={128}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <IoNewspaperOutline className="w-8 h-8 mb-1" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
           {/* Title */}
           <div className="mb-2">
             {(paywall_mode !== 'inactive' ? archiveUrl : url?.url) && (
@@ -67,27 +117,10 @@ const NewsItem = ({ blok, story }) => {
             )}
           </div>
           
-          {/* Paywall Notice */}
-          {paywall_mode !== 'inactive' && url?.url && (
-            <div className="mb-2">
-              <span className="text-xs text-muted-foreground italic">
-                This link bypasses the paywall.{' '}
-                <Link 
-                  href={url.url} 
-                  className={cn("link no-underline font-light hover:underline")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  See original
-                </Link>.
-              </span>
-            </div>
-          )}
-          
           {/* Source and Tags */}
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="text-sm text-muted-foreground md:hidden">
-              {formatRelativeDate(dateString)} •{' '}
+              {formatRelativeDate(dateString)}{source && ' • '}
             </span>
             {source && (
               <span className="text-sm text-muted-foreground">
@@ -106,6 +139,20 @@ const NewsItem = ({ blok, story }) => {
                 ))}
               </>
             )}
+            {/* Paywall Notice */}
+            {paywall_mode !== 'inactive' && url?.url && (
+              <span className="text-xs text-muted-foreground italic">
+                This link bypasses the paywall.{' '}
+                <Link 
+                  href={url.url} 
+                  className={cn("link no-underline font-light hover:underline")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  See original
+                </Link>.
+              </span>
+            )}
           </div>
           
           {/* Comment */}
@@ -114,6 +161,26 @@ const NewsItem = ({ blok, story }) => {
               <RichText document={comment} noWrapper={true} />
             </div>
           )}
+          </div>
+          
+          {/* News Image - Desktop */}
+          <div className="hidden md:block flex-shrink-0">
+            <div className="w-32 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              {imageExists ? (
+                <Image
+                  src={imageSrc}
+                  alt={story?.name || 'News item'}
+                  width={128}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <IoNewspaperOutline className="w-6 h-6 mb-1" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

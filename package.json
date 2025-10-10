@@ -11,7 +11,7 @@
     "storyblockexportimages": "NODE_OPTIONS='--experimental-vm-modules' node scripts/export-stroyblok.mjs  --yaml --mode images --images ./out/images --verbose",
     "storyblockexportcontent": "NODE_OPTIONS='--experimental-vm-modules' node scripts/export-stroyblok.mjs  --yaml --mode content --content ./content --verbose",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
-    "postbuild": "yarn storyblockexportimages && next-sitemap && yarn rss && yarn index && if [ \"$BUILD_MODE\" = \"static\" ]; then cp public/.htaccess out/.htaccess; fi && yarn buildbackup",
+    "postbuild": "yarn storyblockexportimages && next-sitemap && yarn rss && yarn index && if [ \"$BUILD_MODE\" = \"static\" ]; then cp public/.htaccess out/.htaccess; fi  && yarn fetch-news -q && yarn buildbackup",
     "rss": "node scripts/generate-rss.js",
     "index": "NODE_ENV=${NODE_ENV} bash scripts/build-search-index.sh",
     "buildstatic": "BUILD_MODE=static yarn build && yarn checkbuild",
@@ -28,7 +28,8 @@
     "api:restart": "yarn run pm2 restart ac-api",
     "api:status": "yarn run pm2 status ac-api",
     "api:delete": "yarn run pm2 delete ac-api",
-    "api:logs": "yarn run pm2 logs ac-api"
+    "api:logs": "yarn run pm2 logs ac-api",
+    "fetch-news": "node scripts/fetch-news-images.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
@@ -92,9 +93,11 @@
     "local-ssl-proxy": "^2.0.5",
     "next-sitemap": "^4.2.3",
     "node-fetch": "^3.3.2",
+    "open-graph-scraper": "^6.10.0",
     "pagefind": "^1.3.0",
     "postcss": "^8.4.49",
     "react-json-view": "^1.21.3",
+    "sharp": "^0.34.4",
     "storyblok-backup": "^0.5.0",
     "storyblok-js-client": "^6.10.3",
     "tailwindcss": "^3.4.16",

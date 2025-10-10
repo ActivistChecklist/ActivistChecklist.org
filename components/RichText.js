@@ -199,7 +199,8 @@ const nodeResolvers = {
   heading: (children, { level }) => {
     const className = `heading-${level}`;
     return React.createElement(`h${level}`, { className }, children);
-  }
+  },
+  paragraph: (children) => children
 };
 
 export function RichText({ document, className, noWrapper = false, ...props }) {

@@ -5,7 +5,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const BACKUP_DIR = 'buildbackups';
-const MAX_BACKUPS = 50;
+const MAX_BACKUPS = 25;
 
 function getGitHash() {
   try {

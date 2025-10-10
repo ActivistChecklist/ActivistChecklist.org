@@ -49,3 +49,6 @@ public/pagefind
 
 # Backups
 buildbackups/
+
+# News image caching
+public/files/news/
