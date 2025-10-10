@@ -13,8 +13,6 @@ const RelatedGuides = ({ blok }) => {
     blok?.guide4?.cached_url
   ].filter(Boolean); // Remove empty/undefined entries
 
-  console.log('RelatedGuides: guides', guides);
-
   if (guides.length === 0) {
     return null;
   }

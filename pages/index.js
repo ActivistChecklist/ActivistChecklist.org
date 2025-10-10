@@ -130,14 +130,18 @@ const HomePage = ({ changelogEntries = [] }) => {
                     <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
                     New in October 2025:
                   </span>{' '}
-                  <Link href={ROUTES.CHECKLISTS.SPYWARE} className="hover:text-primary transition-colors">
+                  A{' '}
+                  <Link href={ROUTES.NEWS} className="link">
+                    News
+                  </Link> aggregation page with articles about surveillance •{' '}
+                  <Link href={ROUTES.CHECKLISTS.SPYWARE} className="link">
                     Protecting Against Spyware
                   </Link>{' '}checklist •{' '}
-                  <Link href={ROUTES.MOVIES} className="hover:text-primary transition-colors">
+                  <Link href={ROUTES.MOVIES} className="link">
                     Movies and books about surveillance
                   </Link>
                   {' '}• And a {' '}
-                  <Link href={ROUTES.POLICE_DOOR_POSTER} className="hover:text-primary transition-colors">
+                  <Link href={ROUTES.POLICE_DOOR_POSTER} className="link">
                     "Police at the Door" printable poster
                   </Link>
                 </div> 

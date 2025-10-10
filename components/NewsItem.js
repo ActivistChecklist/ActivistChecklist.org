@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
+import Image from 'next/image';
 
 const NewsItem = ({ blok, story }) => {
   if (!blok) {
@@ -11,6 +12,8 @@ const NewsItem = ({ blok, story }) => {
   }
 
   const { date, source, url, paywall_mode = 'inactive', comment } = blok;
+  const [imageExists, setImageExists] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
@@ -32,6 +35,35 @@ const NewsItem = ({ blok, story }) => {
   
   const archiveUrl = getArchiveUrl(paywall_mode, url?.url);
 
+  // Check if image exists for this story
+  useEffect(() => {
+    if (!story?.slug) return;
+    
+    const checkImageExists = async () => {
+      const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+      
+      for (const ext of possibleExtensions) {
+        const imagePath = `/files/news/${story.slug}${ext}`;
+        
+        try {
+          // Try to fetch the image to see if it exists
+          const response = await fetch(imagePath, { method: 'HEAD' });
+          if (response.ok) {
+            setImageSrc(imagePath);
+            setImageExists(true);
+            return;
+          }
+        } catch (error) {
+          // Image doesn't exist, continue to next extension
+        }
+      }
+      
+      setImageExists(false);
+    };
+    
+    checkImageExists();
+  }, [story?.slug]);
+
   return (
     <div 
       {...storyblokEditable(blok)}
@@ -52,7 +84,24 @@ const NewsItem = ({ blok, story }) => {
         </div>
         
         {/* Content container */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col md:flex-row md:gap-4">
+          {/* News Image - Mobile */}
+          {imageExists && (
+            <div className="flex-shrink-0 mb-2 md:hidden">
+              <div className="w-full h-24 bg-muted rounded-md overflow-hidden">
+                <Image
+                  src={imageSrc}
+                  alt={story?.name || 'News item'}
+                  width={400}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
           {/* Title */}
           <div className="mb-2">
             {(paywall_mode !== 'inactive' ? archiveUrl : url?.url) && (
@@ -67,27 +116,10 @@ const NewsItem = ({ blok, story }) => {
             )}
           </div>
           
-          {/* Paywall Notice */}
-          {paywall_mode !== 'inactive' && url?.url && (
-            <div className="mb-2">
-              <span className="text-xs text-muted-foreground italic">
-                This link bypasses the paywall.{' '}
-                <Link 
-                  href={url.url} 
-                  className={cn("link no-underline font-light hover:underline")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  See original
-                </Link>.
-              </span>
-            </div>
-          )}
-          
           {/* Source and Tags */}
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="text-sm text-muted-foreground md:hidden">
-              {formatRelativeDate(dateString)} •{' '}
+              {formatRelativeDate(dateString)}{source && ' • '}
             </span>
             {source && (
               <span className="text-sm text-muted-foreground">
@@ -106,12 +138,42 @@ const NewsItem = ({ blok, story }) => {
                 ))}
               </>
             )}
+            {/* Paywall Notice */}
+            {paywall_mode !== 'inactive' && url?.url && (
+              <span className="text-xs text-muted-foreground italic">
+                This link bypasses the paywall.{' '}
+                <Link 
+                  href={url.url} 
+                  className={cn("link no-underline font-light hover:underline")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  See original
+                </Link>.
+              </span>
+            )}
           </div>
           
           {/* Comment */}
           {comment && (
             <div className="prose prose-slate max-w-none text-sm">
               <RichText document={comment} noWrapper={true} />
+            </div>
+          )}
+          </div>
+          
+          {/* News Image - Desktop */}
+          {imageExists && (
+            <div className="hidden md:block flex-shrink-0">
+              <div className="w-32 h-20 bg-muted rounded-md overflow-hidden">
+                <Image
+                  src={imageSrc}
+                  alt={story?.name || 'News item'}
+                  width={128}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           )}
         </div>
