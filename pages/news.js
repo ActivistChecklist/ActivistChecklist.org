@@ -6,7 +6,7 @@ import RSSButton from '@/components/ui/RSSButton';
 import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
 
-const NewsPage = ({ newsItems = [] }) => {
+const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
   // Group news items by year
   const groupNewsByYear = (items) => {
     const groups = {};
@@ -36,13 +36,14 @@ const NewsPage = ({ newsItems = [] }) => {
 
     return (
       <section className={cn("mb-12")}>
-        <h2 className="text-2xl font-bold mb-6 text-foreground border-b pb-2">{year}</h2>
+        <h2 className="text-2xl font-bold pb-6 text-foreground">{year}</h2>
         <div className="space-y-4">
           {items.map((story) => (
             <NewsItem 
               key={story.uuid} 
               blok={story.content}
               story={story}
+              imageManifest={imageManifest}
             />
           ))}
         </div>
@@ -113,6 +114,8 @@ export async function getStaticProps() {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion, fetchAllNewsItems } = await import('../utils/core');
+    const fs = await import('fs');
+    const path = await import('path');
     
     const storyblokApi = getStoryblokApi();
     
@@ -120,6 +123,16 @@ export async function getStaticProps() {
     const allItems = await fetchAllNewsItems(storyblokApi, {
       version: getStoryblokVersion()
     });
+
+    // Load image manifest
+    let imageManifest = {};
+    try {
+      const manifestPath = path.join(process.cwd(), 'public', 'files', 'news', 'image-manifest.json');
+      const manifestData = fs.readFileSync(manifestPath, 'utf8');
+      imageManifest = JSON.parse(manifestData);
+    } catch (error) {
+      console.warn('Could not load image manifest:', error);
+    }
 
     // Sort by content.date or first_published_at as fallback, newest first
     const sortedItems = (allItems || []).sort((a, b) => {
@@ -130,14 +143,16 @@ export async function getStaticProps() {
 
     return {
       props: {
-        newsItems: sortedItems
+        newsItems: sortedItems,
+        imageManifest
       }
     };
   } catch (error) {
     console.error('Error fetching news items:', error);
     return {
       props: {
-        newsItems: []
+        newsItems: [],
+        imageManifest: {}
       }
     };
   }

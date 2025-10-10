@@ -270,6 +270,37 @@ function getResizedFileName(storySlug) {
   return `${storySlug}-resized.jpg`;
 }
 
+// Generate image manifest based on existing files
+function generateImageManifest(quietMode = false) {
+  const MANIFEST_PATH = path.join(NEWS_IMAGES_DIR, 'image-manifest.json');
+  
+  log('📋 Generating image manifest...', quietMode);
+  
+  if (!fs.existsSync(NEWS_IMAGES_DIR)) {
+    log('❌ News images directory does not exist', quietMode);
+    return {};
+  }
+  
+  const manifest = {};
+  const files = fs.readdirSync(NEWS_IMAGES_DIR);
+  
+  // Look for resized images (pattern: slug-resized.jpg)
+  const resizedImages = files.filter(file => file.endsWith('-resized.jpg'));
+  
+  resizedImages.forEach(file => {
+    const slug = file.replace('-resized.jpg', '');
+    manifest[slug] = `/files/news/${file}`;
+  });
+  
+  log(`✅ Found ${Object.keys(manifest).length} images in manifest`, quietMode);
+  
+  // Write manifest to file
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+  log(`📄 Manifest written to: ${MANIFEST_PATH}`, quietMode);
+  
+  return manifest;
+}
+
 // Generate original filename
 function getOriginalFileName(storySlug, imageUrl) {
   const url = new URL(imageUrl);
@@ -392,6 +423,9 @@ async function main() {
     console.log(`✅ Processed: ${processed}`);
     console.log(`⏭️ Skipped: ${skipped}`);
     console.log(`❌ Errors: ${errors}`);
+    
+    // Generate image manifest after processing all images
+    generateImageManifest(quietMode);
     
     console.log('🎉 Script completed successfully!');
     process.exit(0);
