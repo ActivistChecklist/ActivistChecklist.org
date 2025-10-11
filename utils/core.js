@@ -145,14 +145,26 @@ export const fetchAllNewsItems = async (storyblokApi, options = {}) => {
  */
 export const loadImageManifest = async () => {
   try {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      return {};
+    }
+    
     const fs = await import('fs');
     const path = await import('path');
     
     const manifestPath = path.join(process.cwd(), 'public', 'files', 'news', 'image-manifest.json');
+    
+    // Check if file exists before trying to read it
+    if (!fs.existsSync(manifestPath)) {
+      console.warn('Image manifest file does not exist:', manifestPath);
+      return {};
+    }
+    
     const manifestData = fs.readFileSync(manifestPath, 'utf8');
     return JSON.parse(manifestData);
   } catch (error) {
-    console.warn('Could not load image manifest:', error);
+    console.warn('Could not load image manifest:', error.message);
     return {};
   }
 };
