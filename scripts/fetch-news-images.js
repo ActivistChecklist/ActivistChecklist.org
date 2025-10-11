@@ -154,7 +154,7 @@ async function getSocialGraphImage(url) {
 }
 
 // Download and process image from URL with security measures
-async function downloadImage(imageUrl, resizedFilePath, originalFilePath) {
+async function downloadImage(imageUrl, resizedFilePath) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalSize = 0;
@@ -239,8 +239,7 @@ async function downloadImage(imageUrl, resizedFilePath, originalFilePath) {
             })
             .toBuffer();
           
-          // Write both original and processed images to files
-          fs.writeFileSync(originalFilePath, imageBuffer);
+          // Write only the processed image to file
           fs.writeFileSync(resizedFilePath, processedBuffer);
           resolve();
         } catch (error) {
@@ -270,13 +269,37 @@ function getResizedFileName(storySlug) {
   return `${storySlug}-resized.jpg`;
 }
 
-// Generate original filename
-function getOriginalFileName(storySlug, imageUrl) {
-  const url = new URL(imageUrl);
-  const pathname = url.pathname;
-  const extension = path.extname(pathname) || '.jpg';
-  return `${storySlug}-original${extension}`;
+// Generate image manifest based on existing files
+function generateImageManifest(quietMode = false) {
+  const MANIFEST_PATH = path.join(NEWS_IMAGES_DIR, 'image-manifest.json');
+  
+  log('📋 Generating image manifest...', quietMode);
+  
+  if (!fs.existsSync(NEWS_IMAGES_DIR)) {
+    log('❌ News images directory does not exist', quietMode);
+    return {};
+  }
+  
+  const manifest = {};
+  const files = fs.readdirSync(NEWS_IMAGES_DIR);
+  
+  // Look for resized images (pattern: slug-resized.jpg)
+  const resizedImages = files.filter(file => file.endsWith('-resized.jpg'));
+  
+  resizedImages.forEach(file => {
+    const slug = file.replace('-resized.jpg', '');
+    manifest[slug] = `/files/news/${file}`;
+  });
+  
+  log(`✅ Found ${Object.keys(manifest).length} images in manifest`, quietMode);
+  
+  // Write manifest to file
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+  log(`📄 Manifest written to: ${MANIFEST_PATH}`, quietMode);
+  
+  return manifest;
 }
+
 
 // Quiet mode logging helper
 function log(message, quietMode = false) {
@@ -356,14 +379,12 @@ async function main() {
           continue;
         }
         
-        // Generate image paths
+        // Generate image path
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
-        const originalImagePath = path.join(NEWS_IMAGES_DIR, getOriginalFileName(storySlug, imageUrl));
         
         // Download and process image
-        await downloadImage(imageUrl, resizedImagePath, originalImagePath);
+        await downloadImage(imageUrl, resizedImagePath);
         log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
-        log(`   📁 Original: ${originalImagePath}`, quietMode);
         log(`   📁 Resized: ${resizedImagePath}`, quietMode);
         processed++;
         
@@ -392,6 +413,9 @@ async function main() {
     console.log(`✅ Processed: ${processed}`);
     console.log(`⏭️ Skipped: ${skipped}`);
     console.log(`❌ Errors: ${errors}`);
+    
+    // Generate image manifest after processing all images
+    generateImageManifest(quietMode);
     
     console.log('🎉 Script completed successfully!');
     process.exit(0);

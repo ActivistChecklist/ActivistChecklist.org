@@ -6,7 +6,7 @@ import RSSButton from '@/components/ui/RSSButton';
 import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
 
-const NewsPage = ({ newsItems = [] }) => {
+const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
   // Group news items by year
   const groupNewsByYear = (items) => {
     const groups = {};
@@ -35,14 +35,15 @@ const NewsPage = ({ newsItems = [] }) => {
     if (!items.length) return null;
 
     return (
-      <section className={cn("mb-12")}>
-        <h2 className="text-2xl font-bold mb-6 text-foreground border-b pb-2">{year}</h2>
+      <section className={cn("pb-12")}>
+        <h2 className="text-2xl font-bold pb-4 text-foreground">{year}</h2>
         <div className="space-y-4">
           {items.map((story) => (
             <NewsItem 
               key={story.uuid} 
               blok={story.content}
               story={story}
+              imageManifest={imageManifest}
             />
           ))}
         </div>
@@ -112,32 +113,27 @@ const NewsPage = ({ newsItems = [] }) => {
 export async function getStaticProps() {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchAllNewsItems } = await import('../utils/core');
+    const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');
     
     const storyblokApi = getStoryblokApi();
     
-    // Fetch all news items with pagination support
-    const allItems = await fetchAllNewsItems(storyblokApi, {
+    // Fetch news data using shared utility
+    const { newsItems, imageManifest } = await fetchNewsData(storyblokApi, {
       version: getStoryblokVersion()
-    });
-
-    // Sort by content.date or first_published_at as fallback, newest first
-    const sortedItems = (allItems || []).sort((a, b) => {
-      const dateA = new Date(a.content.date || a.first_published_at || a.created_at);
-      const dateB = new Date(b.content.date || b.first_published_at || b.created_at);
-      return dateB - dateA; // Newest first
     });
 
     return {
       props: {
-        newsItems: sortedItems
+        newsItems,
+        imageManifest
       }
     };
   } catch (error) {
     console.error('Error fetching news items:', error);
     return {
       props: {
-        newsItems: []
+        newsItems: [],
+        imageManifest: {}
       }
     };
   }
