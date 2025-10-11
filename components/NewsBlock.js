@@ -16,7 +16,7 @@ const NewsBlock = ({ newsItems = [], imageManifest = {}, limit = 3 }) => {
   return (
     <section className="mb-16">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Latest News</h2>
+        <h2 className="text-2xl font-bold">Latest Surveillance News</h2>
         <Button asChild variant="outline" size="sm">
           <Link href="/news" className="group">
             View all news <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />

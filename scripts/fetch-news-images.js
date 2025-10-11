@@ -154,7 +154,7 @@ async function getSocialGraphImage(url) {
 }
 
 // Download and process image from URL with security measures
-async function downloadImage(imageUrl, resizedFilePath, originalFilePath) {
+async function downloadImage(imageUrl, resizedFilePath) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalSize = 0;
@@ -239,8 +239,7 @@ async function downloadImage(imageUrl, resizedFilePath, originalFilePath) {
             })
             .toBuffer();
           
-          // Write both original and processed images to files
-          fs.writeFileSync(originalFilePath, imageBuffer);
+          // Write only the processed image to file
           fs.writeFileSync(resizedFilePath, processedBuffer);
           resolve();
         } catch (error) {
@@ -301,13 +300,6 @@ function generateImageManifest(quietMode = false) {
   return manifest;
 }
 
-// Generate original filename
-function getOriginalFileName(storySlug, imageUrl) {
-  const url = new URL(imageUrl);
-  const pathname = url.pathname;
-  const extension = path.extname(pathname) || '.jpg';
-  return `${storySlug}-original${extension}`;
-}
 
 // Quiet mode logging helper
 function log(message, quietMode = false) {
@@ -387,14 +379,12 @@ async function main() {
           continue;
         }
         
-        // Generate image paths
+        // Generate image path
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
-        const originalImagePath = path.join(NEWS_IMAGES_DIR, getOriginalFileName(storySlug, imageUrl));
         
         // Download and process image
-        await downloadImage(imageUrl, resizedImagePath, originalImagePath);
+        await downloadImage(imageUrl, resizedImagePath);
         log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
-        log(`   📁 Original: ${originalImagePath}`, quietMode);
         log(`   📁 Resized: ${resizedImagePath}`, quietMode);
         processed++;
         
