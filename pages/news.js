@@ -54,7 +54,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
   return (
     <div>
       <Head>
-        <title>News - Activist Checklist</title>
+        <title>Surveillance News - Activist Checklist</title>
         <meta name="description" content="Latest news about state surveillance and threats facing social movements." />
       </Head>
       <Layout>
@@ -62,7 +62,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
           <header className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold mb-4">News</h1>
+                <h1 className="text-4xl font-bold mb-4">Surveillance News</h1>
                 <p className="text-lg text-muted-foreground">
                   Latest news about state surveillance and threats facing social movements.
                 </p>

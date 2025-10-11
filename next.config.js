@@ -11,6 +11,13 @@ const baseConfig = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
     };
+    
+    // Exclude fs from client-side bundles
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    
     return config;
   },
 };

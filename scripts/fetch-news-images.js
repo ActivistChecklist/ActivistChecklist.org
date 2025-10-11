@@ -5,7 +5,15 @@ const path = require('path');
 const https = require('https');
 const { createWriteStream } = require('fs');
 const ogs = require('open-graph-scraper');
-const sharp = require('sharp');
+
+// Try to load sharp, but handle gracefully if it fails
+let sharp;
+try {
+  sharp = require('sharp');
+} catch (error) {
+  console.warn('⚠️ Sharp not available, image processing will be skipped:', error.message);
+  sharp = null;
+}
 
 // Load environment variables
 require('dotenv').config();
@@ -216,6 +224,14 @@ async function downloadImage(imageUrl, resizedFilePath) {
       response.on('end', async () => {
         try {
           const imageBuffer = Buffer.concat(chunks);
+          
+          // Check if sharp is available for processing
+          if (!sharp) {
+            console.warn('⚠️ Sharp not available, saving original image without processing');
+            fs.writeFileSync(resizedFilePath, imageBuffer);
+            resolve();
+            return;
+          }
           
           // Validate image with sharp before processing
           const metadata = await sharp(imageBuffer).metadata();
