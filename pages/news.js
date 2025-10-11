@@ -35,8 +35,8 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
     if (!items.length) return null;
 
     return (
-      <section className={cn("mb-12")}>
-        <h2 className="text-2xl font-bold pb-6 text-foreground">{year}</h2>
+      <section className={cn("pb-12")}>
+        <h2 className="text-2xl font-bold pb-4 text-foreground">{year}</h2>
         <div className="space-y-4">
           {items.map((story) => (
             <NewsItem 
@@ -113,37 +113,18 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
 export async function getStaticProps() {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchAllNewsItems } = await import('../utils/core');
-    const fs = await import('fs');
-    const path = await import('path');
+    const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');
     
     const storyblokApi = getStoryblokApi();
     
-    // Fetch all news items with pagination support
-    const allItems = await fetchAllNewsItems(storyblokApi, {
+    // Fetch news data using shared utility
+    const { newsItems, imageManifest } = await fetchNewsData(storyblokApi, {
       version: getStoryblokVersion()
-    });
-
-    // Load image manifest
-    let imageManifest = {};
-    try {
-      const manifestPath = path.join(process.cwd(), 'public', 'files', 'news', 'image-manifest.json');
-      const manifestData = fs.readFileSync(manifestPath, 'utf8');
-      imageManifest = JSON.parse(manifestData);
-    } catch (error) {
-      console.warn('Could not load image manifest:', error);
-    }
-
-    // Sort by content.date or first_published_at as fallback, newest first
-    const sortedItems = (allItems || []).sort((a, b) => {
-      const dateA = new Date(a.content.date || a.first_published_at || a.created_at);
-      const dateB = new Date(b.content.date || b.first_published_at || b.created_at);
-      return dateB - dateA; // Newest first
     });
 
     return {
       props: {
-        newsItems: sortedItems,
+        newsItems,
         imageManifest
       }
     };

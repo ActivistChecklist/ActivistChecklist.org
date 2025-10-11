@@ -138,3 +138,55 @@ export const fetchAllNewsItems = async (storyblokApi, options = {}) => {
     ...options
   });
 };
+
+/**
+ * Load image manifest from the filesystem
+ * @returns {Promise<Object>} Image manifest object
+ */
+export const loadImageManifest = async () => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const manifestPath = path.join(process.cwd(), 'public', 'files', 'news', 'image-manifest.json');
+    const manifestData = fs.readFileSync(manifestPath, 'utf8');
+    return JSON.parse(manifestData);
+  } catch (error) {
+    console.warn('Could not load image manifest:', error);
+    return {};
+  }
+};
+
+/**
+ * Fetch news data with image manifest - shared utility for news pages
+ * @param {Object} storyblokApi - The Storyblok API instance
+ * @param {Object} options - Additional query options (version, sort_by, etc.)
+ * @returns {Promise<Object>} Object with newsItems and imageManifest
+ */
+export const fetchNewsData = async (storyblokApi, options = {}) => {
+  try {
+    // Fetch all news items with pagination support
+    const allItems = await fetchAllNewsItems(storyblokApi, options);
+
+    // Load image manifest
+    const imageManifest = await loadImageManifest();
+
+    // Sort by content.date or first_published_at as fallback, newest first
+    const sortedItems = (allItems || []).sort((a, b) => {
+      const dateA = new Date(a.content.date || a.first_published_at || a.created_at);
+      const dateB = new Date(b.content.date || b.first_published_at || b.created_at);
+      return dateB - dateA; // Newest first
+    });
+
+    return {
+      newsItems: sortedItems,
+      imageManifest
+    };
+  } catch (error) {
+    console.error('Error fetching news data:', error);
+    return {
+      newsItems: [],
+      imageManifest: {}
+    };
+  }
+};

@@ -10,6 +10,7 @@ import { ROUTES } from '../config/routes'
 import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
+import NewsBlock from '@/components/NewsBlock';
 
 const HERO_CONTENT = {
   title: "Digital Security Checklists for Activists",
@@ -84,7 +85,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [] }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {} }) => {
   return (
     <div>
       <Head>
@@ -193,11 +194,22 @@ const HomePage = ({ changelogEntries = [] }) => {
             </div>
           </section>
 
+          {/* Latest News */}
+          <NewsBlock newsItems={newsItems} imageManifest={imageManifest} />
+
           {/* Recent Updates */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold mb-6">Recent Updates</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Recent Site Updates</h2>
+              <Button asChild variant="outline" size="sm">
+                <Link href={ROUTES.CHANGELOG} className="group">
+                  View all updates <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </div>
             <ChangeLogRecentEntries entries={changelogEntries} />
           </section>
+
 
         </div>
       </Layout>
@@ -208,16 +220,21 @@ const HomePage = ({ changelogEntries = [] }) => {
 export async function getStaticProps() {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchAllChangelogEntries } = await import('../utils/core');
+    const { getStoryblokVersion, fetchAllChangelogEntries, fetchNewsData } = await import('../utils/core');
     
     const storyblokApi = getStoryblokApi();
     
-    // Fetch all changelog entries with pagination support, then limit to 5
-    const allEntries = await fetchAllChangelogEntries(storyblokApi, {
-      version: getStoryblokVersion()
-    });
+    // Fetch changelog entries and news data in parallel
+    const [allEntries, { newsItems, imageManifest }] = await Promise.all([
+      fetchAllChangelogEntries(storyblokApi, {
+        version: getStoryblokVersion()
+      }),
+      fetchNewsData(storyblokApi, {
+        version: getStoryblokVersion()
+      })
+    ]);
 
-    // Sort by first_published_at or created_at as fallback, newest first
+    // Sort changelog entries by first_published_at or created_at as fallback, newest first
     const sortedEntries = (allEntries || []).sort((a, b) => {
       const dateA = new Date(a.first_published_at || a.created_at);
       const dateB = new Date(b.first_published_at || b.created_at);
@@ -226,14 +243,18 @@ export async function getStaticProps() {
 
     return {
       props: {
-        changelogEntries: sortedEntries.slice(0, 5) // Limit to 5 for homepage
+        changelogEntries: sortedEntries.slice(0, 5), // Limit to 5 for homepage
+        newsItems,
+        imageManifest
       }
     };
   } catch (error) {
-    console.error('Error fetching changelog entries:', error);
+    console.error('Error fetching homepage data:', error);
     return {
       props: {
-        changelogEntries: []
+        changelogEntries: [],
+        newsItems: [],
+        imageManifest: {}
       }
     };
   }
