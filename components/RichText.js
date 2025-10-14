@@ -199,13 +199,22 @@ const nodeResolvers = {
   heading: (children, { level }) => {
     const className = `heading-${level}`;
     return React.createElement(`h${level}`, { className }, children);
-  },
-  paragraph: (children) => children
+  }
 };
 
 export function RichText({ document, className, noWrapper = false, ...props }) {
   const content = render(document, {
-    nodeResolvers,
+    nodeResolvers: {
+      ...nodeResolvers,
+      paragraph: (children, props) => {
+        // If noWrapper is true, return children without <p> wrapper
+        if (noWrapper) {
+          return children;
+        }
+        // Default behavior: wrap in <p> tag
+        return React.createElement('p', {}, children);
+      }
+    },
     markResolvers,
     blokResolvers: {
       ...blokResolvers
