@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   IoSearch, 
   IoMegaphone, 
@@ -19,6 +19,7 @@ import { useDebug } from '@/contexts/DebugContext';
 import { cn } from '@/lib/utils';
 import Link from '@/components/Link';
 import { SECURITY_CHECKLISTS } from '@/config/navigation';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const POPULAR_SEARCHES = [
   'phone security protest',
@@ -102,6 +103,73 @@ const Search = ({ variant = 'searchbar', className, ...props }) => {
   const [pagefind, setPagefind] = useState(null);
   const [open, setOpen] = useState(false);
   const { addDebugData } = useDebug();
+  const { trackEvent } = useAnalytics();
+  
+  // Refs for tracking search queries
+  const searchTrackingTimeoutRef = useRef(null);
+  const lastTrackedQueryRef = useRef('');
+  const pendingQueryRef = useRef('');
+
+  // Track search query with generous timeout
+  const trackSearchQuery = (searchQuery) => {
+    if (!searchQuery.trim()) return;
+    
+    // Clear any existing timeout
+    if (searchTrackingTimeoutRef.current) {
+      clearTimeout(searchTrackingTimeoutRef.current);
+    }
+    
+    // Update pending query
+    pendingQueryRef.current = searchQuery.trim();
+    
+    // Set generous timeout (5 seconds) to track after user stops typing
+    searchTrackingTimeoutRef.current = setTimeout(() => {
+      const queryToTrack = pendingQueryRef.current;
+      
+      // Only track if it's different from what we last tracked and not empty
+      if (queryToTrack && queryToTrack !== lastTrackedQueryRef.current) {
+        trackEvent({
+          name: 'search_query',
+          data: {
+            query: queryToTrack,
+            query_length: queryToTrack.length,
+            word_count: queryToTrack.split(/\s+/).length
+          }
+        });
+        
+        lastTrackedQueryRef.current = queryToTrack;
+        addDebugData('search_tracked', { query: queryToTrack });
+      }
+    }, 5000); // 5 second generous timeout
+  };
+
+  // Cleanup function for tracking
+  const cleanupSearchTracking = () => {
+    if (searchTrackingTimeoutRef.current) {
+      clearTimeout(searchTrackingTimeoutRef.current);
+      searchTrackingTimeoutRef.current = null;
+    }
+    
+    // Track any pending query before cleanup
+    const pendingQuery = pendingQueryRef.current;
+    if (pendingQuery && pendingQuery !== lastTrackedQueryRef.current) {
+      trackEvent({
+        name: 'search_query',
+        data: {
+          query: pendingQuery,
+          query_length: pendingQuery.length,
+          word_count: pendingQuery.split(/\s+/).length,
+          cleanup_reason: 'dialog_closed'
+        }
+      });
+      
+      lastTrackedQueryRef.current = pendingQuery;
+      addDebugData('search_tracked_cleanup', { query: pendingQuery });
+    }
+    
+    // Reset refs
+    pendingQueryRef.current = '';
+  };
 
   // Initialize Pagefind
   useEffect(() => {
@@ -164,14 +232,36 @@ const Search = ({ variant = 'searchbar', className, ...props }) => {
     }
   };
 
-  // Debounce search
+  // Debounce search and track queries
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       handleSearch(query);
+      // Track the search query after user stops typing
+      trackSearchQuery(query);
     }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [query, pagefind]);
+
+  // Handle dialog close - cleanup tracking
+  useEffect(() => {
+    if (!open) {
+      cleanupSearchTracking();
+    }
+  }, [open]);
+
+  // Handle tab close - cleanup tracking
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      cleanupSearchTracking();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      cleanupSearchTracking();
+    };
+  }, []);
 
   // Parse HTML content from excerpt
   const createMarkup = (html) => {
