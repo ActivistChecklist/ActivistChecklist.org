@@ -138,6 +138,13 @@ export const NAV_ITEMS = {
     href: ROUTES.NEWS,
     title: "News",
     type: "link"
+  },
+  FLYER: {
+    key: 'flyer',
+    label: "Printable Flyer",
+    href: ROUTES.FLYER,
+    title: "Printable Flyer",
+    type: "link"
   }
 }
 
@@ -188,7 +195,7 @@ export const ABOUT_SECTION = {
   items: [
     NAV_ITEMS.ABOUT,
     NAV_ITEMS.CHANGELOG,
-    
+    NAV_ITEMS.FLYER,
     NAV_ITEMS.CONTACT,
     NAV_ITEMS.PRIVACY
   ]

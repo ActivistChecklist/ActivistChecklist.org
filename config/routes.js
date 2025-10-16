@@ -22,6 +22,7 @@ export const ROUTES = {
   },
   CHANGELOG: '/changelog',
   NEWS: '/news',
+  FLYER: '/flyer',
   // BLOG: '/blog'
   PGP_KEY_FILE: '/files/publickey.contact@activistchecklist.org.asc'
 } 
