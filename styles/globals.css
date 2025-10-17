@@ -2,12 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Libre Franklin - Headers */
+@font-face {
+  font-display: swap;
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/libre-franklin-v20-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-display: swap;
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/libre-franklin-v20-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-display: swap;
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/libre-franklin-v20-latin-700.woff2') format('woff2');
+}
+@font-face {
+  font-display: swap;
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/libre-franklin-v20-latin-800.woff2') format('woff2');
+}
+
+/* Source Sans 3 - Body Text */
+@font-face {
+  font-display: swap;
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/source-sans-3-v19-latin-regular.woff2') format('woff2');
+}
+@font-face {
+  font-display: swap;
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/source-sans-3-v19-latin-500.woff2') format('woff2');
+}
+/* @font-face {
+  font-display: swap;
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/source-sans-3-v19-latin-600.woff2') format('woff2');
+} */
+
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-size: 17px; /* Slightly larger to compensate for Source Sans 3's smaller appearance */
+}
+
+h1, h2, h3, h4, h5, h6, font-heading {
+  font-family: var(--font-heading);
 }
 
 html {
@@ -33,6 +91,10 @@ a {
 
 @layer base {
   :root {
+    /* Font Variables - Community Font Combination */
+    --font-heading: 'Libre Franklin', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
     --proton: 251 100% 64.7%;
     --intercept: 247 100% 66%; /* passes accessibility */
     --intercept2: 247 100% 65.5%; /* passes accessibility */
