@@ -102,7 +102,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {} })
             )}>
               <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--tw-gradient-stops))] from-primary/10 via-accent/5 to-primary/10 opacity-70"></div>
               <div className="relative max-w-4xl mx-auto text-center">
-                <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent text-balance">
+                <h1 className="text-5xl md:text-6xl font-heavy mb-6 bg-gradient-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent text-balance">
                   {HERO_CONTENT.title}
                 </h1>
                 <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-2xl mx-auto">

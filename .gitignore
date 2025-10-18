@@ -52,3 +52,6 @@ buildbackups/
 
 # News image caching
 public/files/news/
+
+# Metadata cleaner folder 
+metadata-cleaner/

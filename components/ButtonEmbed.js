@@ -22,7 +22,7 @@ const DynamicIcon = ({ iconName, className, ...props }) => {
 };
 
 export const ButtonEmbed = (props) => {
-  const { title, url, variant, size, className, icon, iconPosition, download } = props;
+  const { title, url, variant, size, className, icon, iconPosition, download, alignment } = props;
   
   // Extract the actual URL and target from the url object
   const href = url?.cached_url || url?.url || '#';
@@ -30,6 +30,20 @@ export const ButtonEmbed = (props) => {
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;
   const position = iconPosition || 'left';
+  
+  // Handle alignment classes for the container
+  const getAlignmentClass = () => {
+    switch (alignment) {
+      case 'left':
+        return 'flex justify-start';
+      case 'center':
+        return 'flex justify-center';
+      case 'right':
+        return 'flex justify-end';
+      default:
+        return 'flex justify-start'; // default to left alignment
+    }
+  };
 
    // Handle download tracking
    const handleClick = async (e) => {
@@ -39,24 +53,26 @@ export const ButtonEmbed = (props) => {
   };
   
   return (
-    <Button 
-      asChild
-      variant={variant || 'default'}
-      size={size || 'default'}
-      className={className}
-    >
-      <a 
-        href={href}
-        target={target}
-        rel={target === '_blank' ? 'noopener noreferrer' : undefined}
-        onClick={handleClick}
-        {...(download && { download: '' })}
+    <div className={getAlignmentClass()}>
+      <Button 
+        asChild
+        variant={variant || 'default'}
+        size={size || 'default'}
+        className={className}
       >
-        {iconElement && position === 'left' && iconElement}
-        {title}
-        {iconElement && position === 'right' && iconElement}
-      </a>
-    </Button>
+        <a 
+          href={href}
+          target={target}
+          rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+          onClick={handleClick}
+          {...(download && { download: '' })}
+        >
+          {iconElement && position === 'left' && iconElement}
+          {title}
+          {iconElement && position === 'right' && iconElement}
+        </a>
+      </Button>
+    </div>
   );
 };
 

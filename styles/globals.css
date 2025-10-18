@@ -255,6 +255,11 @@ a {
     @apply underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary;
   }
 
+  /* Muted links that stay muted until hover - override prose styling */
+  .muted-links a:not(.button) {
+    @apply text-muted-foreground underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary transition-colors !important;
+  }
+
   mark {
     @apply bg-amber-200 dark:bg-amber-900/50 px-0.5 rounded-sm;
     color: inherit;
@@ -440,6 +445,11 @@ a {
       @apply mt-6 border-l-4 bg-border/20 p-4 pl-6 mr-4 md:mr-36;
     }
 
+
+    /* Images */
+    img {
+      @apply max-h-[70vh] w-auto mx-auto block border border-muted-foreground/20 rounded-lg my-4;
+    }
 
     /* Links */
     a:not(.button) {

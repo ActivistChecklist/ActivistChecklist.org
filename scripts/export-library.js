@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import yaml from 'js-yaml'
 import { logger, formatProgress } from './utils.js'
-import { ImageHandler } from './export-image-handler.js'
+import { MediaHandler } from './export-image-handler.js'
 import { storyToYaml } from './export-yaml.js'
 
 export default class SbExport {
@@ -17,7 +17,7 @@ export default class SbExport {
       accessToken: token,
       region: 'us'
     })
-    this.imageHandler = new ImageHandler(imagesDir, verbose)
+    this.mediaHandler = new MediaHandler(imagesDir, verbose)
 
     // Define how different components should be handled
     this.componentTypes = {
@@ -226,6 +226,6 @@ export default class SbExport {
    * Export images from stories
    */
   async exportImages(stories) {
-    return this.imageHandler.processImages(stories)
+    return this.mediaHandler.processMedia(stories)
   }
 }

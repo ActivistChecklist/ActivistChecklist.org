@@ -242,12 +242,13 @@ async function downloadImage(imageUrl, resizedFilePath) {
             return;
           }
           
-          // Process image with sharp: resize to max 720px width, convert to JPG
+          // Process image with sharp: resize to max 720px width, convert to JPG, strip metadata
           const processedBuffer = await sharp(imageBuffer)
             .resize(720, null, {
               withoutEnlargement: true,
               fit: 'inside'
             })
+            .withMetadata(false) // Strip all metadata including EXIF
             .jpeg({
               quality: 85,
               progressive: true,

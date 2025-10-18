@@ -9,6 +9,7 @@ import { ProtectionBadge } from "@/components/guides/ProtectionBadge";
 import { cn } from "@/lib/utils";
 import CopyButton from "@/components/CopyButton";
 import ButtonEmbed from "@/components/ButtonEmbed";
+import VideoEmbed from "@/components/VideoEmbed";
 
 const INLINE_COMPONENTS = {
   Badge,
@@ -174,6 +175,9 @@ const blokResolvers = {
     },
     button: (props) => {
       return <ButtonEmbed {...props} className={`my-2 mr-2 ${props.className || ''}`} />;
+    },
+    video_embed: (props) => {
+      return <VideoEmbed {...props} className={`my-4 ${props.className || ''}`} />;
     }
 }
 
@@ -242,7 +246,7 @@ export function RichText({ document, className, noWrapper = false, ...props }) {
   });
 
   if (noWrapper) {
-    return content;
+    return <span className={cn("prose", className)} {...props}>{content}</span>;
   }
 
   return (
