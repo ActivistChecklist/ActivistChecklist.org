@@ -325,6 +325,20 @@ function log(message, quietMode = false) {
   }
 }
 
+// Progress logging helper - always shows progress even in quiet mode
+function logProgress(message, quietMode = false) {
+  console.log(message);
+}
+
+// Simple progress bar
+function createProgressBar(current, total, width = 30) {
+  const percentage = Math.round((current / total) * 100);
+  const filled = Math.round((current / total) * width);
+  const empty = width - filled;
+  const bar = '█'.repeat(filled) + '░'.repeat(empty);
+  return `[${bar}] ${percentage}% (${current}/${total})`;
+}
+
 // Main function
 async function main() {
   const args = process.argv.slice(2);
@@ -358,8 +372,13 @@ async function main() {
     let processed = 0;
     let skipped = 0;
     let errors = 0;
+    let currentIndex = 0;
+    
+    // Show initial progress
+    logProgress(`🚀 Starting processing: ${createProgressBar(0, stories.length)}`, quietMode);
     
     for (const story of stories) {
+      currentIndex++;
       const storyId = story.id;
       const storySlug = story.slug;
       const url = story.content?.url?.url;
@@ -367,6 +386,7 @@ async function main() {
       if (!url) {
         log(`⏭️ Skipping story ${storyId} (${storySlug}): No URL`, quietMode);
         skipped++;
+        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -376,6 +396,7 @@ async function main() {
       if (!forceMode && fs.existsSync(resizedImagePath)) {
         log(`✅ Resized image already exists for story ${storyId} (${storySlug})`, quietMode);
         skipped++;
+        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -393,6 +414,7 @@ async function main() {
         if (!imageUrl) {
           log(`❌ No social graph image found for story ${storyId} (${storySlug})`, quietMode);
           errors++;
+          logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
           continue;
         }
         
@@ -404,6 +426,7 @@ async function main() {
         log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
         log(`   📁 Resized: ${resizedImagePath}`, quietMode);
         processed++;
+        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         
         // Small delay to be respectful to the API
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -417,6 +440,7 @@ async function main() {
       } catch (error) {
         console.error(`❌ Error processing story ${storyId} (${storySlug}):`, error.message);
         errors++;
+        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         
         // In test mode, exit even on error
         if (testMode) {
@@ -425,6 +449,9 @@ async function main() {
         }
       }
     }
+    
+    // Show final progress
+    logProgress(`🏁 Completed: ${createProgressBar(stories.length, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
     
     console.log('\n📊 Summary:');
     console.log(`✅ Processed: ${processed}`);
