@@ -163,8 +163,7 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.SPYWARE,
     NAV_ITEMS.ORGANIZER,
     NAV_ITEMS.ACTION_RESEARCH,
-    NAV_ITEMS.FEDERAL,
-  ],
+  ].slice(0, 8), // Limit to 8 items maximum
   footerLink: {
     title: "Browse all checklists",
     href: ROUTES.CHECKLISTS.LIST,

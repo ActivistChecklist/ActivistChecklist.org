@@ -14,8 +14,8 @@ If you're new to node and yarn, follow these steps to install the prerequisites:
 # Install Homebrew first (if you don't have it already)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install Node.js and Yarn package manager using Homebrew
-brew install node yarn
+# Install Node.js, Yarn package manager, ffmpeg, and exiftool using Homebrew
+brew install node yarn ffmpeg exiftool
 
 # Enable Corepack (which enables yarn to install packages globally)
 corepack enable 

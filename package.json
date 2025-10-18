@@ -30,7 +30,7 @@
     "api:delete": "yarn run pm2 delete ac-api",
     "api:logs": "yarn run pm2 logs ac-api",
     "fetch-news": "node scripts/fetch-news-images.js",
-    "metadata": "node scripts/metadata-cli.js"
+    "metadata": "node scripts/metadata-cli.cjs"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

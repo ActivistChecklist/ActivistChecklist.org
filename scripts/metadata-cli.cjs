@@ -4,7 +4,7 @@ const { Command } = require('commander')
 const path = require('path')
 const fs = require('fs/promises')
 const readline = require('readline')
-const MetadataStripper = require('../lib/metadata-library.js').MetadataStripper
+const MetadataStripper = require('../lib/metadata-library.cjs').MetadataStripper
 
 const program = new Command()
 
@@ -28,7 +28,7 @@ const stripCommand = program
     try {
       // Validate input path
       const inputPath = path.resolve(input)
-      
+
       try {
         await fs.access(inputPath)
       } catch (error) {
@@ -56,15 +56,15 @@ const stripCommand = program
       console.log(`📸 Images: ${imageTypes.join(', ')}`)
       console.log(`📄 PDFs: ${pdfTypes.join(', ')}`)
       console.log(`🎬 Videos: ${videoTypes.join(', ')}`)
-      
+
       if (options.backup) {
         console.log('💾 Backup: Enabled')
       }
-      
+
       if (options.dryRun) {
         console.log('🧪 Dry run: Enabled (no changes will be made)')
       }
-      
+
       console.log('')
 
       if (options.dryRun) {
@@ -76,22 +76,22 @@ const stripCommand = program
         const scanStartTime = Date.now()
         const scanResults = await stripper.scan(inputPath)
         const scanEndTime = Date.now()
-        
+
         if (scanResults.filesWithMetadata.length === 0) {
           console.log('🎉 No metadata concerns found. Files are already clean!')
           return
         }
-        
+
         console.log(`📊 Found ${scanResults.filesWithMetadata.length} files with metadata concerns`)
         console.log(`⏱️ Scan completed in: ${((scanEndTime - scanStartTime) / 1000).toFixed(2)}s`)
         console.log('')
-        
+
         // Now perform the actual stripping
         console.log('🔄 Stripping metadata from files...')
         const startTime = Date.now()
         const results = await stripper.stripMetadata(inputPath)
         const endTime = Date.now()
-        
+
         // Display detailed results using existing functions
         console.log('')
         console.log('📊 Stripping Results:')
@@ -101,15 +101,16 @@ const stripCommand = program
         console.log(`❌ Errors: ${results.errors}`)
         console.log(`⏱️ Time: ${((endTime - startTime) / 1000).toFixed(2)}s`)
         console.log('')
-        
-        // Reuse the existing display functions with success indicators
-        displayStrippingResults(scanResults, results)
-        
+
+        // Generate report from scan results and display with success indicators
+        const report = stripper.generateReport(scanResults)
+        displayStrippingResults(report, results)
+
         if (options.backup && results.processed > 0) {
           console.log('💾 Backup files created with .backup extension')
         }
       }
-      
+
     } catch (error) {
       console.error(`❌ Fatal error: ${error.message}`)
       process.exit(1)
@@ -131,7 +132,7 @@ const scanCommand = program
     try {
       // Validate input path
       const inputPath = path.resolve(input)
-      
+
       try {
         await fs.access(inputPath)
       } catch (error) {
@@ -165,14 +166,14 @@ const scanCommand = program
       const startTime = Date.now()
       const scanResults = await stripper.scan(inputPath)
       const endTime = Date.now()
-      
+
       // Generate report
       const report = stripper.generateReport(scanResults)
-      
+
       // Display scan results
       console.log('📊 Scan Results:')
       console.log('')
-      
+
       // Overall status with clear indicators
       if (report.summary.filesWithMetadata === 0) {
         console.log('✅ CLEAN - No metadata concerns found!')
@@ -184,15 +185,15 @@ const scanCommand = program
         console.log('🟢 LOW PRIORITY - Only minor concerns found')
       }
       console.log('')
-      
+
       // Summary with meaningful indicators
       console.log('📋 Summary:')
       console.log(`   📁 Total files scanned: ${report.summary.totalFiles}`)
       console.log(`   🔍 Successfully scanned: ${report.summary.scannedFiles}`)
-      
+
       if (report.summary.filesWithMetadata > 0) {
         console.log(`   ⚠️  Files with metadata: ${report.summary.filesWithMetadata}`)
-        
+
         if (report.summary.highConcerns > 0) {
           console.log(`   🔴 High-priority concerns: ${report.summary.highConcerns} (immediate action needed)`)
         }
@@ -209,7 +210,7 @@ const scanCommand = program
       if (report.summary.errors > 0) {
         console.log(`   ❌ Scan errors: ${report.summary.errors}`)
       }
-      
+
       console.log(`   ⏱️  Scan completed in: ${((endTime - startTime) / 1000).toFixed(2)}s`)
       console.log('')
 
@@ -254,7 +255,7 @@ const scanCommand = program
       } else {
         console.log('💡 Next Steps:')
         console.log('─'.repeat(60))
-        
+
         if (report.summary.highConcerns > 0) {
           console.log(`🔴 URGENT: ${report.summary.highConcerns} high-priority concerns need immediate attention`)
           console.log('   These contain author info, GPS data, or other identifying metadata')
@@ -280,7 +281,7 @@ const scanCommand = program
       } else if (report.filesWithMetadata.length > 0) {
         console.log('💡 Use --interactive flag to selectively strip metadata from files with concerns')
       }
-      
+
     } catch (error) {
       console.error(`❌ Fatal error: ${error.message}`)
       process.exit(1)
@@ -317,7 +318,7 @@ async function interactiveStrip(stripper, report) {
     console.log(`\n${i + 1}. 📄 ${fileName}`)
     console.log(`   📍 ${relativePath}`)
     console.log(`   ⚠️  Concerns: ${concernCount} total (${highConcerns} high, ${mediumConcerns} medium, ${lowConcerns} low)`)
-    
+
     // Show first few concerns with better formatting
     file.concerns.slice(0, 2).forEach(concern => {
       const levelIcon = concern.level === 'high' ? '🔴' : concern.level === 'medium' ? '🟡' : '🟢'
@@ -329,7 +330,7 @@ async function interactiveStrip(stripper, report) {
     console.log('')
 
     const answer = await question(`Strip metadata from ${fileName}? (y/n/a for all/q to quit): `)
-    
+
     if (answer.toLowerCase() === 'q') {
       break
     } else if (answer.toLowerCase() === 'a') {
@@ -349,9 +350,9 @@ async function interactiveStrip(stripper, report) {
     console.log('')
     console.log('🔄 Stripping metadata from selected files...')
     console.log('─'.repeat(60))
-    
+
     const stripResults = await stripper.stripSelectedFiles({ files: [] }, selectedFiles)
-    
+
     console.log('')
     console.log('📊 Stripping Results:')
     console.log('┌─────────────────────────────────────────────────────────┐')
@@ -360,7 +361,7 @@ async function interactiveStrip(stripper, report) {
     console.log(`│ ✅ Processed:        ${stripResults.processed.toString().padStart(8)} │`)
     console.log(`│ ❌ Errors:          ${stripResults.errors.toString().padStart(8)} │`)
     console.log('└─────────────────────────────────────────────────────────┘')
-    
+
     if (stripResults.errors > 0) {
       console.log('')
       console.log('❌ ERRORS:')
@@ -387,7 +388,7 @@ async function interactiveStrip(stripper, report) {
  */
 async function performDryRun(inputPath, stripper) {
   const stats = await fs.stat(inputPath)
-  
+
   if (stats.isFile()) {
     if (stripper.isSupported(inputPath)) {
       const fileType = stripper.getFileType(inputPath)
@@ -405,10 +406,10 @@ async function performDryRun(inputPath, stripper) {
  */
 async function performDryRunDirectory(dirPath, stripper) {
   const entries = await fs.readdir(dirPath, { withFileTypes: true })
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dirPath, entry.name)
-    
+
     if (entry.isDirectory()) {
       console.log(`📁 Directory: ${entry.name}/`)
       await performDryRunDirectory(fullPath, stripper)
@@ -426,21 +427,18 @@ async function performDryRunDirectory(dirPath, stripper) {
 /**
  * Display stripping results by reusing the existing concern display logic
  */
-function displayStrippingResults(scanResults, stripResults) {
+function displayStrippingResults(report, stripResults) {
   if (stripResults.files.length === 0) return
-  
+
   console.log('📋 Detailed Results:')
   console.log('═'.repeat(60))
-  
+
   // Create a map of file results for quick lookup
   const fileResultsMap = new Map()
   stripResults.files.forEach(file => {
     fileResultsMap.set(file.filePath, file)
   })
-  
-  // Reuse the existing concern display logic with success indicators
-  const report = scanResults // scanResults already has the report structure
-  
+
   // Display high concerns with success indicators
   if (report.highConcerns.length > 0) {
     console.log('🔴 HIGH CONCERNS (Stripped)')
@@ -454,7 +452,7 @@ function displayStrippingResults(scanResults, stripResults) {
     })
     console.log('')
   }
-  
+
   // Display medium concerns with success indicators
   if (report.mediumConcerns.length > 0) {
     console.log('🟡 MEDIUM CONCERNS (Stripped)')
@@ -468,7 +466,7 @@ function displayStrippingResults(scanResults, stripResults) {
     })
     console.log('')
   }
-  
+
   // Display low concerns with success indicators
   if (report.lowConcerns.length > 0) {
     console.log('🟢 LOW CONCERNS (Stripped)')
@@ -482,7 +480,7 @@ function displayStrippingResults(scanResults, stripResults) {
     })
     console.log('')
   }
-  
+
   // Display errors
   const errors = stripResults.files.filter(file => !file.success)
   if (errors.length > 0) {
