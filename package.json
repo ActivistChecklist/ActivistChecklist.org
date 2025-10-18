@@ -11,7 +11,7 @@
     "storyblockexportimages": "NODE_OPTIONS='--experimental-vm-modules' node scripts/export-stroyblok.mjs  --yaml --mode images --images ./out/images --verbose",
     "storyblockexportcontent": "NODE_OPTIONS='--experimental-vm-modules' node scripts/export-stroyblok.mjs  --yaml --mode content --content ./content --verbose",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
-    "postbuild": "yarn storyblockexportimages && next-sitemap && yarn rss && yarn index && if [ \"$BUILD_MODE\" = \"static\" ]; then cp public/.htaccess out/.htaccess; fi  && yarn fetch-news -q && yarn buildbackup",
+    "postbuild": "yarn storyblockexportimages && next-sitemap && yarn rss && yarn index && if [ \"$BUILD_MODE\" = \"static\" ]; then cp public/.htaccess out/.htaccess; fi && if [ \"$VERCEL\" != \"1\" ]; then yarn fetch-news -q; fi && yarn buildbackup",
     "rss": "node scripts/generate-rss.js",
     "index": "NODE_ENV=${NODE_ENV} bash scripts/build-search-index.sh",
     "buildstatic": "BUILD_MODE=static yarn build && yarn checkbuild",
