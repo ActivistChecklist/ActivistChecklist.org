@@ -61,12 +61,6 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     <div className="text-sm text-gray-600 mb-2">
       <div className="flex flex-wrap items-center gap-1">
         <span>{formatRelativeDate(dateString)}</span>
-        {source && (
-          <>
-            <span>•</span>
-            <span>{source.name || source}</span>
-          </>
-        )}
         {story?.tag_list && story.tag_list.length > 0 && (
           <>
             <span>•</span>
@@ -104,7 +98,14 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                 "text-lg font-semibold mb-2 line-clamp-3 transition-all duration-100",
                 hasUrl ? "text-black group-hover:underline group-hover:decoration-primary" : "text-gray-900"
               )}>
-                {story?.name || 'News Item'}
+                <span className={hasUrl ? "group-hover:underline group-hover:decoration-primary" : ""}>
+                  {story?.name || 'News Item'}
+                </span>
+                {source && (
+                  <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
+                    • {source.name || source}
+                  </span>
+                )}
               </h3>
             </div>
             
@@ -161,9 +162,16 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             {/* Title */}
             <h3 className={cn(
               "text-lg font-semibold mb-2 line-clamp-3 transition-all duration-100",
-              hasUrl ? "text-black group-hover:underline group-hover:decoration-primary" : "text-gray-900"
+              hasUrl ? "text-black" : "text-gray-900"
             )}>
-              {story?.name || 'News Item'}
+              <span className={hasUrl ? "group-hover:underline group-hover:decoration-primary" : ""}>
+                {story?.name || 'News Item'}
+              </span>
+              {source && (
+                <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
+                  • {source.name || source}
+                </span>
+              )}
             </h3>
             
             {/* Comment */}
