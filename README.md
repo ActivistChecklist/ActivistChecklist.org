@@ -159,9 +159,7 @@ ActivistChecklist.org
 
 ## Contributing changes to the content
 
-If you'd like to contribute content changes, you can submit a pull request modifying the YAML files in the `/content` directory. While these changes won't be merged directly, we'll review your suggestions and implement approved changes through our content management system.
-
-See [content/README.md](content/README.md) for more information.
+If you'd like to suggest content changes, please open an issue. The content doesn't live in the repository, so there isn't a way to submit pull requests for content changes at the moment.
 
 ## Where does the content live?
 
