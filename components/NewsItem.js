@@ -24,6 +24,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            console.log('Image intersecting, setting shouldLoadImage to true');
             setShouldLoadImage(true);
             observer.unobserve(entry.target);
           }
@@ -37,7 +38,10 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     );
 
     if (imageRef.current) {
+      console.log('Observing imageRef:', imageRef.current);
       observer.observe(imageRef.current);
+    } else {
+      console.log('imageRef.current is null');
     }
 
     return () => {
@@ -51,10 +55,14 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
   
   // Check if image exists using build-time manifest
   const getImageInfo = () => {
-    if (!story?.slug) return { exists: false, src: null };
+    if (!story?.slug) {
+      console.log('No story slug found');
+      return { exists: false, src: null };
+    }
     
     // Check if the story slug exists in the image manifest
     const imagePath = imageManifest[story.slug];
+    console.log('Checking image for slug:', story.slug, 'found:', imagePath);
     
     if (imagePath) {
       return { exists: true, src: imagePath };
@@ -107,19 +115,8 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     </div>
   );
 
-  return (
-    <div 
-      {...storyblokEditable(blok)}
-      className={cn(
-        "news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group",
-        hasUrl && "cursor-pointer"
-      )}
-      onClick={hasUrl ? (e) => {
-        // Don't navigate if clicking on a nested link
-        if (e.target.closest('a')) return;
-        window.open(mainUrl, '_blank', 'noopener,noreferrer');
-      } : undefined}
-    >
+  const NewsItemContent = () => (
+    <>
       {isMobile ? (
         // Mobile layout: stacked vertically
         <div className="space-y-3">
@@ -148,6 +145,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                 className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
               >
                 {imageInfo.exists && shouldLoadImage ? (
+                  console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
                   <Image
                     src={imageInfo.src}
                     alt={story?.name || 'News item'}
@@ -193,6 +191,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                 className="underline hover:no-underline hover:text-primary transition-colors duration-200"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
               >
                 See original
               </Link>.
@@ -238,6 +237,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                   className="underline hover:no-underline hover:text-primary transition-colors duration-200"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   See original
                 </Link>.
@@ -252,6 +252,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
               className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
             >
               {imageInfo.exists && shouldLoadImage ? (
+                console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
                 <Image
                   src={imageInfo.src}
                   alt={story?.name || 'News item'}
@@ -278,6 +279,39 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           </div>
         </div>
       )}
+    </>
+  );
+
+  // If there's a URL, wrap the content in a proper <a> tag for URL preview
+  if (hasUrl) {
+    return (
+      <a 
+        href={mainUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...storyblokEditable(blok)}
+        className={cn(
+          "news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group cursor-pointer block"
+        )}
+        onClick={(e) => {
+          // Don't navigate if clicking on a nested link
+          if (e.target.closest('a:not([href="' + mainUrl + '"])')) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <NewsItemContent />
+      </a>
+    );
+  }
+
+  // If no URL, return the content directly
+  return (
+    <div 
+      {...storyblokEditable(blok)}
+      className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group"
+    >
+      <NewsItemContent />
     </div>
   );
 };
