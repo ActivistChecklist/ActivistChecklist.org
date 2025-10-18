@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
 import { cn, formatRelativeDate } from '@/lib/utils';
@@ -9,11 +9,43 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const NewsItem = ({ blok, story, imageManifest = {} }) => {
   const isMobile = useIsMobile();
+  const [shouldLoadImage, setShouldLoadImage] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageRef = useRef(null);
   
   if (!blok) {
     console.log('⚠️ NewsItem: blok is undefined. Skipping');
     return null;
   }
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShouldLoadImage(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        // Start loading when image is 200px away from viewport
+        rootMargin: '800px',
+        threshold: 0.1
+      }
+    );
+
+    if (imageRef.current) {
+      observer.observe(imageRef.current);
+    }
+
+    return () => {
+      if (imageRef.current) {
+        observer.unobserve(imageRef.current);
+      }
+    };
+  }, []);
 
   const { date, source, url, paywall_mode = 'inactive', comment } = blok;
   
@@ -111,18 +143,31 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             
             {/* Image */}
             <div className="flex-shrink-0">
-              <div className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-                {imageInfo.exists ? (
+              <div 
+                ref={imageRef}
+                className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+              >
+                {imageInfo.exists && shouldLoadImage ? (
                   <Image
                     src={imageInfo.src}
                     alt={story?.name || 'News item'}
                     width={128}
                     height={80}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                    className={cn(
+                      "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                      imageLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    onLoad={() => setImageLoaded(true)}
+                    priority={false}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-gray-400">
                     <IoNewspaperOutline className="w-8 h-8" />
+                  </div>
+                )}
+                {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
@@ -202,18 +247,31 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           
           {/* Image */}
           <div className="flex-shrink-0">
-            <div className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-              {imageInfo.exists ? (
+            <div 
+              ref={imageRef}
+              className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+            >
+              {imageInfo.exists && shouldLoadImage ? (
                 <Image
                   src={imageInfo.src}
                   alt={story?.name || 'News item'}
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                  width={192}
+                  height={112}
+                  className={cn(
+                    "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  )}
+                  onLoad={() => setImageLoaded(true)}
+                  priority={false}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-gray-400">
                   <IoNewspaperOutline className="w-10 h-10" />
+                </div>
+              )}
+              {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                  <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
