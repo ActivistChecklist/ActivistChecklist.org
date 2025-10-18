@@ -11,7 +11,18 @@ let sharp;
 try {
   sharp = require('sharp');
 } catch (error) {
-  console.warn('⚠️ Sharp not available, image processing will be skipped:', error.message);
+  const isVercel = process.env.VERCEL === '1';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isVercel) {
+    console.warn('⚠️ Sharp not available on Vercel, image processing will be skipped:', error.message);
+  } else if (isDevelopment) {
+    console.error('❌ Sharp is required for development but not available:', error.message);
+    console.error('💡 Run: yarn add sharp');
+    throw new Error('Sharp is required for development');
+  } else {
+    console.warn('⚠️ Sharp not available, image processing will be skipped:', error.message);
+  }
   sharp = null;
 }
 
