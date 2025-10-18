@@ -18,7 +18,7 @@ export const colorSchemes = {
 };
 
 // Specify which announcement is currently active
-export const ACTIVE_ANNOUNCEMENT = 'noKingsFlyer'; //'softLaunch';
+export const ACTIVE_ANNOUNCEMENT = null; //'noKingsFlyer';
 
 // Configure your announcements
 export const announcements = {
