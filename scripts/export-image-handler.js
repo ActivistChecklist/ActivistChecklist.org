@@ -2,7 +2,10 @@ import fs from 'fs/promises'
 import path from 'path'
 import fetch from 'node-fetch'
 import { createHash, logger } from './utils.js'
-import MetadataStripper from '../lib/metadata-library.js'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const { MetadataStripper } = require('../lib/metadata-library.cjs')
 
 export class MediaHandler {
   constructor(mediaDir, verbose = false) {
