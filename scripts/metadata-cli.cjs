@@ -77,19 +77,25 @@ const stripCommand = program
         const scanResults = await stripper.scan(inputPath)
         const scanEndTime = Date.now()
 
-        if (scanResults.filesWithMetadata.length === 0) {
+        if (scanResults.filesWithMetadata === 0) {
           console.log('🎉 No metadata concerns found. Files are already clean!')
           return
         }
 
-        console.log(`📊 Found ${scanResults.filesWithMetadata.length} files with metadata concerns`)
+        console.log(`📊 Found ${scanResults.filesWithMetadata} files with metadata concerns`)
         console.log(`⏱️ Scan completed in: ${((scanEndTime - scanStartTime) / 1000).toFixed(2)}s`)
         console.log('')
 
-        // Now perform the actual stripping
-        console.log('🔄 Stripping metadata from files...')
+        // Now perform the actual stripping - only process files with metadata concerns
+        console.log('🔄 Stripping metadata from files with concerns...')
         const startTime = Date.now()
-        const results = await stripper.stripMetadata(inputPath)
+
+        // Get the file paths that have metadata concerns
+        const filesToProcess = scanResults.files
+          .filter(file => file.hasMetadata)
+          .map(file => file.filePath)
+
+        const results = await stripper.stripSelectedFiles(scanResults, filesToProcess)
         const endTime = Date.now()
 
         // Display detailed results using existing functions
@@ -102,9 +108,8 @@ const stripCommand = program
         console.log(`⏱️ Time: ${((endTime - startTime) / 1000).toFixed(2)}s`)
         console.log('')
 
-        // Generate report from scan results and display with success indicators
-        const report = stripper.generateReport(scanResults)
-        displayStrippingResults(report, results)
+        // Reuse the existing display functions with success indicators
+        displayStrippingResults(scanResults, results)
 
         if (options.backup && results.processed > 0) {
           console.log('💾 Backup files created with .backup extension')
@@ -427,7 +432,7 @@ async function performDryRunDirectory(dirPath, stripper) {
 /**
  * Display stripping results by reusing the existing concern display logic
  */
-function displayStrippingResults(report, stripResults) {
+function displayStrippingResults(scanResults, stripResults) {
   if (stripResults.files.length === 0) return
 
   console.log('📋 Detailed Results:')
@@ -437,6 +442,28 @@ function displayStrippingResults(report, stripResults) {
   const fileResultsMap = new Map()
   stripResults.files.forEach(file => {
     fileResultsMap.set(file.filePath, file)
+  })
+
+  // Generate report from scan results
+  const report = {
+    highConcerns: [],
+    mediumConcerns: [],
+    lowConcerns: []
+  }
+
+  // Categorize files by concern level
+  scanResults.files.forEach(file => {
+    if (file.hasMetadata) {
+      file.concerns.forEach(concern => {
+        if (concern.level === 'high') {
+          report.highConcerns.push({ ...concern, filePath: file.filePath })
+        } else if (concern.level === 'medium') {
+          report.mediumConcerns.push({ ...concern, filePath: file.filePath })
+        } else if (concern.level === 'low') {
+          report.lowConcerns.push({ ...concern, filePath: file.filePath })
+        }
+      })
+    }
   })
 
   // Display high concerns with success indicators
