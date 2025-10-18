@@ -2,13 +2,15 @@ import fs from 'fs/promises'
 import path from 'path'
 import fetch from 'node-fetch'
 import { createHash, logger } from './utils.js'
+import MetadataStripper from '../lib/metadata-library.js'
 
-export class ImageHandler {
-  constructor(imagesDir, verbose = false) {
-    this.imagesDir = imagesDir
+export class MediaHandler {
+  constructor(mediaDir, verbose = false) {
+    this.mediaDir = mediaDir
     this.verbose = verbose
-    this.imageCache = new Map()
+    this.mediaCache = new Map()
     this.urlMappings = new Map() // Maps original URLs to local paths
+    this.metadataStripper = new MetadataStripper({ verbose })
   }
 
   /**
@@ -18,24 +20,24 @@ export class ImageHandler {
     // Checks for a.storyblok.com or a-us.storyblok.com
     return typeof url === 'string' && 
            url.match(/a(-us)?\.storyblok\.com/) && 
-           url.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf)(\?|$)/i)
+           url.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4)(\?|$)/i)
   }
 
-  findImages(obj, images = new Set()) {
-    if (!obj) return images
+  findMedia(obj, media = new Set()) {
+    if (!obj) return media
 
     // Handle string values - check if it's a Storyblok asset URL
     if (typeof obj === 'string') {
       if (this.isStoryblokAsset(obj)) {
-        images.add(obj)
+        media.add(obj)
       }
-      return images
+      return media
     }
 
     // Handle arrays
     if (Array.isArray(obj)) {
-      obj.forEach(item => this.findImages(item, images))
-      return images
+      obj.forEach(item => this.findMedia(item, media))
+      return media
     }
 
     // Handle objects - check specific patterns then recurse
@@ -43,15 +45,17 @@ export class ImageHandler {
       // Check for URLs in common Storyblok patterns
       const urlsToCheck = [
         obj.image?.filename,           // Standard image objects
-        obj.attrs?.src,               // Rich text image nodes
-        obj.url?.cached_url,          // Button components (cached)
-        obj.url?.url,                 // Button components (direct)
-        obj.attrs?.href               // Link attributes
+        obj.video?.cached_url,         // Video embed components (cached)
+        obj.video?.url,                // Video embed components (direct)
+        obj.attrs?.src,                // Rich text image nodes
+        obj.url?.cached_url,           // Button components (cached)
+        obj.url?.url,                  // Button components (direct)
+        obj.attrs?.href                // Link attributes
       ].filter(Boolean)
 
       urlsToCheck.forEach(url => {
         if (this.isStoryblokAsset(url)) {
-          images.add(url)
+          media.add(url)
         }
       })
 
@@ -59,7 +63,7 @@ export class ImageHandler {
       if (obj.type === 'text' && obj.marks) {
         obj.marks.forEach(mark => {
           if (mark.type === 'link' && this.isStoryblokAsset(mark.attrs?.href)) {
-            images.add(mark.attrs.href)
+            media.add(mark.attrs.href)
           }
         })
       }
@@ -68,29 +72,29 @@ export class ImageHandler {
       const arrayProps = ['content', 'body']
       arrayProps.forEach(prop => {
         if (obj[prop] && Array.isArray(obj[prop])) {
-          obj[prop].forEach(item => this.findImages(item, images))
+          obj[prop].forEach(item => this.findMedia(item, media))
         }
       })
 
       // Handle blok nodes with body in attrs
       if (obj.type === 'blok' && obj.attrs?.body && Array.isArray(obj.attrs.body)) {
-        obj.attrs.body.forEach(item => this.findImages(item, images))
+        obj.attrs.body.forEach(item => this.findMedia(item, media))
       }
 
       // Recursively process all other object values
       Object.values(obj).forEach(value => {
         if (typeof value === 'object' && value !== null) {
-          this.findImages(value, images)
+          this.findMedia(value, media)
         }
       })
     }
 
-    return images
+    return media
   }
 
-  async downloadImage(url) {
+  async downloadMedia(url) {
     const filename = url.split('/').pop()
-    const filepath = path.join(this.imagesDir, filename)
+    const filepath = path.join(this.mediaDir, filename)
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -99,59 +103,110 @@ export class ImageHandler {
 
     const arrayBuffer = await response.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    await fs.writeFile(filepath, buffer)
+    
+    // Check if file type is supported for metadata stripping
+    const fileType = this.metadataStripper.getFileType(filename)
+    
+    let processedBuffer = buffer
+    let metadataStripped = false
+    
+    if (fileType !== 'unsupported') {
+      try {
+        if (fileType === 'image') {
+          processedBuffer = await this.metadataStripper.stripImageMetadata(buffer)
+          metadataStripped = true
+        } else if (fileType === 'pdf') {
+          processedBuffer = await this.metadataStripper.stripPdfMetadata(buffer)
+          metadataStripped = true
+        } else if (fileType === 'video') {
+          await this.metadataStripper.stripVideoMetadata(buffer, filepath)
+          metadataStripped = true
+          
+          // For videos, we don't need to write the buffer since ffmpeg handles it
+          // Store the URL mapping for replacement
+          const relativePath = path.relative(process.cwd(), filepath)
+          const urlPath = relativePath.startsWith('out/') 
+            ? relativePath.replace('out/', '/')
+            : `/${relativePath}`
+          this.urlMappings.set(url, urlPath)
+
+          return {
+            filename,
+            filepath,
+            size: buffer.length, // Original size for reference
+            hash: createHash(buffer),
+            downloadedAt: new Date().toISOString(),
+            localPath: relativePath,
+            metadataStripped: true
+          }
+        }
+        
+        if (this.verbose && metadataStripped) {
+          logger.detail(`    Downloaded and stripped ${fileType} metadata: ${filename} (${Math.round(processedBuffer.length / 1024)}KB)`)
+        }
+      } catch (error) {
+        // If metadata stripping fails, fall back to original file
+        logger.warn(`    Failed to strip metadata from ${filename}, saving original: ${error.message}`)
+        processedBuffer = buffer
+      }
+    }
+    
+    // Write the processed buffer (for images and PDFs)
+    if (fileType !== 'video') {
+      await fs.writeFile(filepath, processedBuffer)
+    }
 
     // Store the URL mapping for replacement
     const relativePath = path.relative(process.cwd(), filepath)
-    // For /out/images, we want the URL to be /images/filename
     const urlPath = relativePath.startsWith('out/') 
       ? relativePath.replace('out/', '/')
       : `/${relativePath}`
     this.urlMappings.set(url, urlPath)
 
     if (this.verbose) {
-      logger.detail(`    Downloaded: ${filename} (${Math.round(buffer.length / 1024)}KB)`)
+      logger.detail(`    Downloaded: ${filename} (${Math.round(processedBuffer.length / 1024)}KB)`)
     }
 
     return {
       filename,
       filepath,
-      size: buffer.length,
-      hash: createHash(buffer),
+      size: processedBuffer.length,
+      hash: createHash(processedBuffer),
       downloadedAt: new Date().toISOString(),
-      localPath: relativePath
+      localPath: relativePath,
+      metadataStripped: metadataStripped
     }
   }
 
-  async processImages(stories) {
-    await fs.mkdir(this.imagesDir, { recursive: true })
+  async processMedia(stories) {
+    await fs.mkdir(this.mediaDir, { recursive: true })
     
-    const imageUrls = new Set()
+    const mediaUrls = new Set()
     stories.forEach(story => {
-      this.findImages(story.content, imageUrls)
+      this.findMedia(story.content, mediaUrls)
       if (this.verbose) {
-        const storyImages = this.findImages(story.content, new Set())
-        if (storyImages.size > 0) {
-          logger.detail(`  Found ${storyImages.size} files in ${story.full_slug}`)
+        const storyMedia = this.findMedia(story.content, new Set())
+        if (storyMedia.size > 0) {
+          logger.detail(`  Found ${storyMedia.size} files in ${story.full_slug}`)
         }
       }
     })
 
-    if (imageUrls.size === 0) {
+    if (mediaUrls.size === 0) {
       return { downloaded: 0, skipped: 0, errors: 0 }
     }
 
-    logger.info('\n🖼  Processing images and PDFs...')
-    logger.detail(`  Found ${imageUrls.size} unique files`)
+    logger.info('\n🖼  Processing images, PDFs, and videos...')
+    logger.detail(`  Found ${mediaUrls.size} unique files`)
     
     let downloaded = 0
     let skipped = 0
     let errors = 0
 
-    for (const url of imageUrls) {
+    for (const url of mediaUrls) {
       try {
         const urlHash = createHash(url)
-        if (this.imageCache.has(urlHash)) {
+        if (this.mediaCache.has(urlHash)) {
           skipped++
           if (this.verbose) {
             logger.detail(`    Skipped: ${url.split('/').pop()} (cached)`)
@@ -159,13 +214,13 @@ export class ImageHandler {
           continue
         }
 
-        await this.downloadImage(url)
-        this.imageCache.set(urlHash, true)
+        await this.downloadMedia(url)
+        this.mediaCache.set(urlHash, true)
         downloaded++
 
         // Log progress every 10 files if not in verbose mode
         if (!this.verbose && downloaded % 10 === 0) {
-          logger.detail(`  Progress: ${downloaded}/${imageUrls.size} files`)
+          logger.detail(`  Progress: ${downloaded}/${mediaUrls.size} files`)
         }
       } catch (error) {
         logger.warn(`  Failed to download ${url}: ${error.message}`)
