@@ -122,7 +122,7 @@ async function fetchNewsStories(quietMode = false) {
 }
 
 // Get social graph image URL for a given URL
-async function getSocialGraphImage(url) {
+async function getSocialGraphImage(url, quietMode = false) {
   if (!url) return null;
   
   try {
@@ -143,7 +143,9 @@ async function getSocialGraphImage(url) {
     const { error, result } = await ogs(options);
     
     if (error) {
-      console.warn(`⚠️ Failed to get social graph image for ${url}:`, error);
+      if (!quietMode) {
+        console.warn(`⚠️ Failed to get social graph image for ${url}:`, error);
+      }
       return null;
     }
     
@@ -167,13 +169,15 @@ async function getSocialGraphImage(url) {
     return null;
     
   } catch (error) {
-    console.warn(`⚠️ Failed to get social graph image for ${url}:`, error.message);
+    if (!quietMode) {
+      console.warn(`⚠️ Failed to get social graph image for ${url}:`, error.message);
+    }
     return null;
   }
 }
 
 // Download and process image from URL with security measures
-async function downloadImage(imageUrl, resizedFilePath) {
+async function downloadImage(imageUrl, resizedFilePath, quietMode = false) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalSize = 0;
@@ -238,7 +242,9 @@ async function downloadImage(imageUrl, resizedFilePath) {
           
           // Check if sharp is available for processing
           if (!sharp) {
-            console.warn('⚠️ Sharp not available, saving original image without processing');
+            if (!quietMode) {
+              console.warn('⚠️ Sharp not available, saving original image without processing');
+            }
             fs.writeFileSync(resizedFilePath, imageBuffer);
             resolve();
             return;
@@ -336,9 +342,9 @@ function log(message, quietMode = false) {
   }
 }
 
-// Progress logging helper - always shows progress even in quiet mode
+// Progress logging helper - always overwrites the same line
 function logProgress(message, quietMode = false) {
-  console.log(message);
+  process.stdout.write(`\r${message}`);
 }
 
 // Simple progress bar
@@ -420,7 +426,7 @@ async function main() {
       
       try {
         // Get social graph image
-        const imageUrl = await getSocialGraphImage(url);
+        const imageUrl = await getSocialGraphImage(url, quietMode);
         
         if (!imageUrl) {
           log(`❌ No social graph image found for story ${storyId} (${storySlug})`, quietMode);
@@ -433,7 +439,7 @@ async function main() {
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
         
         // Download and process image
-        await downloadImage(imageUrl, resizedImagePath);
+        await downloadImage(imageUrl, resizedImagePath, quietMode);
         log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
         log(`   📁 Resized: ${resizedImagePath}`, quietMode);
         processed++;
@@ -463,6 +469,9 @@ async function main() {
     
     // Show final progress
     logProgress(`🏁 Completed: ${createProgressBar(stories.length, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
+    
+    // Add newline after final progress bar
+    console.log('');
     
     console.log('\n📊 Summary:');
     console.log(`✅ Processed: ${processed}`);
