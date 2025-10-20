@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
 import { cn, formatRelativeDate } from '@/lib/utils';
@@ -9,60 +9,21 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const NewsItem = ({ blok, story, imageManifest = {} }) => {
   const isMobile = useIsMobile();
-  const [shouldLoadImage, setShouldLoadImage] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const imageRef = useRef(null);
   
   if (!blok) {
-    console.log('⚠️ NewsItem: blok is undefined. Skipping');
     return null;
   }
-
-  // Intersection Observer for lazy loading
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            console.log('Image intersecting, setting shouldLoadImage to true');
-            setShouldLoadImage(true);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        // Start loading when image is 200px away from viewport
-        rootMargin: '800px',
-        threshold: 0.1
-      }
-    );
-
-    if (imageRef.current) {
-      console.log('Observing imageRef:', imageRef.current);
-      observer.observe(imageRef.current);
-    } else {
-      console.log('imageRef.current is null');
-    }
-
-    return () => {
-      if (imageRef.current) {
-        observer.unobserve(imageRef.current);
-      }
-    };
-  }, []);
 
   const { date, source, url, paywall_mode = 'inactive', comment } = blok;
   
   // Check if image exists using build-time manifest
   const getImageInfo = () => {
     if (!story?.slug) {
-      console.log('No story slug found');
       return { exists: false, src: null };
     }
     
     // Check if the story slug exists in the image manifest
     const imagePath = imageManifest[story.slug];
-    console.log('Checking image for slug:', story.slug, 'found:', imagePath);
     
     if (imagePath) {
       return { exists: true, src: imagePath };
@@ -157,63 +118,37 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div 
-                    ref={imageRef}
-                    className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-                  >
-                    {imageInfo.exists && shouldLoadImage ? (
-                      console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                  <div className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+                    {imageInfo.exists ? (
                       <Image
                         src={imageInfo.src}
                         alt={story?.name || 'News item'}
                         width={128}
                         height={80}
-                        className={cn(
-                          "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                          imageLoaded ? "opacity-100" : "opacity-0"
-                        )}
-                        onLoad={() => setImageLoaded(true)}
-                        priority={false}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center text-gray-400">
                         <IoNewspaperOutline className="w-8 h-8" />
                       </div>
                     )}
-                    {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                        <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
                   </div>
                 </a>
               ) : (
-                <div 
-                  ref={imageRef}
-                  className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-                >
-                  {imageInfo.exists && shouldLoadImage ? (
-                    console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                <div className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+                  {imageInfo.exists ? (
                     <Image
                       src={imageInfo.src}
                       alt={story?.name || 'News item'}
                       width={128}
                       height={80}
-                      className={cn(
-                        "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                        imageLoaded ? "opacity-100" : "opacity-0"
-                      )}
-                      onLoad={() => setImageLoaded(true)}
-                      priority={false}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <IoNewspaperOutline className="w-8 h-8" />
-                    </div>
-                  )}
-                  {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                      <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>
@@ -313,63 +248,37 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div 
-                  ref={imageRef}
-                  className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-                >
-                  {imageInfo.exists && shouldLoadImage ? (
-                    console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                <div className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+                  {imageInfo.exists ? (
                     <Image
                       src={imageInfo.src}
                       alt={story?.name || 'News item'}
                       width={192}
                       height={112}
-                      className={cn(
-                        "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                        imageLoaded ? "opacity-100" : "opacity-0"
-                      )}
-                      onLoad={() => setImageLoaded(true)}
-                      priority={false}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <IoNewspaperOutline className="w-10 h-10" />
                     </div>
                   )}
-                  {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                      <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
                 </div>
               </a>
             ) : (
-              <div 
-                ref={imageRef}
-                className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-              >
-                {imageInfo.exists && shouldLoadImage ? (
-                  console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+              <div className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+                {imageInfo.exists ? (
                   <Image
                     src={imageInfo.src}
                     alt={story?.name || 'News item'}
                     width={192}
                     height={112}
-                    className={cn(
-                      "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                      imageLoaded ? "opacity-100" : "opacity-0"
-                    )}
-                    onLoad={() => setImageLoaded(true)}
-                    priority={false}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-gray-400">
                     <IoNewspaperOutline className="w-10 h-10" />
-                  </div>
-                )}
-                {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
