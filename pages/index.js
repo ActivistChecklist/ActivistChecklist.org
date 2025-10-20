@@ -25,7 +25,7 @@ const HERO_CONTENT = {
   }
 };
 
-const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 6);
+const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
 
 const TRUST_POINTS = [
   {
@@ -152,7 +152,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {} })
 
           {/* Quick Action Guides */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold mb-6">Digital Security Checklists</h2>
+            <h2 className="text-2xl font-bold mb-6">Digital Security & Physical Safety Checklists</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {ACTION_GUIDES.map((guide, index) => (
                 <GuideCard key={index} guideItem={guide} size="large" />

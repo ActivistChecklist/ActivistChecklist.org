@@ -8,6 +8,7 @@ import {
   IoChatbubbleOutline,
   IoAirplaneOutline,
   IoEyeOffOutline,
+  IoNotificationsOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -59,6 +60,13 @@ export const NAV_ITEMS = {
     href: ROUTES.CHECKLISTS.SECONDARY_PHONE,
     description: "Set up an extra phone for activism and protests.",
     icon: IoPhonePortraitOutline
+  },
+  EMERGENCY: {
+    key: 'emergency',
+    title: "Emergency planning",
+    href: ROUTES.CHECKLISTS.EMERGENCY,
+    description: "Establish an emergency support network in case you're detained or threatened.",
+    icon: IoNotificationsOutline
   },
   SPYWARE: {
     key: 'spyware',
@@ -161,9 +169,9 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.TRAVEL,
     NAV_ITEMS.SECONDARY_PHONE,
     NAV_ITEMS.SPYWARE,
+    NAV_ITEMS.EMERGENCY,
     NAV_ITEMS.ORGANIZER,
-    NAV_ITEMS.ACTION_RESEARCH,
-  ].slice(0, 8), // Limit to 8 items maximum
+  ].slice(0, 8), // Limit to 9 items maximum
   footerLink: {
     title: "Browse all checklists",
     href: ROUTES.CHECKLISTS.LIST,
