@@ -125,11 +125,21 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             <div className="flex-1 min-w-0">
               <h3 className={cn(
                 "text-lg font-semibold mb-2 line-clamp-3 transition-all duration-100",
-                hasUrl ? "text-black group-hover:underline group-hover:decoration-primary" : "text-gray-900"
+                hasUrl ? "text-black" : "text-gray-900"
               )}>
-                <span className={hasUrl ? "group-hover:underline group-hover:decoration-primary" : ""}>
-                  {story?.name || 'News Item'}
-                </span>
+                {hasUrl ? (
+                  <a 
+                    href={mainUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline hover:decoration-primary"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {story?.name || 'News Item'}
+                  </a>
+                ) : (
+                  <span>{story?.name || 'News Item'}</span>
+                )}
                 {source && (
                   <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
                     • {source.name || source}
@@ -140,35 +150,74 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             
             {/* Image */}
             <div className="flex-shrink-0">
-              <div 
-                ref={imageRef}
-                className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-              >
-                {imageInfo.exists && shouldLoadImage ? (
-                  console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
-                  <Image
-                    src={imageInfo.src}
-                    alt={story?.name || 'News item'}
-                    width={128}
-                    height={80}
-                    className={cn(
-                      "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                      imageLoaded ? "opacity-100" : "opacity-0"
+              {hasUrl ? (
+                <a 
+                  href={mainUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div 
+                    ref={imageRef}
+                    className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+                  >
+                    {imageInfo.exists && shouldLoadImage ? (
+                      console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                      <Image
+                        src={imageInfo.src}
+                        alt={story?.name || 'News item'}
+                        width={128}
+                        height={80}
+                        className={cn(
+                          "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                          imageLoaded ? "opacity-100" : "opacity-0"
+                        )}
+                        onLoad={() => setImageLoaded(true)}
+                        priority={false}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-400">
+                        <IoNewspaperOutline className="w-8 h-8" />
+                      </div>
                     )}
-                    onLoad={() => setImageLoaded(true)}
-                    priority={false}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-gray-400">
-                    <IoNewspaperOutline className="w-8 h-8" />
+                    {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                        <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
                   </div>
-                )}
-                {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
+                </a>
+              ) : (
+                <div 
+                  ref={imageRef}
+                  className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+                >
+                  {imageInfo.exists && shouldLoadImage ? (
+                    console.log('Rendering mobile image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                    <Image
+                      src={imageInfo.src}
+                      alt={story?.name || 'News item'}
+                      width={128}
+                      height={80}
+                      className={cn(
+                        "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      )}
+                      onLoad={() => setImageLoaded(true)}
+                      priority={false}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <IoNewspaperOutline className="w-8 h-8" />
+                    </div>
+                  )}
+                  {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                      <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
@@ -208,9 +257,19 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
               "text-lg font-semibold mb-2 line-clamp-3 transition-all duration-100",
               hasUrl ? "text-black" : "text-gray-900"
             )}>
-              <span className={hasUrl ? "group-hover:underline group-hover:decoration-primary" : ""}>
-                {story?.name || 'News Item'}
-              </span>
+              {hasUrl ? (
+                <a 
+                  href={mainUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline hover:decoration-primary"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {story?.name || 'News Item'}
+                </a>
+              ) : (
+                <span>{story?.name || 'News Item'}</span>
+              )}
               {source && (
                 <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
                   • {source.name || source}
@@ -247,65 +306,81 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           
           {/* Image */}
           <div className="flex-shrink-0">
-            <div 
-              ref={imageRef}
-              className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
-            >
-              {imageInfo.exists && shouldLoadImage ? (
-                console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
-                <Image
-                  src={imageInfo.src}
-                  alt={story?.name || 'News item'}
-                  width={192}
-                  height={112}
-                  className={cn(
-                    "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
-                    imageLoaded ? "opacity-100" : "opacity-0"
+            {hasUrl ? (
+              <a 
+                href={mainUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div 
+                  ref={imageRef}
+                  className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+                >
+                  {imageInfo.exists && shouldLoadImage ? (
+                    console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                    <Image
+                      src={imageInfo.src}
+                      alt={story?.name || 'News item'}
+                      width={192}
+                      height={112}
+                      className={cn(
+                        "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      )}
+                      onLoad={() => setImageLoaded(true)}
+                      priority={false}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <IoNewspaperOutline className="w-10 h-10" />
+                    </div>
                   )}
-                  onLoad={() => setImageLoaded(true)}
-                  priority={false}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center text-gray-400">
-                  <IoNewspaperOutline className="w-10 h-10" />
+                  {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                      <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {imageInfo.exists && shouldLoadImage && !imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                  <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-            </div>
+              </a>
+            ) : (
+              <div 
+                ref={imageRef}
+                className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+              >
+                {imageInfo.exists && shouldLoadImage ? (
+                  console.log('Rendering desktop image:', imageInfo.src, 'shouldLoadImage:', shouldLoadImage) ||
+                  <Image
+                    src={imageInfo.src}
+                    alt={story?.name || 'News item'}
+                    width={192}
+                    height={112}
+                    className={cn(
+                      "w-full h-full object-cover group-hover:scale-110 transition-all duration-200",
+                      imageLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    onLoad={() => setImageLoaded(true)}
+                    priority={false}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-gray-400">
+                    <IoNewspaperOutline className="w-10 h-10" />
+                  </div>
+                )}
+                {imageInfo.exists && shouldLoadImage && !imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
     </>
   );
 
-  // If there's a URL, wrap the content in a proper <a> tag for URL preview
-  if (hasUrl) {
-    return (
-      <a 
-        href={mainUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...storyblokEditable(blok)}
-        className={cn(
-          "news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group cursor-pointer block"
-        )}
-        onClick={(e) => {
-          // Don't navigate if clicking on a nested link
-          if (e.target.closest('a:not([href="' + mainUrl + '"])')) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <NewsItemContent />
-      </a>
-    );
-  }
-
-  // If no URL, return the content directly
+  // Return the content in a div container
   return (
     <div 
       {...storyblokEditable(blok)}
