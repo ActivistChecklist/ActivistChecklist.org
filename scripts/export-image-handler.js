@@ -50,6 +50,8 @@ export class MediaHandler {
         obj.image?.filename,           // Standard image objects
         obj.video?.cached_url,         // Video embed components (cached)
         obj.video?.url,                // Video embed components (direct)
+        obj.video_file?.filename,      // Video file components (filename)
+        obj.video_file?.cached_url,    // Video file components (cached)
         obj.attrs?.src,                // Rich text image nodes
         obj.url?.cached_url,           // Button components (cached)
         obj.url?.url,                  // Button components (direct)
