@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import CopyButton from "@/components/CopyButton";
 import ButtonEmbed from "@/components/ButtonEmbed";
 import VideoEmbed from "@/components/VideoEmbed";
+import ImageEmbed from "@/components/ImageEmbed";
+import RelatedGuides from "@/components/RelatedGuides";
 
 const INLINE_COMPONENTS = {
   Badge,
@@ -178,6 +180,12 @@ const blokResolvers = {
     },
     video_embed: (props) => {
       return <VideoEmbed {...props} className={`my-4 ${props.className || ''}`} />;
+    },
+    image_embed: (props) => {
+      return <ImageEmbed {...props} className={`my-4 ${props.className || ''}`} />;
+    },
+    related_guides: (props) => {
+      return <RelatedGuides blok={props} {...props} />;
     }
 }
 

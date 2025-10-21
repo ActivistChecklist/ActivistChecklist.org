@@ -13,24 +13,24 @@ export default function Page({ story, preview }) {
   
   // Get the first image from the story content if available, fallback to default
   const getOgImage = () => {
-    // if (story?.content?.image) {
-    //   // Handle Storyblok image object or string
-    //   const imageUrl = typeof story.content.image === 'string' 
-    //     ? story.content.image 
-    //     : story.content.image.filename || story.content.image.url;
+    if (story?.content?.image) {
+      // Handle Storyblok image object or string
+      const imageUrl = typeof story.content.image === 'string' 
+        ? story.content.image 
+        : story.content.image.cached_url || story.content.image.filename || story.content.image.url;
 
-    //   if (!imageUrl) {
-    //     return `${baseUrl}/images/og-image.jpg`;
-    //   }
+      if (!imageUrl) {
+        return `${baseUrl}/images/og-image.png`;
+      }
 
-    //   // If it's already an absolute URL, return as is
-    //   if (imageUrl.startsWith('http')) {
-    //     return imageUrl;
-    //   }
-    //   // Otherwise, make it absolute
-    //   return `${baseUrl}${imageUrl}`;
-    // }
-    return `/images/og-image.png`; // Your default OG image
+      // If it's already an absolute URL, return as is
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      // Otherwise, make it absolute
+      return `${baseUrl}${imageUrl}`;
+    }
+    return `${baseUrl}/images/og-image.png`; // Default OG image
   };
 
   // Get a description from the story content if available, fallback to default
