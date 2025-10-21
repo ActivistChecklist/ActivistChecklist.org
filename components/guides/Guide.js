@@ -182,14 +182,22 @@ const Guide = ({ blok }) => {
                     onToggleExpand={() => handleSectionExpandToggle(sectionIndex, section)}
                   />
                 )}
-                {section.blocks.map((nestedBlok) => (
-                  <StoryblokComponent 
-                    blok={nestedBlok} 
-                    key={nestedBlok._uid}
-                    index={nestedBlok.component === 'checklist-item' ? currentIndex++ : undefined}
-                    expandTrigger={expandTriggers[sectionIndex]}
-                  />
-                ))}
+                {section.blocks.map((nestedBlok) => {
+                  // Pass isBlock prop for related-guides components
+                  const props = nestedBlok.component === 'related-guides' 
+                    ? { isBlock: true } 
+                    : {};
+                  
+                  return (
+                    <StoryblokComponent 
+                      blok={nestedBlok} 
+                      key={nestedBlok._uid}
+                      index={nestedBlok.component === 'checklist-item' ? currentIndex++ : undefined}
+                      expandTrigger={expandTriggers[sectionIndex]}
+                      {...props}
+                    />
+                  );
+                })}
               </section>
             );
           })}

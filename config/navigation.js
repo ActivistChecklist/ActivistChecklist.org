@@ -149,9 +149,16 @@ export const NAV_ITEMS = {
   },
   FLYER: {
     key: 'flyer',
-    label: "Printable Flyer",
+    label: "Printable flyer",
     href: ROUTES.FLYER,
-    title: "Printable Flyer",
+    title: "Printable flyer",
+    type: "link"
+  },
+  LINKS: {
+    key: 'links',
+    label: "Remove link tracking",
+    href: ROUTES.LINKS,
+    title: "Remove link tracking",
     type: "link"
   }
 }
@@ -188,9 +195,10 @@ export const RESOURCES_SECTION = {
   href: ROUTES.RESOURCES,
   type: "dropdown",
   items: [
-    NAV_ITEMS.MOVIES,
+    NAV_ITEMS.LINKS,
     NAV_ITEMS.POLICE_DOOR_POSTER,
     NAV_ITEMS.FLYER,
+    NAV_ITEMS.MOVIES,
     NAV_ITEMS.RESOURCES,
   ]
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { storyblokEditable } from "@storyblok/react";
+import { storyblokEditable, StoryblokComponent } from "@storyblok/react";
 import { RichText } from "../RichText";
 import { useDebug } from '../../contexts/DebugContext'
 import { useLayout } from "@/contexts/LayoutContext";
@@ -31,6 +31,26 @@ function Page({ blok, story }) {
       <div className="prose prose-slate max-w-none" {...storyblokEditable(blok)}>
         <RichText document={blok.body} />
       </div>
+      
+      {/* Render blocks if they exist */}
+      {blok.blocks && blok.blocks.length > 0 && (
+        <div className="mt-8">
+          {blok.blocks.map((nestedBlok) => {
+            // Pass isBlock prop for related-guides components
+            const props = nestedBlok.component === 'related-guides' 
+              ? { isBlock: true } 
+              : {};
+            
+            return (
+              <StoryblokComponent 
+                blok={nestedBlok} 
+                key={nestedBlok._uid}
+                {...props}
+              />
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

@@ -3,7 +3,7 @@ import GuideCardBlock from '@/components/GuideCardBlock';
 import { RichText } from '@/components/RichText';
 import { cn } from '@/lib/utils';
 
-const RelatedGuides = ({ blok }) => {
+const RelatedGuides = ({ blok, isBlock = false }) => {
 
   // Extract guide URLs from blok (using cached_url for Storyblok multilink fields)
   const guides = [
@@ -33,22 +33,32 @@ const RelatedGuides = ({ blok }) => {
     }
   };
 
+  // Different styling based on context
+  const containerClass = isBlock 
+    ? "bg-muted/50 border border-border/50 rounded-lg p-6 my-8" 
+    : "mt-12 pt-8 border-t border-border/50";
+
+  const titleClass = isBlock 
+    ? "text-xl font-semibold text-foreground mb-4" 
+    : "";
+
+  const defaultTitle = isBlock 
+    ? "Keep learning with these related guides"
+    : "If you found this helpful, also check out these guides";
+
   return (
-    <div className="mt-12 pt-8 border-t border-border/50">
+    <div className={containerClass}>
       {/* Title section */}
       <div className="mb-6">
-        <h2 className={cn(
-          // "text-2xl font-bold text-foreground",
-          // "!border-b-0 !pb-0"
-        )}
+        <h3 className={cn(titleClass)}
           id="related"
         >
           {blok?.title ? (
             <RichText document={blok.title} />
           ) : (
-            "Related Checklists"
+            defaultTitle
           )}
-        </h2>
+        </h3>
         {blok?.description && (
           <div className="mt-2 text-muted-foreground">
             <RichText document={blok.description} />
