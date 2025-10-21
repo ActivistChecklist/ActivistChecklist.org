@@ -4,6 +4,10 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'text-error',
+    'text-warning'
+  ],
   screens: {
     print: { raw: 'print' },
     screen: { raw: 'screen' },
@@ -113,7 +117,8 @@ module.exports = {
   				foreground: 'hsl(var(--success-foreground))',
   				text: 'hsl(var(--success))',
   				border: 'hsl(var(--success) / 0.2)'
-  			}
+  			},
+  			'error': 'hsl(var(--text-error))',
   		},
   		keyframes: {
   			'accordion-down': {

@@ -2,7 +2,7 @@
 import NextLink from 'next/link'
 
 export default function Link({ href, children, ...props }) {
-  const isExternal = href?.startsWith('http')
+  const isExternal = typeof href === 'string' && href.startsWith('http')
   
   if (isExternal) {
     return (

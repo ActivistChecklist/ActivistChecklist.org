@@ -166,6 +166,10 @@ a {
     --warning-foreground: 38 92% 95%;
     --info: 220 90% 50%;
     --info-foreground: 220 90% 95%;
+    
+    /* Text variants - darker for better readability */
+    --text-error: 0 84.2% 45%;
+    --text-warning: 38 92% 40%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 98%;
@@ -222,6 +226,10 @@ a {
     --info-foreground: 220 90% 100%;
     --success: 142 76% 35%;
     --success-foreground: 142 76% 100%;
+    
+    /* Text variants - lighter for dark mode readability */
+    --text-error: 0 84.2% 70%;
+    --text-warning: 38 92% 65%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 15%;
@@ -263,6 +271,15 @@ a {
   mark {
     @apply bg-amber-200 dark:bg-amber-900/50 px-0.5 rounded-sm;
     color: inherit;
+  }
+
+  /* Text utility classes */
+  .text-error {
+    color: hsl(var(--text-error));
+  }
+
+  .text-warning {
+    color: hsl(var(--text-warning));
   }
 }
 
@@ -448,7 +465,16 @@ a {
 
     /* Images */
     img {
-      @apply max-h-[70vh] w-auto mx-auto block border border-muted-foreground/20 rounded-lg my-4;
+      @apply w-auto block border border-muted-foreground/20 rounded-lg my-4;
+    }
+    
+    /* Override prose img margins for floated images */
+    img.float-left {
+      @apply !ml-0 !mr-6;
+    }
+    
+    img.float-right {
+      @apply !mr-0 !ml-6;
     }
 
     /* Links */

@@ -48,6 +48,8 @@ export class MediaHandler {
       // Check for URLs in common Storyblok patterns
       const urlsToCheck = [
         obj.image?.filename,           // Standard image objects
+        obj.image?.cached_url,         // Page-level image field (cached)
+        obj.image?.url,                // Page-level image field (direct)
         obj.video?.cached_url,         // Video embed components (cached)
         obj.video?.url,                // Video embed components (direct)
         obj.video_file?.filename,      // Video file components (filename)
