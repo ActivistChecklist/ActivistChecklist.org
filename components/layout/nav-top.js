@@ -7,7 +7,8 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Search from "@/components/Search"
-import { navigationConfig, isNavItemActive, isSubItemActive } from "@/config/navigation"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
+import { useTranslatedNavigation, isNavItemActive, isSubItemActive } from "@/hooks/useTranslatedNavigation"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -21,8 +22,16 @@ import { cn } from "@/lib/utils"
 
 const TopNav = ({ hideOnScroll = false, maxWidth }) => {
   const pathname = usePathname()
+  const [isClient, setIsClient] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+
+  // Ensure client-side rendering to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const { navigationConfig } = useTranslatedNavigation();
 
   useEffect(() => {
     if (!hideOnScroll) {
@@ -42,6 +51,26 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prevScrollPos, hideOnScroll]);
+
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <header className="sticky top-0 w-full border-b bg-background text-foreground z-50 print:hidden">
+        <div className={cn(maxWidth, "mx-auto px-4")}>
+          <div className="flex h-14 items-center justify-between">
+            <div className="flex items-center">
+              <div className="h-6 w-6 mr-2" /> {/* Placeholder for menu button */}
+              <div className="h-5 w-48 bg-muted animate-pulse rounded" /> {/* Placeholder for logo */}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="h-8 w-16 bg-muted animate-pulse rounded" /> {/* Placeholder for language switcher */}
+              <div className="h-8 w-8 bg-muted animate-pulse rounded" /> {/* Placeholder for search */}
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -136,6 +165,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                     ))}
                   </nav>
                   <div className="pt-4 border-t mt-4 flex items-center gap-2">
+                    <LanguageSwitcher />
                     <Search variant="searchbar" />
                   </div>
                 </SheetContent>
@@ -233,6 +263,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                   </NavigationMenuList>
                 </NavigationMenu>
               </div>
+              <LanguageSwitcher />
               <Search variant="button" />
             </div>
           </div>

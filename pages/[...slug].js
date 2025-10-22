@@ -7,8 +7,9 @@ import {
   StoryblokComponent,
 } from "@storyblok/react";
 import { cn } from "@/lib/utils";
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/i18n";
 
-export default function Page({ story, preview }) {
+export default function Page({ story, preview, language }) {
   story = useStoryblokState(story);
   
   // Get the first image from the story content if available, fallback to default
@@ -49,7 +50,9 @@ export default function Page({ story, preview }) {
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://activistchecklist.org';
   const currentPath = story?.full_slug || '';
-  const canonicalUrl = `${baseUrl}/${currentPath}`;
+  // Include language prefix in canonical URL if it's not the default language
+  const languagePrefix = language && language !== DEFAULT_LANGUAGE ? `${language}/` : '';
+  const canonicalUrl = `${baseUrl}/${languagePrefix}${currentPath}`;
   
   // Shared metadata values
   const pageTitle = story 
@@ -90,11 +93,36 @@ export async function getStaticProps({ params, preview = false }) {
   let slug = params?.slug ? params.slug.join("/") : "home";
   const storyblokApi = getStoryblokApi();
 
-  // First get the main story
-  let { data } = await storyblokApi.get(`cdn/stories/${slug}`, {
+  // Check if this is a language-specific request
+  const pathSegments = params?.slug || [];
+  const availableLanguageCodes = SUPPORTED_LANGUAGES
+    .filter(lang => lang.code !== DEFAULT_LANGUAGE)
+    .map(lang => lang.code);
+  const language = availableLanguageCodes.includes(pathSegments[0]) 
+    ? pathSegments.shift() 
+    : undefined;
+  const actualSlug = pathSegments.join('/') || 'home';
+
+  // First try to get the story in the requested language
+  let { data } = await storyblokApi.get(`cdn/stories/${actualSlug}`, {
     version: getStoryblokVersion(preview),
+    language: language || DEFAULT_LANGUAGE,
     resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
   });
+
+  // If no story found in requested language and it's not the default language, try default language
+  if (!data?.story && language && language !== DEFAULT_LANGUAGE) {
+    const fallbackData = await storyblokApi.get(`cdn/stories/${actualSlug}`, {
+      version: getStoryblokVersion(preview),
+      language: DEFAULT_LANGUAGE,
+      resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
+    });
+    
+    if (fallbackData?.story) {
+      data = fallbackData;
+      // Keep the original language for URL purposes, but use English content
+    }
+  }
 
   if (!data?.story) {
     return { notFound: true };
@@ -213,6 +241,7 @@ export async function getStaticProps({ params, preview = false }) {
       story: data.story,
       key: data.story.id,
       preview: preview || false,
+      language: language || DEFAULT_LANGUAGE,
       revalidate: 0,
       // ...getRevalidate(),
     },
@@ -263,7 +292,20 @@ export async function getStaticPaths() {
     const slug = story.full_slug;
     let splittedSlug = slug.split("/");
 
+    // Add default language path (English)
     paths.push({ params: { slug: splittedSlug } });
+    
+    // Add paths for other supported languages
+    // For now, we'll add Spanish paths for specific stories we know have translations
+    const translatedStories = ['police']; // Add more as we translate them
+    if (translatedStories.includes(story.slug)) {
+      // Add paths for all non-default languages
+      SUPPORTED_LANGUAGES
+        .filter(lang => lang.code !== DEFAULT_LANGUAGE)
+        .forEach(lang => {
+          paths.push({ params: { slug: [lang.code, ...splittedSlug] } });
+        });
+    }
   });
 
   return {

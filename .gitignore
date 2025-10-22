@@ -20,8 +20,9 @@
 .DS_Store
 *.pem
 
+# cusror
 .cursorrules
-.cursor/
+.cursor/ 
 
 # debug
 npm-debug.log*

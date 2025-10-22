@@ -13,8 +13,17 @@ import {
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
 
+// Helper function to get translations
+function getT() {
+  if (typeof window !== 'undefined' && window.i18next) {
+    return window.i18next.t.bind(window.i18next);
+  }
+  // Fallback for server-side rendering
+  return (key) => key;
+}
+
 export const SITE_BRANDING = {
-  title: "Activist Checklist",
+  title: "Activist Checklist", // Will be translated in components
   description: "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
 }
 

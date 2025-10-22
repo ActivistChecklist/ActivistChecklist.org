@@ -11,6 +11,7 @@ import { LayoutProvider, useLayout } from "@/contexts/LayoutContext";
 import SkipLink from "./SkipLink";
 import PageCounter from "./PageCounter";
 import AnnouncementBar from "./AnnouncementBar";
+import LanguageDetectionBanner from "../LanguageDetectionBanner";
 import Script from 'next/script';
 import { extractHeaders } from "@/components/layout/TableOfContentsSidebar";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
           <TableOfContentsProvider>
             <div className="flex flex-col min-h-screen">
               <SkipLink />
+              <LanguageDetectionBanner />
               <AnnouncementBar />
               <TopNav maxWidth={maxWidth} />
               <div className="flex-1">

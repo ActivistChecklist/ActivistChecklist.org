@@ -1,0 +1,75 @@
+{
+  "site": {
+    "title": "Activist Checklist",
+    "description": "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
+  },
+  "nav": {
+    "home": "Home",
+    "security-essentials": "Security essentials",
+    "protest-prep": "Prepare for a protest",
+    "travel": "Travel & flight security",
+    "signal": "Signal security checklist",
+    "secondary-phone": "Secondary phone",
+    "emergency": "Emergency planning",
+    "spyware": "Spyware protection",
+    "organizer": "Action organizer checklist",
+    "research": "Action research & scouting",
+    "federal": "Federal workers",
+    "movies": "Movies, books, & podcasts",
+    "resources": "Resources",
+    "police-poster": "\"Police at the door\" poster",
+    "about": "About",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "changelog": "Recent site updates",
+    "news": "News",
+    "flyer": "Printable flyer",
+    "links": "Remove link tracking"
+  },
+  "desc": {
+    "security-essentials": "Core security practices every activist should follow.",
+    "protest-prep": "Digital security for anyone attending a protest.",
+    "travel": "Digital security practices for activists traveling.",
+    "signal": "Secure your Signal messaging app for safer communications.",
+    "secondary-phone": "Set up an extra phone for activism and protests.",
+    "emergency": "Establish an emergency support network in case you're detained or threatened.",
+    "spyware": "Protect yourself from spyware and surveillance software.",
+    "organizer": "For movement organizers and coordinators.",
+    "research": "How to conduct research and browse the web anonymously.",
+    "federal": "Digital security guidance for federal employees."
+  },
+  "section": {
+    "security-checklists": "Security Checklists",
+    "resources": "Resources",
+    "about": "About",
+    "browse-all": "Browse all checklists"
+  },
+  "footer": {
+    "navigation": "Navigation",
+    "top-checklists": "Top Checklists"
+  },
+  "search": {
+    "placeholder": "Search guides...",
+    "popular": "Popular searches",
+    "top-guides": "Top guides"
+  },
+  "languageDetection": {
+    "message": "We detected you prefer {{language}}.",
+    "question": "Switch to {{language}} version?",
+    "switchButton": "Switch to {{language}}",
+    "dismiss": "Dismiss"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "close": "Close",
+    "open": "Open",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  }
+}
