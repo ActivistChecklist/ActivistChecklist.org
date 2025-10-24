@@ -228,19 +228,14 @@ export async function getStaticPaths() {
     excluding_fields: 'body,blocks,content'
   });
 
-  // Define folders that should be excluded from static path generation
-  // Only exclude these folders in static builds, allow them in development/Vercel
-  const isStaticBuild = process.env.BUILD_MODE === 'static';
-  const excludedFolders = isStaticBuild ? [
-    'checklist-items/',
-    'changelog/',
-    'news/',
-  ] : [];
-
   // Define specific slugs to exclude
   const excludedSlugs = [
     'home'
   ];
+
+  // Define content types that should be included in static builds
+  const isStaticBuild = process.env.BUILD_MODE === 'static';
+  const includedTypes = isStaticBuild ? ['page', 'guide'] : null;
 
   let paths = [];
   
@@ -255,9 +250,11 @@ export async function getStaticPaths() {
       return;
     }
 
-    // Skip stories in excluded folders
-    if (excludedFolders.some(folder => story.full_slug.startsWith(folder))) {
-      return;
+    // For static builds, only include specific content types
+    if (isStaticBuild && includedTypes) {
+      if (!includedTypes.includes(story.content.component)) {
+        return;
+      }
     }
 
     const slug = story.full_slug;
