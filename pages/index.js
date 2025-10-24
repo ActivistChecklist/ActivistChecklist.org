@@ -11,6 +11,7 @@ import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
 import NewsBlock from '@/components/NewsBlock';
+import { RichText } from '@/components/RichText';
 
 const HERO_CONTENT = {
   title: "Digital Security Checklists for Activists",
@@ -85,7 +86,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {} }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, latestMajorUpdate = null }) => {
   return (
     <div>
       <Head>
@@ -126,26 +127,12 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {} })
                     </Link>
                   </Button>
                 </div>
-                <div className="mt-8 text-muted-foreground">
-                  <span className="inline-flex items-baseline gap-1">
-                    <Sparkles className="h-4 w-4 translate-y-[0.1em]" />
-                    New in October 2025:
-                  </span>{' '}
-                  A{' '}
-                  <Link href={ROUTES.NEWS} className="link">
-                    News
-                  </Link> aggregation page with articles about surveillance •{' '}
-                  <Link href={ROUTES.CHECKLISTS.SPYWARE} className="link">
-                    Protecting Against Spyware
-                  </Link>{' '}checklist •{' '}
-                  <Link href={ROUTES.MOVIES} className="link">
-                    Movies and books about surveillance
-                  </Link>
-                  {' '}• And a {' '}
-                  <Link href={ROUTES.POLICE_DOOR_POSTER} className="link">
-                    "Police at the Door" printable poster
-                  </Link>
-                </div> 
+                {latestMajorUpdate && (
+                  <div className="mt-8 text-muted-foreground">
+                    <Sparkles className="h-4 w-4 inline mr-1" />
+                    <RichText document={latestMajorUpdate.body} noWrapper={true} />
+                  </div>
+                )} 
               </div>
             </header>
           </div>
@@ -241,11 +228,20 @@ export async function getStaticProps() {
       return dateB - dateA; // Newest first
     });
 
+    // Find the latest major update
+    const latestMajorUpdate = sortedEntries.find(entry => entry.content?.type === 'major');
+    
+    // Format the latest major update
+    const latestMajorUpdateFormatted = latestMajorUpdate ? {
+      body: latestMajorUpdate.content.body
+    } : null;
+
     return {
       props: {
         changelogEntries: sortedEntries.slice(0, 5), // Limit to 5 for homepage
         newsItems,
-        imageManifest
+        imageManifest,
+        latestMajorUpdate: latestMajorUpdateFormatted
       }
     };
   } catch (error) {
@@ -254,7 +250,8 @@ export async function getStaticProps() {
       props: {
         changelogEntries: [],
         newsItems: [],
-        imageManifest: {}
+        imageManifest: {},
+        latestMajorUpdate: null
       }
     };
   }
