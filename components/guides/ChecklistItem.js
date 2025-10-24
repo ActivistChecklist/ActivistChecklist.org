@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Link2 } from 'lucide-react';
 import { storyblokEditable } from '@storyblok/react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,67 @@ const InfoItemIcon = () => {
           className="z-[100]"
         >
           Informational item
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+const CopyLinkButton = ({ slug, onCopy }) => {
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  const handleCopy = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}${window.location.pathname}#${slug}`;
+    
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTooltipOpen(true);
+      
+      // Call the parent's copy handler if provided
+      if (onCopy) {
+        onCopy(url);
+      }
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setLinkCopied(false);
+        setTooltipOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={0} open={tooltipOpen} onOpenChange={setTooltipOpen}>
+        <TooltipTrigger asChild>
+          <button
+            onClick={handleCopy}
+            className={cn(
+              "relative inline-block p-1.5 rounded-md transition-all duration-200 ml-2 align-middle",
+              "hover:bg-neutral-200/60",
+              "text-neutral-500 hover:text-neutral-700",
+              "print:hidden",
+              linkCopied && "text-green-600"
+            )}
+            aria-label="Copy link to this item"
+          >
+            <Link2 className={cn(
+              "h-4 w-4 transition-all",
+              linkCopied && "opacity-0 scale-0"
+            )} />
+            <Check className={cn(
+              "h-4 w-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all text-green-600",
+              linkCopied ? "opacity-100 scale-100" : "opacity-0 scale-0"
+            )} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={5}>
+          {linkCopied ? "Link copied!" : "Copy link to this item"}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -165,6 +226,16 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     }
   };
 
+  const handleLinkCopy = (url) => {
+    // Track the copy event
+    trackEvent({
+      name: 'checklist_item_link_copied',
+      data: {
+        item_id: window.location.pathname + "#" + blok.slug,
+      }
+    });
+  };
+
   return (
     <Card
       ref={cardRef}
@@ -213,13 +284,12 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
           <div>
             <CardTitle 
               className={cn(
-                "flex items-start",
                 isChecked && "text-muted-foreground",
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
               <h3 className={cn(
-                  "flex-grow mt-0 text-lg",
+                  "inline mt-0 text-lg",
                   isChecked && "line-through decoration-1"
                 )}
                 id={blok.slug}
@@ -250,6 +320,11 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
                 {/* <Markdown inlineOnly={true} content={blok.title} /> */}
                 {blok.title}
+                
+                {/* Copy link button - only show when expanded */}
+                {isExpanded && (
+                  <CopyLinkButton slug={blok.slug} onCopy={handleLinkCopy} />
+                )}
               </h3>
             </CardTitle>
             <CardDescription 
