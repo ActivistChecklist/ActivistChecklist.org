@@ -321,9 +321,11 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 {/* <Markdown inlineOnly={true} content={blok.title} /> */}
                 {blok.title}
                 
-                {/* Copy link button - only show when expanded */}
+                {/* Copy link button - inline, only visible when expanded */}
                 {isExpanded && (
-                  <CopyLinkButton slug={blok.slug} onCopy={handleLinkCopy} />
+                  <span className="inline-block ml-2">
+                    <CopyLinkButton slug={blok.slug} onCopy={handleLinkCopy} />
+                  </span>
                 )}
               </h3>
             </CardTitle>
