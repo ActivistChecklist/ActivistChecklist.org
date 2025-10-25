@@ -120,7 +120,7 @@ export const NAV_ITEMS = {
     key: 'about',
     label: "About",
     href: ROUTES.ABOUT.INDEX,
-    title: "About This Site"
+    title: "About this site"
   },
   CONTACT: {
     key: 'contact',

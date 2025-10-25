@@ -421,7 +421,22 @@ a {
   .prose {
     /* Headings */
     h2 {
-      @apply mt-10 border-b pb-2;
+      @apply mb-6 pt-16 relative;
+    }
+
+    h2::before {
+      display: block;
+      content: " ";
+      position: absolute;
+      top: 2.1rem;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #b8bdcc;
+      height: 1px;
+    }
+
+    .dark h2::before {
+      border-top-color: #4a5568;
     }
 
     h3 {

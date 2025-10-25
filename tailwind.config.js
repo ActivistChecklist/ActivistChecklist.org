@@ -18,6 +18,10 @@ module.exports = {
   			heading: ['var(--font-heading)'],
   			body: ['var(--font-body)'],
   		},
+
+		maxWidth: {
+			'2.5xl': '44rem',
+		},
 		fontSize: {
 			'xs': ['0.75rem', { lineHeight: '1rem' }],
 			'sm': ['0.875rem', { lineHeight: '1.25rem' }],

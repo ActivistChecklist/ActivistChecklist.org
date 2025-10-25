@@ -22,8 +22,8 @@ const GuideCard = ({
     },
     large: {
       card: "h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card flex flex-col",
-      header: "",
-      content: "flex-1",
+      header: "pb-4",
+      content: "pb-4 flex-1",
       footer: "mt-auto",
       iconContainer: "p-2 rounded-lg bg-primary/10 text-primary",
       icon: "h-6 w-6",
