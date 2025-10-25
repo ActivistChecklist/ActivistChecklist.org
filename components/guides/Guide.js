@@ -3,7 +3,6 @@ import { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { RichText } from "../RichText";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Clock, Expand as ExpandIcon, Collapse as CollapseIcon } from 'lucide-react';
 import { FeedbackCTA } from "@/components/guides/FeedbackCTA";
 import { useLayout } from "@/contexts/LayoutContext";
@@ -12,11 +11,10 @@ import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
     <div className="mb-4 prose prose-slate max-w-none" {...storyblokEditable(blok)}>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 sm:gap-0">
-        <h2 className={cn(
-            "!border-b-0 !pb-0"
-          )}
+      <div className="relative">
+        <h2
           id={blok.slug}
+          style={{ paddingRight: checklistItemCount > 1 ? '8rem' : '0' }}
         >
           <RichText document={blok.title} />
         </h2>
@@ -24,7 +22,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
           <Button
             variant="defaultOutline"
             size="sm"
-            className="gap-2 start print:hidden"
+            className="gap-2 start print:hidden absolute bottom-0 right-0"
             onClick={onToggleExpand}
           >
             {isExpanded ? (
