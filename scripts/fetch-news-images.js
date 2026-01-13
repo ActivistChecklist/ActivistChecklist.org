@@ -31,6 +31,7 @@ require('dotenv').config();
 
 // Configuration
 const NEWS_IMAGES_DIR = path.join(__dirname, '..', 'public', 'files', 'news');
+const MANUAL_IMAGES_DIR = path.join(NEWS_IMAGES_DIR, 'manual');
 const STORYBLOK_TOKEN = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN;
 
 
@@ -42,6 +43,11 @@ if (!STORYBLOK_TOKEN) {
 // Ensure news images directory exists
 if (!fs.existsSync(NEWS_IMAGES_DIR)) {
   fs.mkdirSync(NEWS_IMAGES_DIR, { recursive: true });
+}
+
+// Ensure manual images directory exists
+if (!fs.existsSync(MANUAL_IMAGES_DIR)) {
+  fs.mkdirSync(MANUAL_IMAGES_DIR, { recursive: true });
 }
 
 // Fetch all news stories from Storyblok
@@ -303,6 +309,107 @@ function getResizedFileName(storySlug) {
   return `${storySlug}-resized.jpg`;
 }
 
+// Check for manually added images with various naming patterns
+function findManuallyAddedImage(storySlug, quietMode = false) {
+  // First check if already processed image exists in main directory
+  const exactMatch = getResizedFileName(storySlug);
+  const processedPath = path.join(NEWS_IMAGES_DIR, exactMatch);
+  if (fs.existsSync(processedPath)) {
+    return processedPath;
+  }
+  
+  // Then check manual directory for source images
+  if (!fs.existsSync(MANUAL_IMAGES_DIR)) {
+    return null;
+  }
+  
+  const files = fs.readdirSync(MANUAL_IMAGES_DIR);
+  
+  // Try variations: slug.jpg, slug.jpeg, slug.png, slug.webp
+  const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+  for (const ext of extensions) {
+    const filename = `${storySlug}.${ext}`;
+    if (files.includes(filename)) {
+      return path.join(MANUAL_IMAGES_DIR, filename);
+    }
+  }
+  
+  // Try with different separators or slight variations
+  // e.g., slug-image.jpg, slug_image.jpg
+  const variations = [
+    `${storySlug}-image.jpg`,
+    `${storySlug}_image.jpg`,
+    `${storySlug}-image.jpeg`,
+    `${storySlug}_image.jpeg`,
+    `${storySlug}-image.png`,
+    `${storySlug}_image.png`,
+  ];
+  
+  for (const filename of variations) {
+    if (files.includes(filename)) {
+      return path.join(MANUAL_IMAGES_DIR, filename);
+    }
+  }
+  
+  return null;
+}
+
+// Process a manually added image (resize, convert to JPG, strip metadata)
+async function processManuallyAddedImage(sourcePath, targetPath, quietMode = false) {
+  try {
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error('Source image does not exist');
+    }
+    
+    // If source and target are the same, we still need to process it
+    const imageBuffer = fs.readFileSync(sourcePath);
+    
+    // Check if sharp is available
+    if (!sharp) {
+      if (!quietMode) {
+        console.warn('⚠️ Sharp not available, copying image without processing');
+      }
+      // If target is different from source, copy it
+      if (sourcePath !== targetPath) {
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+      return;
+    }
+    
+    // Validate image with sharp
+    const metadata = await sharp(imageBuffer).metadata();
+    
+    // Check image dimensions
+    const MAX_DIMENSION = 20000;
+    if (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION) {
+      throw new Error('Image dimensions too large');
+    }
+    
+    // Process image: resize to max 720px width, convert to JPG, strip metadata
+    const processedBuffer = await sharp(imageBuffer)
+      .resize(720, null, {
+        withoutEnlargement: true,
+        fit: 'inside'
+      })
+      .withMetadata(false) // Strip all metadata including EXIF
+      .jpeg({
+        quality: 85,
+        progressive: true,
+        mozjpeg: true
+      })
+      .toBuffer();
+    
+    // Write processed image
+    fs.writeFileSync(targetPath, processedBuffer);
+    
+    // If source and target are different, optionally remove source
+    // (We'll keep it for now in case user wants to keep original)
+    
+  } catch (error) {
+    throw new Error(`Failed to process manually added image: ${error.message}`);
+  }
+}
+
 // Generate image manifest based on existing files
 function generateImageManifest(quietMode = false) {
   const MANIFEST_PATH = path.join(NEWS_IMAGES_DIR, 'image-manifest.json');
@@ -342,19 +449,6 @@ function log(message, quietMode = false) {
   }
 }
 
-// Progress logging helper - always overwrites the same line
-function logProgress(message, quietMode = false) {
-  process.stdout.write(`\r${message}`);
-}
-
-// Simple progress bar
-function createProgressBar(current, total, width = 30) {
-  const percentage = Math.round((current / total) * 100);
-  const filled = Math.round((current / total) * width);
-  const empty = width - filled;
-  const bar = '█'.repeat(filled) + '░'.repeat(empty);
-  return `[${bar}] ${percentage}% (${current}/${total})`;
-}
 
 // Main function
 async function main() {
@@ -390,9 +484,7 @@ async function main() {
     let skipped = 0;
     let errors = 0;
     let currentIndex = 0;
-    
-    // Show initial progress
-    logProgress(`🚀 Starting processing: ${createProgressBar(0, stories.length)}`, quietMode);
+    const missingImages = []; // Track stories with missing images
     
     for (const story of stories) {
       currentIndex++;
@@ -403,7 +495,6 @@ async function main() {
       if (!url) {
         log(`⏭️ Skipping story ${storyId} (${storySlug}): No URL`, quietMode);
         skipped++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -413,7 +504,6 @@ async function main() {
       if (!forceMode && fs.existsSync(resizedImagePath)) {
         log(`✅ Resized image already exists for story ${storyId} (${storySlug})`, quietMode);
         skipped++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -425,25 +515,36 @@ async function main() {
       }
       
       try {
-        // Get social graph image
-        const imageUrl = await getSocialGraphImage(url, quietMode);
-        
-        if (!imageUrl) {
-          log(`❌ No social graph image found for story ${storyId} (${storySlug})`, quietMode);
-          errors++;
-          logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
-          continue;
-        }
-        
         // Generate image path
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
         
-        // Download and process image
-        await downloadImage(imageUrl, resizedImagePath, quietMode);
-        log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
-        log(`   📁 Resized: ${resizedImagePath}`, quietMode);
-        processed++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
+        // Get social graph image
+        const imageUrl = await getSocialGraphImage(url, quietMode);
+        
+        if (imageUrl) {
+          // Download and process image from Open Graph
+          await downloadImage(imageUrl, resizedImagePath, quietMode);
+          log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
+          log(`   📁 Resized: ${resizedImagePath}`, quietMode);
+          processed++;
+        } else {
+          // Fallback: Check for manually added image
+          const manuallyAddedImage = findManuallyAddedImage(storySlug, quietMode);
+          
+          if (manuallyAddedImage) {
+            log(`📎 Found manually added image for story ${storyId} (${storySlug}): ${path.basename(manuallyAddedImage)}`, quietMode);
+            
+            // Process the manually added image (resize, convert to JPG if needed)
+            await processManuallyAddedImage(manuallyAddedImage, resizedImagePath, quietMode);
+            log(`✅ Processed manually added image for story ${storyId} (${storySlug})`, quietMode);
+            log(`   📁 Resized: ${resizedImagePath}`, quietMode);
+            processed++;
+          } else {
+            log(`❌ No image found (Open Graph or manual) for story ${storyId} (${storySlug})`, quietMode);
+            errors++;
+            missingImages.push({ slug: storySlug, url: url });
+          }
+        }
         
         // Small delay to be respectful to the API
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -457,7 +558,6 @@ async function main() {
       } catch (error) {
         console.error(`❌ Error processing story ${storyId} (${storySlug}):`, error.message);
         errors++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         
         // In test mode, exit even on error
         if (testMode) {
@@ -467,12 +567,6 @@ async function main() {
       }
     }
     
-    // Show final progress
-    logProgress(`🏁 Completed: ${createProgressBar(stories.length, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
-    
-    // Add newline after final progress bar
-    console.log('');
-    
     console.log('\n📊 Summary:');
     console.log(`✅ Processed: ${processed}`);
     console.log(`⏭️ Skipped: ${skipped}`);
@@ -480,6 +574,29 @@ async function main() {
     
     // Generate image manifest after processing all images
     generateImageManifest(quietMode);
+    
+    // Show instructions for manually adding missing images
+    if (missingImages.length > 0) {
+      console.log('\n📝 Manual Image Instructions:');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Some articles are missing images. To add them manually:');
+      console.log('');
+      console.log('1. Place image files in: public/files/news/manual/');
+      console.log('2. Name them using one of these patterns:');
+      console.log('   - SLUG.jpg (or .jpeg, .png, .webp)');
+      console.log('   - SLUG-image.jpg');
+      console.log('');
+      console.log('3. The script will automatically find, process, and save them to public/files/news/');
+      console.log('   (processed images will be saved as SLUG-resized.jpg)');
+      console.log('');
+      console.log('Missing images for these articles:');
+      missingImages.forEach(({ slug, url }) => {
+        console.log(`   📄 ${slug}`);
+        console.log(`      🔗 ${url}`);
+        console.log(`      → Place image at: public/files/news/manual/${slug}.jpg`);
+      });
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
     
     console.log('🎉 Script completed successfully!');
     process.exit(0);
