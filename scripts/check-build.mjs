@@ -73,6 +73,11 @@ const REPLACEMENTS = [
   {
     pattern: /fonts\.googleapis\.com/g,
     replacement: 'BLOCKEDGOOGLE'
+  },
+  // Next.js documentation URLs (error messages in bundled code)
+  {
+    pattern: /https?:\/\/nextjs\.org\/docs\/messages\/[^\s"'<>()]+/g,
+    replacement: 'BLOCKEDNEXTJSDOCS'
   }
 ];
 
