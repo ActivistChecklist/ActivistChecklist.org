@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import ErrorBoundary from '../components/development/ErrorBoundary';
 import { useEffect } from "react";
 import Head from 'next/head';
+import '@/lib/i18n'; // Initialize i18next
 
 import Page from "../components/pages/Page";
 import ChecklistItem from "../components/guides/ChecklistItem";

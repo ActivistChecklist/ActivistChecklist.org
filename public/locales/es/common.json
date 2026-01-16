@@ -1,0 +1,75 @@
+{
+  "site": {
+    "title": "Lista de Verificación para Activistas",
+    "description": "Pasos en lenguaje sencillo para la seguridad digital, porque protegerte a ti mismo ayuda a mantener más segura a toda tu comunidad."
+  },
+  "nav": {
+    "home": "Inicio",
+    "security-essentials": "Fundamentos de seguridad",
+    "protest-prep": "Prepararse para una protesta",
+    "travel": "Seguridad de viaje y vuelos",
+    "signal": "Lista de verificación de seguridad de Signal",
+    "secondary-phone": "Teléfono secundario",
+    "emergency": "Planificación de emergencias",
+    "spyware": "Protección contra spyware",
+    "organizer": "Lista de verificación del organizador de acciones",
+    "research": "Investigación y reconocimiento de acciones",
+    "federal": "Trabajadores federales",
+    "movies": "Películas, libros y podcasts",
+    "resources": "Recursos",
+    "police-poster": "Póster \"La policía en la puerta\"",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "privacy": "Privacidad",
+    "changelog": "Actualizaciones recientes del sitio",
+    "news": "Noticias",
+    "flyer": "Folleto imprimible",
+    "links": "Eliminar seguimiento de enlaces"
+  },
+  "desc": {
+    "security-essentials": "Prácticas de seguridad fundamentales que todo activista debe seguir.",
+    "protest-prep": "Seguridad digital para cualquiera que asista a una protesta.",
+    "travel": "Prácticas de seguridad digital para activistas que viajan.",
+    "signal": "Asegura tu aplicación de mensajería Signal para comunicaciones más seguras.",
+    "secondary-phone": "Configura un teléfono adicional para activismo y protestas.",
+    "emergency": "Establece una red de apoyo de emergencia en caso de que seas detenido o amenazado.",
+    "spyware": "Protégete del spyware y software de vigilancia.",
+    "organizer": "Para organizadores y coordinadores de movimientos.",
+    "research": "Cómo realizar investigaciones y navegar por la web de forma anónima.",
+    "federal": "Guía de seguridad digital para empleados federales."
+  },
+  "section": {
+    "security-checklists": "Listas de Verificación de Seguridad",
+    "resources": "Recursos",
+    "about": "Acerca de",
+    "browse-all": "Ver todas las listas de verificación"
+  },
+  "footer": {
+    "navigation": "Navegación",
+    "top-checklists": "Listas de Verificación Principales"
+  },
+  "search": {
+    "placeholder": "Buscar guías...",
+    "popular": "Búsquedas populares",
+    "top-guides": "Guías principales"
+  },
+  "languageDetection": {
+    "message": "Detectamos que prefieres {{language}}.",
+    "question": "¿Cambiar a la versión en {{language}}?",
+    "switchButton": "Cambiar a {{language}}",
+    "dismiss": "Descartar"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "submit": "Enviar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior"
+  }
+}

@@ -25,7 +25,7 @@ function Page({ blok, story }) {
   return (
     <>  
       <h1 className="mb-6">
-        {story.name}
+        {blok.title || story.name}
       </h1>
       <MetaBar items={metaBarItems} />
       <div className="prose prose-slate max-w-none" {...storyblokEditable(blok)}>
