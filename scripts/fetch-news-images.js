@@ -26,12 +26,20 @@ try {
   sharp = null;
 }
 
+// Try to load MetadataStripper for thorough metadata removal
+let MetadataStripper;
+try {
+  MetadataStripper = require('../lib/metadata-library.cjs').MetadataStripper;
+} catch (error) {
+  // MetadataStripper not available, will use basic Sharp metadata stripping
+  MetadataStripper = null;
+}
+
 // Load environment variables
 require('dotenv').config();
 
 // Configuration
 const NEWS_IMAGES_DIR = path.join(__dirname, '..', 'public', 'files', 'news');
-const MANUAL_IMAGES_DIR = path.join(NEWS_IMAGES_DIR, 'manual');
 const STORYBLOK_TOKEN = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN;
 
 
@@ -43,11 +51,6 @@ if (!STORYBLOK_TOKEN) {
 // Ensure news images directory exists
 if (!fs.existsSync(NEWS_IMAGES_DIR)) {
   fs.mkdirSync(NEWS_IMAGES_DIR, { recursive: true });
-}
-
-// Ensure manual images directory exists
-if (!fs.existsSync(MANUAL_IMAGES_DIR)) {
-  fs.mkdirSync(MANUAL_IMAGES_DIR, { recursive: true });
 }
 
 // Fetch all news stories from Storyblok
@@ -265,13 +268,28 @@ async function downloadImage(imageUrl, resizedFilePath, quietMode = false) {
             return;
           }
           
-          // Process image with sharp: resize to max 720px width, convert to JPG, strip metadata
-          const processedBuffer = await sharp(imageBuffer)
+          // Strip metadata thoroughly (same as other images)
+          let strippedBuffer = imageBuffer;
+          if (MetadataStripper) {
+            try {
+              const stripper = new MetadataStripper({ verbose: false });
+              strippedBuffer = await stripper.stripImageMetadata(imageBuffer);
+            } catch (metadataError) {
+              // If metadata stripping fails, fall back to basic Sharp stripping
+              if (!quietMode) {
+                console.warn(`⚠️ Advanced metadata stripping failed, using basic method: ${metadataError.message}`);
+              }
+              // Continue with basic stripping below
+            }
+          }
+          
+          // Process image with sharp: resize to max 720px width, convert to JPG, ensure no metadata
+          const processedBuffer = await sharp(strippedBuffer)
             .resize(720, null, {
               withoutEnlargement: true,
               fit: 'inside'
             })
-            .withMetadata(false) // Strip all metadata including EXIF
+            .withMetadata(false) // Ensure no metadata (redundant but safe)
             .jpeg({
               quality: 85,
               progressive: true,
@@ -309,105 +327,34 @@ function getResizedFileName(storySlug) {
   return `${storySlug}-resized.jpg`;
 }
 
-// Check for manually added images with various naming patterns
-function findManuallyAddedImage(storySlug, quietMode = false) {
-  // First check if already processed image exists in main directory
-  const exactMatch = getResizedFileName(storySlug);
-  const processedPath = path.join(NEWS_IMAGES_DIR, exactMatch);
-  if (fs.existsSync(processedPath)) {
-    return processedPath;
-  }
-  
-  // Then check manual directory for source images
-  if (!fs.existsSync(MANUAL_IMAGES_DIR)) {
+// Get image override URL from story content
+function getImageOverrideUrl(story) {
+  const imageOverride = story.content?.image_override;
+  if (!imageOverride) {
     return null;
   }
   
-  const files = fs.readdirSync(MANUAL_IMAGES_DIR);
-  
-  // Try variations: slug.jpg, slug.jpeg, slug.png, slug.webp
-  const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-  for (const ext of extensions) {
-    const filename = `${storySlug}.${ext}`;
-    if (files.includes(filename)) {
-      return path.join(MANUAL_IMAGES_DIR, filename);
-    }
+  // Handle string directly
+  if (typeof imageOverride === 'string' && imageOverride.trim()) {
+    return imageOverride.trim();
   }
   
-  // Try with different separators or slight variations
-  // e.g., slug-image.jpg, slug_image.jpg
-  const variations = [
-    `${storySlug}-image.jpg`,
-    `${storySlug}_image.jpg`,
-    `${storySlug}-image.jpeg`,
-    `${storySlug}_image.jpeg`,
-    `${storySlug}-image.png`,
-    `${storySlug}_image.png`,
-  ];
+  // Handle Storyblok image object - check cached_url, filename, url (in that order)
+  // First try direct properties
+  const directUrl = imageOverride.cached_url || imageOverride.filename || imageOverride.url;
+  if (directUrl && typeof directUrl === 'string' && directUrl.trim()) {
+    return directUrl.trim();
+  }
   
-  for (const filename of variations) {
-    if (files.includes(filename)) {
-      return path.join(MANUAL_IMAGES_DIR, filename);
+  // Then try nested image object (image_override.image.*)
+  if (imageOverride.image) {
+    const nestedUrl = imageOverride.image.cached_url || imageOverride.image.filename || imageOverride.image.url;
+    if (nestedUrl && typeof nestedUrl === 'string' && nestedUrl.trim()) {
+      return nestedUrl.trim();
     }
   }
   
   return null;
-}
-
-// Process a manually added image (resize, convert to JPG, strip metadata)
-async function processManuallyAddedImage(sourcePath, targetPath, quietMode = false) {
-  try {
-    if (!fs.existsSync(sourcePath)) {
-      throw new Error('Source image does not exist');
-    }
-    
-    // If source and target are the same, we still need to process it
-    const imageBuffer = fs.readFileSync(sourcePath);
-    
-    // Check if sharp is available
-    if (!sharp) {
-      if (!quietMode) {
-        console.warn('⚠️ Sharp not available, copying image without processing');
-      }
-      // If target is different from source, copy it
-      if (sourcePath !== targetPath) {
-        fs.copyFileSync(sourcePath, targetPath);
-      }
-      return;
-    }
-    
-    // Validate image with sharp
-    const metadata = await sharp(imageBuffer).metadata();
-    
-    // Check image dimensions
-    const MAX_DIMENSION = 20000;
-    if (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION) {
-      throw new Error('Image dimensions too large');
-    }
-    
-    // Process image: resize to max 720px width, convert to JPG, strip metadata
-    const processedBuffer = await sharp(imageBuffer)
-      .resize(720, null, {
-        withoutEnlargement: true,
-        fit: 'inside'
-      })
-      .withMetadata(false) // Strip all metadata including EXIF
-      .jpeg({
-        quality: 85,
-        progressive: true,
-        mozjpeg: true
-      })
-      .toBuffer();
-    
-    // Write processed image
-    fs.writeFileSync(targetPath, processedBuffer);
-    
-    // If source and target are different, optionally remove source
-    // (We'll keep it for now in case user wants to keep original)
-    
-  } catch (error) {
-    throw new Error(`Failed to process manually added image: ${error.message}`);
-  }
 }
 
 // Generate image manifest based on existing files
@@ -518,31 +465,36 @@ async function main() {
         // Generate image path
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
         
-        // Get social graph image
-        const imageUrl = await getSocialGraphImage(url, quietMode);
+        // Check for image override first
+        const overrideUrl = getImageOverrideUrl(story);
+        let imageUrl = null;
+        let imageSource = null;
+        
+        if (overrideUrl) {
+          imageUrl = overrideUrl;
+          imageSource = 'override';
+          log(`📎 Using image override for story ${storyId} (${storySlug})`, quietMode);
+        } else {
+          // Fallback to Open Graph image
+          imageUrl = await getSocialGraphImage(url, quietMode);
+          imageSource = 'opengraph';
+        }
         
         if (imageUrl) {
-          // Download and process image from Open Graph
+          // Download and process image
           await downloadImage(imageUrl, resizedImagePath, quietMode);
-          log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
+          log(`✅ Downloaded and processed image for story ${storyId} (${storySlug}) from ${imageSource}`, quietMode);
           log(`   📁 Resized: ${resizedImagePath}`, quietMode);
           processed++;
         } else {
-          // Fallback: Check for manually added image
-          const manuallyAddedImage = findManuallyAddedImage(storySlug, quietMode);
-          
-          if (manuallyAddedImage) {
-            log(`📎 Found manually added image for story ${storyId} (${storySlug}): ${path.basename(manuallyAddedImage)}`, quietMode);
-            
-            // Process the manually added image (resize, convert to JPG if needed)
-            await processManuallyAddedImage(manuallyAddedImage, resizedImagePath, quietMode);
-            log(`✅ Processed manually added image for story ${storyId} (${storySlug})`, quietMode);
-            log(`   📁 Resized: ${resizedImagePath}`, quietMode);
-            processed++;
-          } else {
-            log(`❌ No image found (Open Graph or manual) for story ${storyId} (${storySlug})`, quietMode);
+          // Only report error if no override is set
+          if (!overrideUrl) {
+            log(`❌ No image found (Open Graph) for story ${storyId} (${storySlug})`, quietMode);
             errors++;
             missingImages.push({ slug: storySlug, url: url });
+          } else {
+            // Override was set but URL was invalid/empty - this shouldn't happen but handle gracefully
+            log(`⚠️ Image override set but URL is invalid for story ${storyId} (${storySlug})`, quietMode);
           }
         }
         
@@ -558,6 +510,12 @@ async function main() {
       } catch (error) {
         console.error(`❌ Error processing story ${storyId} (${storySlug}):`, error.message);
         errors++;
+        
+        // Check if image_override is set - if not, add to missing images list
+        const overrideUrl = getImageOverrideUrl(story);
+        if (!overrideUrl) {
+          missingImages.push({ slug: storySlug, url: url });
+        }
         
         // In test mode, exit even on error
         if (testMode) {
@@ -575,26 +533,26 @@ async function main() {
     // Generate image manifest after processing all images
     generateImageManifest(quietMode);
     
-    // Show instructions for manually adding missing images
+    // Show failures (only for items without image_override set)
     if (missingImages.length > 0) {
-      console.log('\n📝 Manual Image Instructions:');
+      console.log('\n❌ Articles missing images (no image_override set):');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Some articles are missing images. To add them manually:');
       console.log('');
-      console.log('1. Place image files in: public/files/news/manual/');
-      console.log('2. Name them using one of these patterns:');
-      console.log('   - SLUG.jpg (or .jpeg, .png, .webp)');
-      console.log('   - SLUG-image.jpg');
+      console.log('To fix these missing images:');
       console.log('');
-      console.log('3. The script will automatically find, process, and save them to public/files/news/');
-      console.log('   (processed images will be saved as SLUG-resized.jpg)');
+      console.log('1. Open Storyblok and navigate to each news item listed below');
+      console.log('2. Find the "image_override" field in the content');
+      console.log('3. Upload an image or paste an image URL');
+      console.log('4. Save and publish the story');
+      console.log('5. Run this script again to process the override images');
       console.log('');
       console.log('Missing images for these articles:');
       missingImages.forEach(({ slug, url }) => {
         console.log(`   📄 ${slug}`);
         console.log(`      🔗 ${url}`);
-        console.log(`      → Place image at: public/files/news/manual/${slug}.jpg`);
+        console.log(`      → Add image_override in Storyblok for this news item`);
       });
+      console.log('');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
     
