@@ -30,7 +30,7 @@ export const MetaBar = ({
 
   return (
     <div className={cn(
-      "bg-muted rounded-md lg:rounded-2xl py-3 px-6 mb-6 flex flex-wrap lg:flex-nowrap items-center", 
+      "bg-muted rounded-md lg:rounded-2xl py-3 px-6 mb-6 flex flex-wrap items-center", 
       "gap-y-2 gap-x-6 text-sm text-muted-foreground",
       "print:mb-0",
       className
