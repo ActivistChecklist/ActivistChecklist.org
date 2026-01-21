@@ -9,6 +9,7 @@ import {
   IoAirplaneOutline,
   IoEyeOffOutline,
   IoNotificationsOutline,
+  IoLockClosedOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -96,6 +97,13 @@ export const NAV_ITEMS = {
     description: "Digital security guidance for federal employees.",
     icon: Landmark
   },
+  DOXXING: {
+    key: 'doxxing',
+    title: "Doxxing Defense Checklist",
+    href: ROUTES.CHECKLISTS.DOXXING,
+    description: "Protect yourself from doxxing and online harassment.",
+    icon: IoLockClosedOutline
+  },
   MOVIES: {
     key: 'movies',
     label: "Movies, books, & podcasts",
@@ -171,14 +179,14 @@ export const SECURITY_CHECKLISTS = {
   columns: 2,
   items: [
     NAV_ITEMS.SECURITY_ESSENTIALS,
-    NAV_ITEMS.PROTEST_PREP,
     NAV_ITEMS.SIGNAL,
+    NAV_ITEMS.PROTEST_PREP,
+    NAV_ITEMS.DOXXING,
     NAV_ITEMS.TRAVEL,
+    NAV_ITEMS.EMERGENCY,
     NAV_ITEMS.SECONDARY_PHONE,
     NAV_ITEMS.SPYWARE,
-    NAV_ITEMS.EMERGENCY,
-    NAV_ITEMS.ORGANIZER,
-  ].slice(0, 8), // Limit to 9 items maximum
+  ].slice(0, 8), // Limit to 8 items maximum
   footerLink: {
     title: "Browse all checklists",
     href: ROUTES.CHECKLISTS.LIST,
