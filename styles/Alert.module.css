@@ -1,6 +1,6 @@
-/* Alert styles */
+/* Alert styles - !text-inherit overrides prose's font-size so alert matches its container */
 .alert {
-  @apply relative w-full rounded-md border border-l-[6px] p-4 [&:not(:first-child)]:mt-3;
+  @apply relative w-full rounded-md border border-l-[6px] p-4 [&:not(:first-child)]:mt-3 !text-inherit;
 }
 
 
@@ -13,7 +13,7 @@
 }
 
 .alertTitle {
-  @apply !mb-2 !-mt-1 !text-lg font-bold leading-none tracking-tight hidden;
+  @apply !mb-2 !-mt-1 font-bold leading-none tracking-tight hidden;
 }
 
 .alertContent {
@@ -26,15 +26,7 @@
 
 
 .alertDescription {
-  @apply text-base [&_p]:leading-relaxed;
-}
-
-:global(.checklist-item) .alert .alertDescription {
-  @apply text-sm;
-}
-
-:global(.checklist-item) .alert .alertTitle {
-  @apply !text-base;
+  @apply [&_p]:leading-relaxed;
 }
 
 :global(.checklist-item) .alert {
