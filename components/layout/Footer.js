@@ -54,13 +54,6 @@ export function Footer() {
               className="hover:text-gray-800 underline underline-offset-2"
             >
               GitHub
-            </Link>.{' '}<br />
-            A project of the{" "}
-            <Link
-              href="https://neighborhoodanarchists.org/" 
-              className="hover:text-gray-800 underline underline-offset-2"
-            >
-              Neighborhood Anarchist Collective
             </Link>.
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
