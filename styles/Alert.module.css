@@ -29,6 +29,14 @@
   @apply [&_p]:leading-relaxed;
 }
 
+:global(.checklist-item) .alert .alertDescription {
+  @apply text-sm;
+}
+
+:global(.checklist-item) .alert .alertTitle {
+  @apply !text-base;
+}
+
 :global(.checklist-item) .alert {
   @apply border-l;
 }
