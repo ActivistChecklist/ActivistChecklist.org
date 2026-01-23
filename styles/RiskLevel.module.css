@@ -1,0 +1,99 @@
+/* Risk Level block - tinted background, no border. Bullets rendered as arrows. */
+.riskLevel {
+  @apply relative w-full rounded-md p-4 [&:not(:first-child)]:mt-3 !text-inherit;
+  border: none;
+}
+
+.riskLevelBadge {
+  @apply inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide;
+  border: none;
+}
+
+.riskLevelBadgeInline {
+  @apply mr-2;
+}
+
+.riskLevelFloatWrap {
+  overflow: auto;
+}
+
+.riskLevelBadgeFloat {
+  float: left;
+  @apply mr-2 mt-0.5;
+}
+
+.riskLevelFirstRow {
+  /* row with badge and either inline body or intro text */
+}
+
+.riskLevelIntro {
+  /* "This section might be for you if:" - bold, same line as badge when multi */
+}
+
+.riskLevelBody {
+  @apply mt-2;
+}
+
+.riskLevelBodyInline {
+  @apply mt-0;
+}
+
+/* Bullets as right arrows - override prose list styling */
+.riskLevelBody ul {
+  list-style: none;
+  @apply pl-0 space-y-1;
+}
+
+.riskLevelBody ul li {
+  @apply relative pl-5;
+}
+
+.riskLevelBody ul li::before {
+  content: "→ ";
+  @apply absolute left-0 font-normal;
+}
+
+/* Level-specific background and arrow/badge colors.
+   Block uses light tint; badge uses darker tint for clear separation.
+   Text on badge uses 800/900 for ~4.5:1+ contrast. */
+.everyone {
+  @apply bg-emerald-50 dark:bg-emerald-950/40;
+}
+
+.everyone .riskLevelBadge {
+  @apply bg-emerald-200 dark:bg-emerald-800/70 text-emerald-900 dark:text-emerald-100;
+}
+
+.everyone .riskLevelBody ul li::before {
+  @apply text-emerald-700 dark:text-emerald-300;
+}
+
+.medium_risk,
+.medium {
+  @apply bg-amber-50 dark:bg-amber-950/40;
+}
+
+.medium_risk .riskLevelBadge,
+.medium .riskLevelBadge {
+  @apply bg-amber-200 dark:bg-amber-800/70 text-amber-900 dark:text-amber-100;
+}
+
+.medium_risk .riskLevelBody ul li::before,
+.medium .riskLevelBody ul li::before {
+  @apply text-amber-700 dark:text-amber-300;
+}
+
+.high_risk,
+.high {
+  @apply bg-red-50 dark:bg-red-950/40;
+}
+
+.high_risk .riskLevelBadge,
+.high .riskLevelBadge {
+  @apply bg-red-200 dark:bg-red-800/70 text-red-900 dark:text-red-100;
+}
+
+.high_risk .riskLevelBody ul li::before,
+.high .riskLevelBody ul li::before {
+  @apply text-red-700 dark:text-red-300;
+}
