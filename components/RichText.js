@@ -2,6 +2,7 @@ import React from 'react';
 import { render, NODE_HEADING } from 'storyblok-rich-text-react-renderer';
 import { StoryblokComponent } from "@storyblok/react";
 import { Alert } from "@/components/ui/alert";
+import { RiskLevel } from "@/components/RiskLevel";
 import { RichTextTable } from "@/components/RichTextTable";
 import { HowTo } from "@/components/guides/HowTo";
 import { Badge } from "@/components/ui/badge";
@@ -168,6 +169,9 @@ const parseComponents = (text) => {
 const blokResolvers = {
     alert: (props) => {
       return <Alert variant={props.type} title={props.title || null} blok={props} {...props} ><RichText document={ props.body} /></Alert>;
+    },
+    risk_level: (props) => {
+      return <RiskLevel blok={props} level={props.level} body={props.body} {...props} />;
     },
     table: (props) => {
       return <RichTextTable blok={props} {...props} />;
