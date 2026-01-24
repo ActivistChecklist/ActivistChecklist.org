@@ -10,6 +10,7 @@ import {
   IoEyeOffOutline,
   IoNotificationsOutline,
   IoLockClosedOutline,
+  IoHandRightOutline,
 } from "react-icons/io5"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
@@ -99,10 +100,17 @@ export const NAV_ITEMS = {
   },
   DOXXING: {
     key: 'doxxing',
-    title: "Doxxing Defense Checklist",
+    title: "Doxxing defense checklist",
     href: ROUTES.CHECKLISTS.DOXXING,
     description: "Protect yourself from doxxing and online harassment.",
     icon: IoLockClosedOutline
+  },
+  ACTION: {
+    key: 'action',
+    title: "Prepare for a direct action",
+    href: ROUTES.CHECKLISTS.ACTION,
+    description: "Digital security for direct actions and civil disobedience.",
+    icon: IoHandRightOutline
   },
   MOVIES: {
     key: 'movies',

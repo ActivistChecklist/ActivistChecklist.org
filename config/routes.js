@@ -13,6 +13,7 @@ export const ROUTES = {
     RESEARCH: '/research',
     SECONDARY_PHONE: '/secondary',
     FEDERAL: '/federal',
+    ACTION: '/action',
   },
   RESOURCES: '/resources',
   MOVIES: '/movies',
