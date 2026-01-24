@@ -11,13 +11,34 @@ import {
   IoNotificationsOutline,
   IoLockClosedOutline,
   IoHandRightOutline,
+  IoLogoGithub,
 } from "react-icons/io5"
+import { SiBluesky } from "react-icons/si"
 import { Landmark } from "lucide-react"
 import { ROUTES } from './routes'
 
 export const SITE_BRANDING = {
   title: "Activist Checklist",
   description: "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
+}
+
+export const SOCIAL_LINKS = {
+  BLUESKY: {
+    key: 'bluesky',
+    label: "Bluesky",
+    username: "@ActivistChecklist",
+    href: "https://bsky.app/profile/activistchecklist.bsky.social",
+    icon: SiBluesky,
+    ariaLabel: "Follow us on Bluesky"
+  },
+  GITHUB: {
+    key: 'github',
+    label: "GitHub",
+    username: "ActivistChecklist",
+    href: "https://github.com/ActivistChecklist/ActivistChecklist.org",
+    icon: IoLogoGithub,
+    ariaLabel: "View our GitHub repository"
+  }
 }
 
 // Define all navigation items by key for reuse
@@ -246,6 +267,9 @@ export const navigationConfig = {
     NAV_ITEMS.NEWS,
     RESOURCES_SECTION,
     ABOUT_SECTION
+  ],
+  socialLinks: [
+    SOCIAL_LINKS.BLUESKY
   ]
 }
 
@@ -270,6 +294,10 @@ export const footerConfig = {
       title: "Top Checklists",
       items: SECURITY_CHECKLISTS.items
     }
+  ],
+  socialLinks: [
+    SOCIAL_LINKS.BLUESKY,
+    SOCIAL_LINKS.GITHUB
   ]
 }
 

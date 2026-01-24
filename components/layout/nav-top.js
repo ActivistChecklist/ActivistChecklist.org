@@ -233,7 +233,21 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                   </NavigationMenuList>
                 </NavigationMenu>
               </div>
-              <Search variant="button" />
+              <div className="flex items-center gap-2">
+                {navigationConfig.socialLinks?.map((social) => (
+                  <a
+                    key={social.key}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.ariaLabel}
+                    className="text-foreground/70 hover:text-foreground transition-colors"
+                  >
+                    <social.icon className="h-5 w-5" aria-hidden="true" />
+                  </a>
+                ))}
+                <Search variant="button" />
+              </div>
             </div>
           </div>
         </div>
