@@ -48,7 +48,7 @@ export function Footer() {
             >
               sources
             </Link>.
-            Code available on{' '}
+            Source code available on{' '}
             <Link   
               href="https://github.com/ActivistChecklist/ActivistChecklist.org"
               className="hover:text-gray-800 underline underline-offset-2"
@@ -57,6 +57,19 @@ export function Footer() {
             </Link>.
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
+            {footerConfig.socialLinks?.map((social) => (
+              <a
+                key={social.key}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={social.ariaLabel}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <social.icon className="h-5 w-5" aria-hidden="true" />
+                <span>{social.username}</span>
+              </a>
+            ))}
             {/* <DarkModeToggle /> */}
           </div>
         </div>
