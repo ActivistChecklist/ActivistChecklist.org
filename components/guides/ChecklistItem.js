@@ -117,6 +117,8 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [enableTransitions, setEnableTransitions] = useState(false);
   const { trackEvent } = useAnalytics();
   const hasTrackedExpansion = useRef(false);
   const cardRef = useRef(null);
@@ -133,22 +135,21 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     setIsChecked(checked);
     localStorage.setItem(storageKey, checked);
   };
+
+  // Track when component has mounted (client-side only)
+  // This prevents the browser from scrolling to the hash on initial page load
+  // because the id attribute won't be rendered until after mount
+  useEffect(() => {
+    setHasMounted(true);
+    // Enable transitions after a brief delay to allow initial state restoration
+    // to happen without animation
+    const timer = setTimeout(() => {
+      setEnableTransitions(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
   
   useEffect(() => {
-    // Auto expand items if they've been linked to directly with an anchor $ in the URL
-    const checkUrlHash = () => {
-      const hash = window.location.hash.slice(1); // Remove the # symbol
-      if (hash === blok.slug && !isChecked) {
-        setExpandedWithStorage(true);
-      }
-    };
-
-    // Initial check
-    checkUrlHash();
-
-    // Add hash change listener
-    window.addEventListener('hashchange', checkUrlHash);
-    
     // Load checked state
     const stored = localStorage.getItem(storageKey);
     if (stored !== null) {
@@ -161,8 +162,44 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       setExpandedWithStorage(storedExpanded === 'true');
     }
 
+    // Auto expand items if they've been linked to directly with an anchor in the URL
+    // and scroll to them AFTER all items have restored their expanded states
+    const checkUrlHash = (shouldScroll = false) => {
+      const hash = window.location.hash.slice(1); // Remove the # symbol
+      if (hash === blok.slug && !isChecked) {
+        setExpandedWithStorage(true);
+        
+        // Scroll to this item after a delay to allow all other items to restore their states
+        // This fixes the issue where other items expanding pushes the target down
+        if (shouldScroll && cardRef.current) {
+          // Use requestAnimationFrame + setTimeout to ensure DOM has updated
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (cardRef.current) {
+                const headerHeight = 80; // Approximate header/nav height buffer
+                const cardTop = cardRef.current.getBoundingClientRect().top + window.scrollY;
+                const targetScrollPosition = cardTop - headerHeight;
+                
+                window.scrollTo({
+                  top: Math.max(0, targetScrollPosition),
+                  behavior: 'smooth'
+                });
+              }
+            }, 100); // Small delay to let layout stabilize (transitions are disabled on initial load)
+          });
+        }
+      }
+    };
+
+    // Initial check - with scroll since this is page load
+    checkUrlHash(true);
+
+    // Add hash change listener - also scroll on hash change
+    const handleHashChange = () => checkUrlHash(true);
+    window.addEventListener('hashchange', handleHashChange);
+
     // Cleanup listener
-    return () => window.removeEventListener('hashchange', checkUrlHash);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [storageKey, expandedStorageKey, blok, isChecked]);
 
   // Handle expand/collapse trigger
@@ -292,7 +329,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                   "inline mt-0 text-lg",
                   isChecked && "line-through decoration-1"
                 )}
-                id={blok.slug}
+                id={hasMounted ? blok.slug : undefined}
                 data-slug={blok.slug} 
               >
                 {/* Render title badges inline at the beginning */}
@@ -341,7 +378,8 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
           <ChevronDown 
             className={cn(
-              "h-8 w-8 transition-transform duration-300 mt-1 text-neutral-500",
+              "h-8 w-8 mt-1 text-neutral-500",
+              enableTransitions ? "transition-transform duration-300" : "transition-none",
               "p-1 rounded-full group-hover:bg-neutral-200/60",
               "print:hidden",
               isExpanded && "rotate-180",
@@ -355,8 +393,8 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       
       <div
         className={cn(
-          "grid transition-all duration-300",
-          "mt-2",
+          "grid mt-2",
+          enableTransitions ? "transition-all duration-300" : "transition-none",
           isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
           isChecked && `opacity-${checkedOpacity}`,
         )}
