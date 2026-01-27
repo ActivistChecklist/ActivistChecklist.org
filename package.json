@@ -89,7 +89,7 @@
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
     "chalk": "^5.3.0",
-    "commander": "^12.1.0",
+    "commander": "^14.0.2",
     "concurrently": "^9.1.0",
     "fastify-cli": "^7.2.0",
     "feed": "^5.1.0",
