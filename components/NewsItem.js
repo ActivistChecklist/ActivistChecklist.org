@@ -14,7 +14,10 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     return null;
   }
 
-  const { date, source, url, paywall_mode = 'inactive', comment } = blok;
+  const { date, source, source_override, url, paywall_mode = 'inactive', comment } = blok;
+  
+  // Use source_override if provided, otherwise fall back to source
+  const displaySource = source_override || (source?.name || source);
   
   // Check if image exists using build-time manifest
   const getImageInfo = () => {
@@ -101,9 +104,9 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
                 ) : (
                   <span>{story?.name || 'News Item'}</span>
                 )}
-                {source && (
+                {displaySource && (
                   <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
-                    • {source.name || source}
+                    • {displaySource}
                   </span>
                 )}
               </h3>
@@ -205,9 +208,9 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
               ) : (
                 <span>{story?.name || 'News Item'}</span>
               )}
-              {source && (
+              {displaySource && (
                 <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
-                  • {source.name || source}
+                  • {displaySource}
                 </span>
               )}
             </h3>
