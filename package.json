@@ -83,7 +83,7 @@
     "storyblok-rich-text-react-renderer": "^2.9.2",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "add": "^2.0.6",
