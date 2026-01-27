@@ -81,7 +81,7 @@
     "remark-gfm": "^4.0.0",
     "remark-html": "^16.0.1",
     "storyblok-rich-text-react-renderer": "^2.9.2",
-    "tailwind-merge": "^2.5.5",
+    "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
   },

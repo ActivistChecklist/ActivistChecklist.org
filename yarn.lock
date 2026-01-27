@@ -4723,10 +4723,10 @@ systeminformation@^5.7:
   resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.23.14.tgz#f8b0064cd62710535375c95f167d99acc5c68854"
   integrity sha512-mUHEuDQJJOpphvjcIrTY0iwLnoNo/qotr6SuN7v0ANOO0L3j89mfCrEuIVheS/9S9KGRt4Osqxh9GoF7BX49UA==
 
-tailwind-merge@^2.5.5:
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-2.5.5.tgz#98167859b856a2a6b8d2baf038ee171b9d814e39"
-  integrity sha512-0LXunzzAZzo0tEPxV3I297ffKZPlKDrjj7NXphC8V5ak9yHC5zRmxnOe2m/Rd/7ivsOMJe3JZ2JVocoDdQTRBA==
+tailwind-merge@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-3.4.0.tgz#5a264e131a096879965f1175d11f8c36e6b64eca"
+  integrity sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==
 
 tailwindcss-animate@^1.0.7:
   version "1.0.7"
