@@ -183,11 +183,11 @@ Content will be exported as JSON files maintaining the same structure as in Stor
 
 ## Editing the content in Storyblok
 
-### Rich text inline JSX Compontents
+### Rich text inline JSX Components
 
 Special parsing available inside rich text fields:
 
-The following text will be parsed as components and rendered as JSX compontents:
+The following text will be parsed as components and rendered as JSX components:
 
 ```jsx
 <Badge variant="destructive">advanced</Badge>
