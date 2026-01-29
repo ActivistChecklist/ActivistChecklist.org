@@ -20,6 +20,8 @@
 .DS_Store
 *.pem
 
+.idea
+
 .cursorrules
 .cursor/
 
