@@ -8,8 +8,13 @@ import {
 } from "@storyblok/react";
 import { cn } from "@/lib/utils";
 
+// Relations that need to be resolved - must match getStaticProps AND bridge
+const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
+
 export default function Page({ story, preview }) {
-  story = useStoryblokState(story);
+  story = useStoryblokState(story, {
+    resolveRelations: RESOLVE_RELATIONS
+  });
   
   // Get the first image from the story content if available, fallback to default
   const getOgImage = () => {
@@ -93,7 +98,7 @@ export async function getStaticProps({ params, preview = false }) {
   // First get the main story
   let { data } = await storyblokApi.get(`cdn/stories/${slug}`, {
     version: getStoryblokVersion(preview),
-    resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
+    resolve_relations: RESOLVE_RELATIONS.join(',')
   });
 
   if (!data?.story) {
