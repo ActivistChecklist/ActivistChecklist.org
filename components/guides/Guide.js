@@ -163,7 +163,7 @@ const Guide = ({ blok }) => {
           <div className="clear-both"></div>
 
           {sections.map((section, sectionIndex) => {
-            const checklistItemCount = section.blocks.filter(block => block.component === 'checklist-item').length;
+            const checklistItemCount = section.blocks.filter(block => block.component === 'checklist-item' || block.component === 'checklist-item-ref').length;
             let currentIndex = 0;
             
             return (
