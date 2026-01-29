@@ -76,7 +76,7 @@ export class MediaHandler {
       }
 
       // Handle special array properties that need recursive processing
-      const arrayProps = ['content', 'body']
+      const arrayProps = ['content', 'body', 'blocks']
       arrayProps.forEach(prop => {
         if (obj[prop] && Array.isArray(obj[prop])) {
           obj[prop].forEach(item => this.findMedia(item, media))
@@ -90,7 +90,12 @@ export class MediaHandler {
 
       // Recursively process all other object values
       Object.values(obj).forEach(value => {
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === 'string') {
+          // Check if string values are storyblok asset URLs (e.g., image fields stored as strings)
+          if (this.isStoryblokAsset(value)) {
+            media.add(value)
+          }
+        } else if (typeof value === 'object' && value !== null) {
           this.findMedia(value, media)
         }
       })

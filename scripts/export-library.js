@@ -7,6 +7,9 @@ import { logger, formatProgress } from './utils.js'
 import { MediaHandler } from './export-image-handler.js'
 import { storyToYaml } from './export-yaml.js'
 
+// Relations that need to be resolved (must match pages/[...slug].js)
+const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source']
+
 export default class SbExport {
   constructor({ token, contentDir, imagesDir, verbose = false, draft = false, yaml = false }) {
     this.contentDir = contentDir
@@ -18,6 +21,7 @@ export default class SbExport {
       region: 'us'
     })
     this.mediaHandler = new MediaHandler(imagesDir, verbose)
+    this.resolveRelations = RESOLVE_RELATIONS.join(',')
 
     // Define how different components should be handled
     this.componentTypes = {
@@ -149,7 +153,8 @@ export default class SbExport {
       // Fetch phase
       logger.info('\n📡 Fetching content...')
       const allStories = await this.sbClient.getAll('cdn/stories', {
-        version: this.version
+        version: this.version,
+        resolve_relations: this.resolveRelations
       })
       
       // Filter out stories in the checklist-items folder
