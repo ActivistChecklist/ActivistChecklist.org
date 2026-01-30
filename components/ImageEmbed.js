@@ -97,7 +97,11 @@ export const ImageEmbed = ({
   );
 
   // Wrap with link if provided
-  const linkUrl = link?.url || link?.cached_url || (typeof link === 'string' ? link : null);
+  // For URL links (linktype === 'url'), prefer the url field which contains exactly what was entered
+  // For story links (linktype === 'story'), use cached_url which contains the story's full path
+  const linkUrl = link?.linktype === 'url'
+    ? (link?.url || link?.cached_url || (typeof link === 'string' ? link : null))
+    : (link?.cached_url || link?.url || (typeof link === 'string' ? link : null));
   const wrappedImage = linkUrl ? (
     <Link 
       href={linkUrl}
