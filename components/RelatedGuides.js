@@ -1,4 +1,5 @@
 import React from 'react';
+import { storyblokEditable } from '@storyblok/react';
 import GuideCardBlock from '@/components/GuideCardBlock';
 import { RichText } from '@/components/RichText';
 import { cn } from '@/lib/utils';
@@ -50,7 +51,7 @@ const RelatedGuides = ({ blok, isBlock = false }) => {
     : "If you found this helpful, also check out these guides";
 
   return (
-    <div className={containerClass}>
+    <div {...storyblokEditable(blok)} className={containerClass}>
       {/* Title section */}
       <div className="mb-6">
         <h3 className={cn(titleClass)}
