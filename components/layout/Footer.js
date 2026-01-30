@@ -33,29 +33,33 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="border-t text-sm border-gray-200 pt-8 flex flex-col md:flex-row md:items-center md:justify-between">
-          <p>
-            Content available under{' '}
-            <Link
-              href="https://creativecommons.org/licenses/by-sa/4.0/"
-              className="hover:text-gray-800 underline underline-offset-2"
-            >
-              Creative Commons BY-SA
-            </Link>.{' '}
-            See our <Link
-              href="/about/#sources"
-              className="hover:text-gray-800 underline underline-offset-2"
-            >
-              sources
-            </Link>.
-            Source code available on{' '}
-            <Link   
-              href="https://github.com/ActivistChecklist/ActivistChecklist.org"
-              className="hover:text-gray-800 underline underline-offset-2"
-            >
-              GitHub
-            </Link>.
+        <div className="border-t text-sm border-gray-200 pt-8 flex flex-col gap-4">
+          <p className="text-gray-500 italic">
+            Heads up: We provide info and resources, not legal advice. Consult an attorney for your specific situation.
           </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <p>
+              Content available under{' '}
+              <Link
+                href="https://creativecommons.org/licenses/by-sa/4.0/"
+                className="hover:text-gray-800 underline underline-offset-2"
+              >
+                Creative Commons BY-SA
+              </Link>.{' '}
+              See our <Link
+                href="/about/#sources"
+                className="hover:text-gray-800 underline underline-offset-2"
+              >
+                sources
+              </Link>.
+              Source code available on{' '}
+              <Link   
+                href="https://github.com/ActivistChecklist/ActivistChecklist.org"
+                className="hover:text-gray-800 underline underline-offset-2"
+              >
+                GitHub
+              </Link>.
+            </p>
           <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
             {footerConfig.socialLinks?.map((social) => (
               <a
@@ -71,6 +75,7 @@ export function Footer() {
               </a>
             ))}
             {/* <DarkModeToggle /> */}
+            </div>
           </div>
         </div>
       </div>
