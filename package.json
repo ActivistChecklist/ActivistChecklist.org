@@ -40,7 +40,7 @@
     "@fastify/cors": "^10.0.1",
     "@fastify/helmet": "^13.0.0",
     "@fastify/rate-limit": "^10.2.1",
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
