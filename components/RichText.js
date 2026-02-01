@@ -13,6 +13,7 @@ import ButtonEmbed from "@/components/ButtonEmbed";
 import VideoEmbed from "@/components/VideoEmbed";
 import ImageEmbed from "@/components/ImageEmbed";
 import RelatedGuides from "@/components/RelatedGuides";
+import { InlineChecklist } from "@/components/guides/InlineChecklist";
 
 const INLINE_COMPONENTS = {
   Badge,
@@ -166,6 +167,180 @@ const parseComponents = (text) => {
   return elements.length === 0 ? text : elements;
 };
 
+// Wrapper components that can span multiple nodes in the rich text tree
+const WRAPPER_COMPONENTS = {
+  InlineChecklist: InlineChecklist
+};
+
+/**
+ * Check if a React element or its text content contains a marker
+ */
+const containsMarker = (element, marker) => {
+  if (typeof element === 'string') {
+    return element.includes(marker);
+  }
+  if (React.isValidElement(element)) {
+    const { children } = element.props;
+    if (typeof children === 'string') {
+      return children.includes(marker);
+    }
+    if (Array.isArray(children)) {
+      return children.some(child => containsMarker(child, marker));
+    }
+    return children ? containsMarker(children, marker) : false;
+  }
+  if (Array.isArray(element)) {
+    return element.some(child => containsMarker(child, marker));
+  }
+  return false;
+};
+
+/**
+ * Remove a marker from a React element tree, returning new tree
+ */
+const removeMarker = (element, marker) => {
+  if (typeof element === 'string') {
+    return element.replace(marker, '').trim() || null;
+  }
+  if (React.isValidElement(element)) {
+    const { children } = element.props;
+    if (typeof children === 'string') {
+      const newChildren = children.replace(marker, '').trim();
+      // If the element is now empty, return null to remove it
+      if (!newChildren) return null;
+      return React.cloneElement(element, {}, newChildren);
+    }
+    if (Array.isArray(children)) {
+      const newChildren = children
+        .map(child => removeMarker(child, marker))
+        .filter(child => child !== null && child !== '');
+      if (newChildren.length === 0) return null;
+      return React.cloneElement(element, {}, newChildren);
+    }
+    if (children) {
+      const newChildren = removeMarker(children, marker);
+      if (newChildren === null) return null;
+      return React.cloneElement(element, {}, newChildren);
+    }
+    return element;
+  }
+  if (Array.isArray(element)) {
+    return element
+      .map(child => removeMarker(child, marker))
+      .filter(child => child !== null && child !== '');
+  }
+  return element;
+};
+
+/**
+ * Extract props from an opening tag like <InlineChecklist storageKey="my-key">
+ */
+const extractTagProps = (element, tagName) => {
+  const props = {};
+  const extractFromString = (str) => {
+    const tagRegex = new RegExp(`<${tagName}([^>]*)>`);
+    const match = str.match(tagRegex);
+    if (match && match[1]) {
+      const propsStr = match[1];
+      const propsRegex = /(\w+)=["']([^"']*)["']/g;
+      let propMatch;
+      while ((propMatch = propsRegex.exec(propsStr)) !== null) {
+        props[propMatch[1]] = propMatch[2];
+      }
+    }
+  };
+
+  if (typeof element === 'string') {
+    extractFromString(element);
+  } else if (React.isValidElement(element)) {
+    const { children } = element.props;
+    if (typeof children === 'string') {
+      extractFromString(children);
+    } else if (Array.isArray(children)) {
+      children.forEach(child => {
+        const childProps = extractTagProps(child, tagName);
+        Object.assign(props, childProps);
+      });
+    } else if (children) {
+      const childProps = extractTagProps(children, tagName);
+      Object.assign(props, childProps);
+    }
+  }
+  return props;
+};
+
+/**
+ * Post-process rendered content to find wrapper component markers
+ * and wrap the content between them in the appropriate component.
+ * 
+ * This handles cases like:
+ * <p><InlineChecklist></p>
+ * <ul><li>Item 1</li><li>Item 2</li></ul>
+ * <p></InlineChecklist></p>
+ */
+const postProcessWrappers = (content) => {
+  if (!content) return content;
+  
+  const children = React.Children.toArray(content);
+  if (children.length === 0) return content;
+
+  for (const [componentName, Component] of Object.entries(WRAPPER_COMPONENTS)) {
+    const openTag = `<${componentName}`;
+    const closeTag = `</${componentName}>`;
+    
+    let openIndex = -1;
+    let closeIndex = -1;
+    let openProps = {};
+    
+    // Find opening and closing tags
+    for (let i = 0; i < children.length; i++) {
+      if (openIndex === -1 && containsMarker(children[i], openTag)) {
+        openIndex = i;
+        openProps = extractTagProps(children[i], componentName);
+      }
+      if (openIndex !== -1 && containsMarker(children[i], closeTag)) {
+        closeIndex = i;
+        break;
+      }
+    }
+    
+    // If we found both tags, wrap the content
+    if (openIndex !== -1 && closeIndex !== -1) {
+      const before = children.slice(0, openIndex);
+      const after = children.slice(closeIndex + 1);
+      
+      // Get content between markers
+      let wrappedContent = children.slice(openIndex, closeIndex + 1);
+      
+      // Remove the opening tag from first element
+      const openTagRegex = new RegExp(`<${componentName}[^>]*>`);
+      wrappedContent[0] = removeMarker(wrappedContent[0], openTagRegex);
+      
+      // Remove the closing tag from last element  
+      wrappedContent[wrappedContent.length - 1] = removeMarker(
+        wrappedContent[wrappedContent.length - 1], 
+        closeTag
+      );
+      
+      // Filter out null/empty elements
+      wrappedContent = wrappedContent.filter(el => el !== null && el !== '');
+      
+      // Create the wrapped component
+      const wrappedElement = React.createElement(
+        Component,
+        { key: `${componentName}-${openIndex}`, ...openProps },
+        wrappedContent
+      );
+      
+      // Recursively process remaining content for more wrappers
+      const result = [...before, wrappedElement, ...after];
+      return postProcessWrappers(result);
+    }
+  }
+  
+  return children;
+};
+
 const blokResolvers = {
     alert: (props) => {
       return <Alert variant={props.type} title={props.title || null} blok={props} {...props} ><RichText document={ props.body} /></Alert>;
@@ -219,7 +394,7 @@ const nodeResolvers = {
 };
 
 export function RichText({ document, className, noWrapper = false, ...props }) {
-  const content = render(document, {
+  const rawContent = render(document, {
     nodeResolvers: {
       ...nodeResolvers,
       paragraph: (children, props) => {
@@ -256,6 +431,9 @@ export function RichText({ document, className, noWrapper = false, ...props }) {
       return <StoryblokComponent blok={blok} key={props._uid} />;
     }
   });
+
+  // Post-process to handle wrapper components that span multiple nodes
+  const content = postProcessWrappers(rawContent);
 
   if (noWrapper) {
     return <span className={cn("prose", className)} {...props}>{content}</span>;
