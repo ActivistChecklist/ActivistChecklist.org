@@ -21,7 +21,7 @@ export function FeedbackCTA() {
       <div className="max-w-2xl mx-auto text-center space-y-6">
         <h3 className="text-2xl font-bold">Have Questions?</h3>
         <p className="text-neutral-300 max-w-md mx-auto">
-          We want to hear your questions/feedback so we can make these guides useful to folks working for change.
+          Let us know if you have questions or feedback so we can make these guides as useful as possible.
         </p>
         <div className="flex gap-2 max-w-md mx-auto">
           <Input

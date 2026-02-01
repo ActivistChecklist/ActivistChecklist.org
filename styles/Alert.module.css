@@ -1,6 +1,6 @@
 /* Alert styles - !text-inherit overrides prose's font-size so alert matches its container */
 .alert {
-  @apply relative w-full rounded-md border border-l-[6px] p-4 [&:not(:first-child)]:mt-3 !text-inherit;
+  @apply relative w-full rounded-md border-l-[6px] py-2 px-5 [&:not(:first-child)]:mt-3 !text-inherit;
 }
 
 
@@ -35,10 +35,6 @@
 
 :global(.checklist-item) .alert .alertTitle {
   @apply !text-base;
-}
-
-:global(.checklist-item) .alert {
-  @apply border-l;
 }
 
 /* Variant styles */
