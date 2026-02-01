@@ -18,7 +18,7 @@ const ChecklistItemRef = ({ blok, expandTrigger, index }) => {
 
   // Render the referenced item using the ChecklistItem component
   return (
-    <div class="checklist-item-ref"  {...storyblokEditable(blok)}>
+    <div className="checklist-item-ref"  {...storyblokEditable(blok)}>
       <ChecklistItem 
         blok={referencedItem.content}
         expandTrigger={expandTrigger}
