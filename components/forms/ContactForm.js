@@ -344,7 +344,7 @@ const ContactForm = ({
             </Button>
             <div className="mb-8 text-sm text-muted-foreground">
               <p>
-                <b>Privacy:</b> Your message is securely encrypted and sent to our Proton Mail. We don't collect any personal information about you.
+                <b>Privacy:</b> Your message is securely encrypted and sent to our Proton Mail account. We don't collect any personal information about you.
               </p>
             </div>
           </form>
