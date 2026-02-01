@@ -51,7 +51,7 @@ const Alert = React.forwardRef(({
     <div
       ref={ref}
       role="alert"
-      className={cn(styles.alert, styles[variant], "prose", className)}
+      className={cn(styles.alert, title && styles.alertWithTitle, styles[variant], "prose", className)}
       {...storyblokEditable(blok)}
       {...props}>
       {showIcon && <Icon className={cn(styles.alertIcon)} />}
