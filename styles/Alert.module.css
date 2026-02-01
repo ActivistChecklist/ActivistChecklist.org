@@ -9,7 +9,7 @@
 }
 
 .alertIcon {
-  @apply absolute left-3 top-[0.9rem] text-foreground;
+  @apply absolute left-3 top-3 text-foreground;
 }
 
 .alertTitle {
@@ -31,6 +31,10 @@
 
 :global(.checklist-item) .alert {
   @apply py-2;
+}
+
+:global(.checklist-item) .alert .alertIcon {
+  @apply top-2;
 }
 
 :global(.checklist-item) .alert .alertDescription {
