@@ -96,7 +96,7 @@
     "commander": "^14.0.2",
     "concurrently": "^9.2.1",
     "fastify-cli": "^7.4.1",
-    "feed": "^5.2.0",
+    "feed": "5.1.0",
     "js-yaml": "^4.1.1",
     "local-ssl-proxy": "^2.0.5",
     "next-sitemap": "^4.2.3",
