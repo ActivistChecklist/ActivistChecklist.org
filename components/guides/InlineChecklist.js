@@ -13,6 +13,8 @@ import { Check } from "lucide-react";
 export function InlineChecklist({ children, storageKey, className }) {
   const [checkedItems, setCheckedItems] = useState({});
   const [mounted, setMounted] = useState(false);
+  // Store children in state to ensure consistent rendering after mount
+  const [stableChildren, setStableChildren] = useState(null);
 
   // Generate a storage key from content if not provided
   const getStorageKey = useCallback(() => {
@@ -38,6 +40,8 @@ export function InlineChecklist({ children, storageKey, className }) {
 
   // Load checked state from localStorage on mount
   useEffect(() => {
+    // Capture children on mount to ensure stable reference
+    setStableChildren(children);
     setMounted(true);
     try {
       const key = getStorageKey();
@@ -48,7 +52,7 @@ export function InlineChecklist({ children, storageKey, className }) {
     } catch (e) {
       console.warn('Failed to load checklist state:', e);
     }
-  }, [getStorageKey]);
+  }, [getStorageKey, children]);
 
   // Save checked state to localStorage
   useEffect(() => {
@@ -68,6 +72,40 @@ export function InlineChecklist({ children, storageKey, className }) {
     }));
   };
 
+  // Split children into first line and rest
+  // First line = first paragraph, or if no paragraphs, all content
+  const splitFirstLine = (itemChildren) => {
+    const childArray = React.Children.toArray(itemChildren);
+    
+    // If only one child, that's the first line
+    if (childArray.length <= 1) {
+      return { firstLine: itemChildren, rest: null };
+    }
+    
+    // Look for paragraph or br break point
+    let breakIndex = -1;
+    for (let i = 0; i < childArray.length; i++) {
+      const child = childArray[i];
+      // If we find a second paragraph or a br, split there
+      if (i > 0 && React.isValidElement(child)) {
+        if (child.type === 'p' || child.type === 'br') {
+          breakIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (breakIndex === -1) {
+      // No break found, first child is the first line
+      return { firstLine: childArray[0], rest: childArray.slice(1) };
+    }
+    
+    return {
+      firstLine: childArray.slice(0, breakIndex),
+      rest: childArray.slice(breakIndex)
+    };
+  };
+
   // Transform bullet list items into checklist items
   const transformChildren = (node, path = '') => {
     if (!React.isValidElement(node)) {
@@ -85,6 +123,7 @@ export function InlineChecklist({ children, storageKey, className }) {
             if (React.isValidElement(item) && item.type === 'li') {
               const itemIndex = `${path}-${idx}`;
               const isChecked = checkedItems[itemIndex] || false;
+              const { firstLine, rest } = splitFirstLine(item.props.children);
               
               return (
                 <li
@@ -92,25 +131,33 @@ export function InlineChecklist({ children, storageKey, className }) {
                   onClick={() => toggleItem(itemIndex)}
                   className={cn(
                     "flex items-start gap-3 cursor-pointer select-none transition-all",
-                    "hover:bg-gray-50 -mx-2 px-2 py-1 rounded-md",
-                    isChecked && "opacity-60"
+                    "hover:bg-muted/40 -mx-2 px-2 py-1 rounded-md",
+                    isChecked && "bg-gray-100"
                   )}
                 >
                   <span
                     className={cn(
-                      "flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-all",
+                      "flex-shrink-0 w-5 h-5 mt-0.5 rounded-sm border-2 flex items-center justify-center transition-colors duration-300",
                       isChecked
-                        ? "bg-green-500 border-green-500 text-white"
-                        : "border-gray-300 hover:border-green-400"
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/40 hover:border-primary"
                     )}
                   >
                     {isChecked && <Check className="w-3 h-3" />}
                   </span>
-                  <span className={cn(
-                    "flex-1 transition-all",
-                    isChecked && "line-through text-gray-500"
-                  )}>
-                    {item.props.children}
+                  <span className="flex-1 transition-all">
+                    <span className={cn(
+                      isChecked && "line-through text-muted-foreground"
+                    )}>
+                      {firstLine}
+                    </span>
+                    {rest && (
+                      <span className={cn(
+                        isChecked && "text-muted-foreground opacity-75"
+                      )}>
+                        {rest}
+                      </span>
+                    )}
                   </span>
                 </li>
               );
@@ -155,18 +202,39 @@ export function InlineChecklist({ children, storageKey, className }) {
     return count;
   };
 
-  const { total } = countItems(children);
+  // Use stableChildren after mount to ensure consistent rendering
+  const childrenToRender = mounted && stableChildren ? stableChildren : children;
+  
+  const { total } = countItems(childrenToRender);
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
   const allChecked = total > 0 && checkedCount >= total;
 
+  // Render a simple placeholder on the server to avoid hydration mismatch
+  // The complex transformChildren logic only runs on client after mount
+  if (!mounted) {
+    return (
+      <div 
+        className={cn(
+          "inline-checklist my-2 py-1 px-2 rounded-lg",
+          // "bg-muted/30",
+          className
+        )}
+        suppressHydrationWarning
+      >
+        {/* Render original children without transformation on server */}
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className={cn(
-      "inline-checklist my-4 p-4 rounded-lg border-2 border-dashed",
-      allChecked ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50",
+      "inline-checklist my-2 p-0 rounded-lg",
+      // allChecked ? "bg-primary/5" : "bg-muted/30",
       className
     )}>
       {total > 0 && (
-        <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
+        <div className="flex items-center justify-between mb-3 text-sm text-muted-foreground">
           <span className="font-medium">
             {allChecked ? "✓ All done!" : `${checkedCount} of ${total} completed`}
           </span>
@@ -176,14 +244,14 @@ export function InlineChecklist({ children, storageKey, className }) {
                 e.stopPropagation();
                 setCheckedItems({});
               }}
-              className="text-xs text-gray-400 hover:text-gray-600 underline"
+              className="text-xs text-muted-foreground/60 hover:text-muted-foreground underline"
             >
               Reset
             </button>
           )}
         </div>
       )}
-      {React.Children.map(children, (child, idx) => transformChildren(child, `root-${idx}`))}
+      {React.Children.map(childrenToRender, (child, idx) => transformChildren(child, `root-${idx}`))}
     </div>
   );
 }
