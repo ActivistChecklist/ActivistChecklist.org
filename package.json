@@ -14,7 +14,7 @@
     "postbuild": "if [ \"$VERCEL\" != \"1\" ]; then yarn storyblockexportimages; fi && next-sitemap && yarn rss && yarn index && if [ \"$BUILD_MODE\" = \"static\" ]; then cp public/.htaccess out/.htaccess; fi && if [ \"$VERCEL\" != \"1\" ]; then yarn fetch-news -q && if [ \"$BUILD_MODE\" = \"static\" ]; then mkdir -p out/files && cp -r public/files/news out/files/ 2>/dev/null || true; fi; fi && yarn buildbackup",
     "rss": "node scripts/generate-rss.js",
     "index": "NODE_ENV=${NODE_ENV} bash scripts/build-search-index.sh",
-    "buildstatic": "BUILD_MODE=static yarn build && yarn checkbuild",
+    "buildstatic": "BUILD_MODE=static yarn build && yarn checkbuild && yarn check-links",
     "checkbuild": "node scripts/check-build.mjs",
     "serve": "npx serve out",
     "buildbackup": "node scripts/build-backup.js",
@@ -30,7 +30,11 @@
     "api:delete": "yarn run pm2 delete ac-api",
     "api:logs": "yarn run pm2 logs ac-api",
     "fetch-news": "node scripts/fetch-news-images.js",
-    "metadata": "node scripts/metadata-cli.cjs"
+    "metadata": "node scripts/metadata-cli.cjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check-links": "node scripts/check-links.mjs",
+    "prepare": "sh scripts/install-hooks.sh"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
@@ -105,6 +109,7 @@
     "storyblok-backup": "^0.5.0",
     "storyblok-js-client": "^6.10.3",
     "tailwindcss": "^3.4.16",
+    "vitest": "^4.0.18",
     "yarn": "^1.22.22"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
