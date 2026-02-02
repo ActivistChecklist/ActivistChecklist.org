@@ -26,7 +26,7 @@ export default function OgPreview({ stories = [], isDev }) {
         Dev-only preview of generated share images. These are generated at build time for each page.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(560px, 1fr))', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 300px)', gap: '24px' }}>
         {stories.map((story) => {
           const title = story.content?.title || story.name;
           const type = story.content?.component || 'page';
