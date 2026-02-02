@@ -60,6 +60,17 @@ function MyApp({ Component, pageProps }) {
   }, [])
 
   const { key, ...props } = pageProps;
+  
+  // Determine base URL for absolute OG image URLs
+  const getBaseUrl = () => {
+    if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    if (typeof window !== 'undefined') return window.location.origin;
+    return 'https://activistchecklist.org';
+  };
+  const baseUrl = getBaseUrl();
+  const defaultOgImage = `${baseUrl}/images/og-image.png`;
+
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <Head>
@@ -77,11 +88,11 @@ function MyApp({ Component, pageProps }) {
         <meta property="og:type" content="website" key="og:type" />
         <meta property="og:title" content="Digital Security Checklists for Activists" key="og:title" />
         <meta property="og:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="og:description" />
-        <meta property="og:image" content="/images/og-image.png" key="og:image" />
+        <meta property="og:image" content={defaultOgImage} key="og:image" />
         <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
         <meta name="twitter:title" content="Digital Security Checklists for Activists" key="twitter:title" />
         <meta name="twitter:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="twitter:description" />
-        <meta name="twitter:image" content="/images/og-image.png" key="twitter:image" />
+        <meta name="twitter:image" content={defaultOgImage} key="twitter:image" />
       </Head>
       <ErrorBoundary>
         <Component key={key} {...props} />
