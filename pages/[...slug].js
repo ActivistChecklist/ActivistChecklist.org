@@ -6,7 +6,7 @@ import {
   getStoryblokApi,
   StoryblokComponent,
 } from "@storyblok/react";
-import { cn } from "@/lib/utils";
+import { cn, getBaseUrl } from "@/lib/utils";
 
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
@@ -60,23 +60,6 @@ export default function Page({ story, preview, ogImagePath }) {
     return "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
   };
 
-  // Determine base URL based on environment:
-  // 1. Explicit NEXT_PUBLIC_SITE_URL (production)
-  // 2. Vercel preview deployment URL
-  // 3. Localhost for development
-  // 4. Fallback to production domain
-  const getBaseUrl = () => {
-    if (process.env.NEXT_PUBLIC_SITE_URL) {
-      return process.env.NEXT_PUBLIC_SITE_URL;
-    }
-    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-      return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-    }
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    return 'https://activistchecklist.org';
-  };
   const baseUrl = getBaseUrl();
   const currentPath = story?.full_slug || '';
   const canonicalUrl = `${baseUrl}/${currentPath}`;

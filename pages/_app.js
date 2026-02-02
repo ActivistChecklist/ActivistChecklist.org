@@ -5,6 +5,7 @@ import ErrorBoundary from '../components/development/ErrorBoundary';
 import { useEffect } from "react";
 import Head from 'next/head';
 
+import { getBaseUrl } from "@/lib/utils";
 import Page from "../components/pages/Page";
 import ChecklistItem from "../components/guides/ChecklistItem";
 import Guide, { SectionHeader } from "../components/guides/Guide";
@@ -61,13 +62,6 @@ function MyApp({ Component, pageProps }) {
 
   const { key, ...props } = pageProps;
   
-  // Determine base URL for absolute OG image URLs
-  const getBaseUrl = () => {
-    if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-    if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-    if (typeof window !== 'undefined') return window.location.origin;
-    return 'https://activistchecklist.org';
-  };
   const baseUrl = getBaseUrl();
   const defaultOgImage = `${baseUrl}/images/og-image.png`;
 

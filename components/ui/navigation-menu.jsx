@@ -35,6 +35,8 @@ const NavigationMenu = React.forwardRef(({ className, children, ...props }, ref)
           "relative z-10 flex max-w-max flex-1 items-center justify-center",
           className
         )}
+        delayDuration={100}
+        skipDelayDuration={0}
         onMouseLeave={() => !isMobile && setIsHovered(false)}
         {...props}>
         {children}
@@ -90,13 +92,6 @@ const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props 
           setIsHovered(true);
           updatePosition(e);
         }
-      }}
-      onClick={(e) => {
-        if (!isMobile) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        props.onClick?.(e);
       }}
       {...props}>
       {children}{" "}
