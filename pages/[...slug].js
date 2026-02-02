@@ -11,17 +11,20 @@ import { cn } from "@/lib/utils";
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
 
-export default function Page({ story, preview }) {
+export default function Page({ story, preview, ogImagePath }) {
   story = useStoryblokState(story, {
     resolveRelations: RESOLVE_RELATIONS
   });
-  
-  // Get the first image from the story content if available, fallback to default
+
+  // Get the OG image: prefer generated image, then Storyblok image, then default
   const getOgImage = () => {
+    if (ogImagePath) {
+      return `${baseUrl}${ogImagePath}`;
+    }
     if (story?.content?.image) {
       // Handle Storyblok image object or string
-      const imageUrl = typeof story.content.image === 'string' 
-        ? story.content.image 
+      const imageUrl = typeof story.content.image === 'string'
+        ? story.content.image
         : story.content.image.cached_url || story.content.image.filename || story.content.image.url;
 
       if (!imageUrl) {
@@ -213,12 +216,22 @@ export async function getStaticProps({ params, preview = false }) {
   // Expand all references in the content
   data.story.content = await expandReferences(data.story.content);
 
+  // Generate OG share image at build time
+  let ogImagePath = null;
+  try {
+    const { generateOgImageForStory } = require('@/lib/og-image');
+    ogImagePath = await generateOgImageForStory(data.story);
+  } catch (error) {
+    console.warn(`OG image generation skipped for ${slug}:`, error.message);
+  }
+
   return {
     props: {
       story: data.story,
       key: data.story.id,
       preview: preview || false,
       revalidate: 0,
+      ogImagePath,
       // ...getRevalidate(),
     },
   };

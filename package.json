@@ -30,6 +30,8 @@
     "api:delete": "yarn run pm2 delete ac-api",
     "api:logs": "yarn run pm2 logs ac-api",
     "fetch-news": "node scripts/fetch-news-images.js",
+    "og-images": "node scripts/generate-og-images.mjs",
+    "og-images:clean": "node scripts/generate-og-images.mjs --clean",
     "metadata": "node scripts/metadata-cli.cjs",
     "test": "vitest run",
     "test:watch": "vitest",

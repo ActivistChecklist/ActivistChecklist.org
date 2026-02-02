@@ -58,5 +58,8 @@ buildbackups/
 # News image caching
 public/files/news/
 
+# Generated OG share images
+public/images/og/
+
 # Metadata cleaner folder 
 metadata-cleaner/
