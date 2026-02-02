@@ -43,10 +43,15 @@ export default function Page({ story, preview, ogImagePath }) {
 
   // Get a description from the story content if available, fallback to default
   const getDescription = () => {
+    // Check for explicit description or summary field
     if (story?.content?.description) {
       return story.content.description;
-    } else if (story?.content?.body) {
-      // If there's rich text content, try to get the first paragraph
+    }
+    if (story?.content?.summary) {
+      return story.content.summary;
+    }
+    // If there's rich text content, try to get the first paragraph
+    if (story?.content?.body) {
       const firstParagraph = story.content.body.content?.[0]?.content?.[0]?.text;
       if (firstParagraph) {
         return firstParagraph.substring(0, 160) + "...";
