@@ -179,12 +179,20 @@ async function scanFile(filePath) {
   const fileFindings = checkForbiddenStrings(content, filePath);
   findings.push(...fileFindings);
 
-  // Extract URLs if needed
-  extractUrls(content, filePath);
+  // Extract URLs only from non-bundled files
+  // Bundled JS files contain doc URLs from React/Next.js/webpack that aren't actual content links
+  if (!isBundledJsFile(filePath)) {
+    extractUrls(content, filePath);
+  }
 }
 
 function isTargetFile(file) {
   return file.endsWith('.html') || file.endsWith('.js');
+}
+
+// Check if a file is a bundled JS file (framework code with embedded doc URLs)
+function isBundledJsFile(filePath) {
+  return filePath.includes('_next/static/chunks/');
 }
 
 async function scanDirectory(dir) {
