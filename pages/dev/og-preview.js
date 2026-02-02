@@ -30,7 +30,8 @@ export default function OgPreview({ stories = [], isDev }) {
         {stories.map((story) => {
           const title = story.content?.title || story.name;
           const type = story.content?.component || 'page';
-          const imgSrc = `/api/og-image?title=${encodeURIComponent(title)}&type=${encodeURIComponent(type)}`;
+          const slug = story.full_slug || '';
+          const imgSrc = `/api/og-image?title=${encodeURIComponent(title)}&type=${encodeURIComponent(type)}&slug=${encodeURIComponent(slug)}`;
 
           return (
             <div key={story.uuid} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', background: '#fafafa' }}>
