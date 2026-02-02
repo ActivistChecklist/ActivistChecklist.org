@@ -1,27 +1,30 @@
 import Head from "next/head";
 import Layout from "../components/layout/Layout";
-import { getStoryblokVersion, getRevalidate, fetchAllStories } from "../utils/core";
+import { getStoryblokVersion, getRevalidate, fetchAllStories, renderRichTextTreeAsPlainText } from "../utils/core";
 import {
   useStoryblokState,
   getStoryblokApi,
   StoryblokComponent,
 } from "@storyblok/react";
-import { cn } from "@/lib/utils";
+import { cn, getBaseUrl } from "@/lib/utils";
 
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
 
-export default function Page({ story, preview }) {
+export default function Page({ story, preview, ogImagePath }) {
   story = useStoryblokState(story, {
     resolveRelations: RESOLVE_RELATIONS
   });
-  
-  // Get the first image from the story content if available, fallback to default
+
+  // Get the OG image: prefer generated image, then Storyblok image, then default
   const getOgImage = () => {
+    if (ogImagePath) {
+      return `${baseUrl}${ogImagePath}`;
+    }
     if (story?.content?.image) {
       // Handle Storyblok image object or string
-      const imageUrl = typeof story.content.image === 'string' 
-        ? story.content.image 
+      const imageUrl = typeof story.content.image === 'string'
+        ? story.content.image
         : story.content.image.cached_url || story.content.image.filename || story.content.image.url;
 
       if (!imageUrl) {
@@ -40,10 +43,26 @@ export default function Page({ story, preview }) {
 
   // Get a description from the story content if available, fallback to default
   const getDescription = () => {
+    // Check for explicit description field
     if (story?.content?.description) {
-      return story.content.description;
-    } else if (story?.content?.body) {
-      // If there's rich text content, try to get the first paragraph
+      // Handle rich text or string
+      if (typeof story.content.description === 'string') {
+        return story.content.description;
+      }
+      const plainText = renderRichTextTreeAsPlainText(story.content.description);
+      if (plainText) return plainText;
+    }
+    // Check for summary field
+    if (story?.content?.summary) {
+      // Handle rich text or string
+      if (typeof story.content.summary === 'string') {
+        return story.content.summary;
+      }
+      const plainText = renderRichTextTreeAsPlainText(story.content.summary);
+      if (plainText) return plainText;
+    }
+    // If there's rich text content, try to get the first paragraph
+    if (story?.content?.body) {
       const firstParagraph = story.content.body.content?.[0]?.content?.[0]?.text;
       if (firstParagraph) {
         return firstParagraph.substring(0, 160) + "...";
@@ -52,7 +71,7 @@ export default function Page({ story, preview }) {
     return "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://activistchecklist.org';
+  const baseUrl = getBaseUrl();
   const currentPath = story?.full_slug || '';
   const canonicalUrl = `${baseUrl}/${currentPath}`;
   
@@ -213,12 +232,22 @@ export async function getStaticProps({ params, preview = false }) {
   // Expand all references in the content
   data.story.content = await expandReferences(data.story.content);
 
+  // Generate OG share image at build time
+  let ogImagePath = null;
+  try {
+    const { generateOgImageForStory } = require('@/lib/og-image');
+    ogImagePath = await generateOgImageForStory(data.story);
+  } catch (error) {
+    console.warn(`OG image generation skipped for ${slug}:`, error.message);
+  }
+
   return {
     props: {
       story: data.story,
       key: data.story.id,
       preview: preview || false,
       revalidate: 0,
+      ogImagePath,
       // ...getRevalidate(),
     },
   };
