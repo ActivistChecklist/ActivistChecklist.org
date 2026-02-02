@@ -14,6 +14,7 @@ export const ROUTES = {
     SECONDARY_PHONE: '/secondary',
     FEDERAL: '/federal',
     ACTION: '/action',
+    ICE: '/ice',
   },
   RESOURCES: '/resources',
   MOVIES: '/movies',
