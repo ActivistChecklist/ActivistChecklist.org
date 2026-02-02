@@ -8,6 +8,7 @@ import {
   IoChatbubbleOutline,
   IoAirplaneOutline,
   IoEyeOffOutline,
+  IoEyeOutline,
   IoNotificationsOutline,
   IoLockClosedOutline,
   IoHandRightOutline,
@@ -132,6 +133,13 @@ export const NAV_ITEMS = {
     href: ROUTES.CHECKLISTS.ACTION,
     description: "Digital security for direct actions and civil disobedience.",
     icon: IoHandRightOutline
+  },
+  ICE: {
+    key: 'ice',
+    title: "ICE watch digital security",
+    href: ROUTES.CHECKLISTS.ICE,
+    description: "Digital security for ICE watch and rapid response networks.",
+    icon: IoEyeOutline
   },
   MOVIES: {
     key: 'movies',
