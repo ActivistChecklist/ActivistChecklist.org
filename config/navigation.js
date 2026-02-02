@@ -8,7 +8,7 @@ import {
   IoChatbubbleOutline,
   IoAirplaneOutline,
   IoEyeOffOutline,
-  IoEyeOutline,
+  IoVideocamOutline,
   IoNotificationsOutline,
   IoLockClosedOutline,
   IoHandRightOutline,
@@ -73,7 +73,7 @@ export const NAV_ITEMS = {
   },
   SIGNAL: {
     key: 'signal',
-    title: "Signal security checklist",
+    title: "Signal security",
     href: ROUTES.CHECKLISTS.SIGNAL,
     description: "Secure your Signal messaging app for safer communications.",
     icon: IoChatbubbleOutline
@@ -122,7 +122,7 @@ export const NAV_ITEMS = {
   },
   DOXXING: {
     key: 'doxxing',
-    title: "Doxxing defense checklist",
+    title: "Doxxing defense",
     href: ROUTES.CHECKLISTS.DOXXING,
     description: "Protect yourself from doxxing and online harassment.",
     icon: IoLockClosedOutline
@@ -139,7 +139,7 @@ export const NAV_ITEMS = {
     title: "ICE watch digital security",
     href: ROUTES.CHECKLISTS.ICE,
     description: "Digital security for ICE watch and rapid response networks.",
-    icon: IoEyeOutline
+    icon: IoVideocamOutline
   },
   MOVIES: {
     key: 'movies',
@@ -218,11 +218,11 @@ export const SECURITY_CHECKLISTS = {
     NAV_ITEMS.SECURITY_ESSENTIALS,
     NAV_ITEMS.SIGNAL,
     NAV_ITEMS.PROTEST_PREP,
+    NAV_ITEMS.ICE,
     NAV_ITEMS.DOXXING,
     NAV_ITEMS.TRAVEL,
     NAV_ITEMS.EMERGENCY,
     NAV_ITEMS.SECONDARY_PHONE,
-    NAV_ITEMS.SPYWARE,
   ].slice(0, 8), // Limit to 8 items maximum
   footerLink: {
     title: "Browse all checklists",
