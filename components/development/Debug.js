@@ -3,7 +3,7 @@ import { useDebug } from '../../contexts/DebugContext'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
 
-const ReactJson = dynamic(() => import('react-json-view'), {
+const JsonView = dynamic(() => import('react18-json-view').then(mod => mod.default), {
   ssr: false
 })
 
@@ -61,12 +61,10 @@ export default function Debug() {
             ))}
           </div>
           <div className="p-6">
-            <ReactJson 
+            <JsonView 
               src={tabs[activeTab].data} 
-              theme="monokai" 
-              style={{ backgroundColor: 'transparent' }}
-              displayDataTypes={false}
-              enableClipboard={false}
+              dark={true}
+              collapsed={2}
             />
           </div>
         </div>
