@@ -61,7 +61,7 @@ NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 const NavigationMenuItem = NavigationMenuPrimitive.Item
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus:bg-muted focus:text-muted-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-muted/50 data-[state=open]:bg-muted/50"
+  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-muted/50 data-[state=open]:bg-muted/50"
 )
 
 const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props }, ref) => {
@@ -92,6 +92,15 @@ const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props 
           setIsHovered(true);
           updatePosition(e);
         }
+      }}
+      onClick={(e) => {
+        // On desktop, prevent click from toggling menu closed when user
+        // hovers (opens menu) then clicks reflexively
+        if (!isMobile) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        props.onClick?.(e);
       }}
       {...props}>
       {children}{" "}
