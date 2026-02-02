@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Layout from "../components/layout/Layout";
-import { getStoryblokVersion, getRevalidate, fetchAllStories } from "../utils/core";
+import { getStoryblokVersion, getRevalidate, fetchAllStories, renderRichTextTreeAsPlainText } from "../utils/core";
 import {
   useStoryblokState,
   getStoryblokApi,
@@ -43,12 +43,23 @@ export default function Page({ story, preview, ogImagePath }) {
 
   // Get a description from the story content if available, fallback to default
   const getDescription = () => {
-    // Check for explicit description or summary field
+    // Check for explicit description field
     if (story?.content?.description) {
-      return story.content.description;
+      // Handle rich text or string
+      if (typeof story.content.description === 'string') {
+        return story.content.description;
+      }
+      const plainText = renderRichTextTreeAsPlainText(story.content.description);
+      if (plainText) return plainText;
     }
+    // Check for summary field
     if (story?.content?.summary) {
-      return story.content.summary;
+      // Handle rich text or string
+      if (typeof story.content.summary === 'string') {
+        return story.content.summary;
+      }
+      const plainText = renderRichTextTreeAsPlainText(story.content.summary);
+      if (plainText) return plainText;
     }
     // If there's rich text content, try to get the first paragraph
     if (story?.content?.body) {
