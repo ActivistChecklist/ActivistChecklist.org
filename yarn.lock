@@ -185,13 +185,13 @@
     ajv-formats "^3.0.1"
     fast-uri "^3.0.0"
 
-"@fastify/cors@^10.1.0":
-  version "10.1.0"
-  resolved "https://registry.npmjs.org/@fastify/cors/-/cors-10.1.0.tgz"
-  integrity sha512-MZyBCBJtII60CU9Xme/iE4aEy8G7QpzGR8zkdXZkDFt7ElEMachbE61tfhAG/bvSaULlqlf0huMT12T7iqEmdQ==
+"@fastify/cors@^11.2.0":
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/@fastify/cors/-/cors-11.2.0.tgz#82c47aff9bd7dfd40ac0a66fcd87a034113dcdd8"
+  integrity sha512-LbLHBuSAdGdSFZYTLVA3+Ch2t+sA6nq3Ejc6XLAKiQ6ViS2qFnvicpj0htsx03FyYeLs04HfRNBsz/a8SvbcUw==
   dependencies:
     fastify-plugin "^5.0.0"
-    mnemonist "0.40.0"
+    toad-cache "^3.7.0"
 
 "@fastify/deepmerge@^3.0.0":
   version "3.2.0"
@@ -3645,13 +3645,6 @@ mkdirp@1.0.4:
   resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-mnemonist@0.40.0:
-  version "0.40.0"
-  resolved "https://registry.npmjs.org/mnemonist/-/mnemonist-0.40.0.tgz"
-  integrity sha512-kdd8AFNig2AD5Rkih7EPCXhu/iMvwevQFX/uEiGhZyPZi7fHqOoF4V4kHLpCfysxXMgQ4B52kdPMCwARshKvEg==
-  dependencies:
-    obliterator "^2.0.4"
-
 module-details-from-path@^1.0.3:
   version "1.0.3"
   resolved "https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.3.tgz"
@@ -3811,11 +3804,6 @@ object-treeify@1.1.33:
   version "1.1.33"
   resolved "https://registry.npmjs.org/object-treeify/-/object-treeify-1.1.33.tgz"
   integrity sha512-EFVjAYfzWqWsBMRHPMAXLCDIJnpMhdWAqR7xG6M6a2cs6PMFpl/+Z20w9zDW4vkxOFfddegBKq9Rehd0bxWE7A==
-
-obliterator@^2.0.4:
-  version "2.0.5"
-  resolved "https://registry.npmjs.org/obliterator/-/obliterator-2.0.5.tgz"
-  integrity sha512-42CPE9AhahZRsMNslczq0ctAEtqk8Eka26QofnqC346BZdHDySk3LWka23LI7ULIw11NmltpiLagIq8gBozxTw==
 
 obug@^2.1.1:
   version "2.1.1"
