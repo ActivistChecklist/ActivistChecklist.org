@@ -35,6 +35,8 @@ const NavigationMenu = React.forwardRef(({ className, children, ...props }, ref)
           "relative z-10 flex max-w-max flex-1 items-center justify-center",
           className
         )}
+        delayDuration={100}
+        skipDelayDuration={0}
         onMouseLeave={() => !isMobile && setIsHovered(false)}
         {...props}>
         {children}
@@ -59,7 +61,7 @@ NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 const NavigationMenuItem = NavigationMenuPrimitive.Item
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-muted/50 data-[state=open]:bg-muted/50"
 )
 
 const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props }, ref) => {
@@ -92,6 +94,8 @@ const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props 
         }
       }}
       onClick={(e) => {
+        // On desktop, prevent click from toggling menu closed when user
+        // hovers (opens menu) then clicks reflexively
         if (!isMobile) {
           e.preventDefault();
           e.stopPropagation();

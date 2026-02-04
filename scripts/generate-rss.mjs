@@ -1,7 +1,7 @@
-const { Feed } = require('feed');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+import { Feed } from 'feed';
+import fs from 'fs';
+import path from 'path';
+import 'dotenv/config';
 
 /**
  * Extensible RSS generator that can handle different content types
@@ -19,7 +19,7 @@ async function generateRSSFeed(config) {
     // Import Storyblok utilities
     const { storyblokInit, apiPlugin, getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion } = await import('../utils/core.js');
-    
+
     // Initialize Storyblok (same config as _app.js)
     storyblokInit({
       accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
@@ -29,9 +29,9 @@ async function generateRSSFeed(config) {
         version: process.env.NODE_ENV === 'development' ? 'draft' : 'published'
       }
     });
-    
+
     const storyblokApi = getStoryblokApi();
-    
+
     // Fetch items using the provided function
     const allItems = await config.fetchItems(storyblokApi, {
       version: getStoryblokVersion()
@@ -81,16 +81,16 @@ async function generateRSSFeed(config) {
     // Write RSS file to out/rss directory (final static export destination)
     const outDir = path.join(process.cwd(), 'out');
     const rssDir = path.join(outDir, 'rss');
-    
+
     if (!fs.existsSync(rssDir)) {
       fs.mkdirSync(rssDir, { recursive: true });
     }
-    
+
     const rssPath = path.join(rssDir, config.filename);
     fs.writeFileSync(rssPath, feed.rss2());
-    
+
     console.log(`✅ ${config.feedType} RSS feed generated with ${sortedItems.length} entries: ${rssPath}`);
-    
+
   } catch (error) {
     console.error(`❌ Error generating ${config.feedType} RSS feed:`, error);
     process.exit(1);
@@ -100,24 +100,24 @@ async function generateRSSFeed(config) {
 // Helper function to extract text from Storyblok rich text
 function extractTextFromRichText(richTextDoc) {
   if (!richTextDoc || !richTextDoc.content) return '';
-  
+
   let text = '';
-  
+
   function extractFromNode(node) {
     if (node.type === 'text') {
       text += node.text || '';
     } else if (node.content && Array.isArray(node.content)) {
       node.content.forEach(extractFromNode);
     }
-    
+
     // Add space after paragraphs and other block elements
     if (node.type === 'paragraph' || node.type === 'heading') {
       text += ' ';
     }
   }
-  
+
   richTextDoc.content.forEach(extractFromNode);
-  
+
   // Clean up extra whitespace
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -127,7 +127,7 @@ function extractTextFromRichText(richTextDoc) {
  */
 async function generateChangelogRSS() {
   const { fetchAllChangelogEntries } = await import('../utils/core.js');
-  
+
   return generateRSSFeed({
     feedType: 'changelog',
     title: "Activist Checklist - Recent Updates",
@@ -136,13 +136,13 @@ async function generateChangelogRSS() {
     fetchItems: fetchAllChangelogEntries,
     transformItem: (story) => {
       const entryDate = new Date(story.first_published_at || story.created_at);
-      
+
       // Convert rich text to plain text for description
       let description = '';
       if (story.content && story.content.body) {
         description = extractTextFromRichText(story.content.body);
       }
-      
+
       return {
         title: story.name || `Update from ${entryDate.toLocaleDateString()}`,
         id: `https://activistchecklist.org/changelog#${story.uuid}`,
@@ -165,7 +165,7 @@ async function generateChangelogRSS() {
  */
 async function generateNewsRSS() {
   const { fetchAllNewsItems } = await import('../utils/core.js');
-  
+
   return generateRSSFeed({
     feedType: 'news',
     title: "Activist Checklist - News",
@@ -175,7 +175,7 @@ async function generateNewsRSS() {
     transformItem: (story) => {
       const entryDate = new Date(story.content?.date || story.first_published_at || story.created_at);
       const { source, url, has_paywall } = story.content || {};
-      
+
       // Extract description from comment or use source
       let description = '';
       if (story.content?.comment) {
@@ -183,23 +183,23 @@ async function generateNewsRSS() {
       } else if (source) {
         description = `News from ${source.name || source}`;
       }
-      
+
       // Generate archive.is URL if has_paywall is true
       const archiveUrl = has_paywall && url?.url ? `https://archive.is/newest/${url.url}` : null;
-      
+
       // Use archive URL for paywall articles, otherwise direct URL, fallback to site link
       const articleUrl = has_paywall ? archiveUrl : (url?.url || `https://activistchecklist.org/news#${story.uuid}`);
-      
+
       // Build enhanced description with tags and link
       let enhancedDescription = '';
-      
+
       // Add tags if available
       if (story.tag_list && story.tag_list.length > 0) {
         const tagsText = story.tag_list.join(', ');
         enhancedDescription += `<strong>Tags:</strong> ${tagsText}`;
       }
-      
-      
+
+
       // Add "view the article here" link
       enhancedDescription += `<br><br><a href="${articleUrl}">View the article here →</a>`;
 
@@ -207,7 +207,7 @@ async function generateNewsRSS() {
       if (has_paywall && url?.url) {
         enhancedDescription += `<br><br>This link bypasses the paywall. <a href="${url.url}">See original</a>`;
       }
-      
+
       return {
         title: story.name || 'News Item',
         id: articleUrl,
@@ -226,29 +226,23 @@ async function generateNewsRSS() {
 }
 
 // Run if called directly
-if (require.main === module) {
-  const feedType = process.argv[2];
-  
-  if (feedType === 'news') {
-    generateNewsRSS();
-  } else if (feedType === 'changelog') {
-    generateChangelogRSS();
-  } else {
-    // Generate both by default
-    Promise.all([
-      generateChangelogRSS(),
-      generateNewsRSS()
-    ]).then(() => {
-      console.log('✅ All RSS feeds generated successfully');
-    }).catch(error => {
-      console.error('❌ Error generating RSS feeds:', error);
-      process.exit(1);
-    });
-  }
+const feedType = process.argv[2];
+
+if (feedType === 'news') {
+  generateNewsRSS();
+} else if (feedType === 'changelog') {
+  generateChangelogRSS();
+} else {
+  // Generate both by default
+  Promise.all([
+    generateChangelogRSS(),
+    generateNewsRSS()
+  ]).then(() => {
+    console.log('✅ All RSS feeds generated successfully');
+  }).catch(error => {
+    console.error('❌ Error generating RSS feeds:', error);
+    process.exit(1);
+  });
 }
 
-module.exports = { 
-  generateRSSFeed, 
-  generateChangelogRSS, 
-  generateNewsRSS 
-};
+export { generateRSSFeed, generateChangelogRSS, generateNewsRSS };

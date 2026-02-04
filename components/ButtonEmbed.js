@@ -25,7 +25,21 @@ export const ButtonEmbed = (props) => {
   const { title, url, variant, size, className, icon, iconPosition, download, alignment } = props;
   
   // Extract the actual URL and target from the url object
-  const href = url?.cached_url || url?.url || '#';
+  // For URL links (linktype === 'url'), prefer the url field which contains exactly what was entered
+  // For story links (linktype === 'story'), use cached_url which contains the story's full path
+  // This prevents Storyblok from transforming manually entered URLs through its content structure
+  const getRawHref = () => {
+    if (url?.linktype === 'url') {
+      return url?.url || url?.cached_url || '#';
+    }
+    // For story links, cached_url doesn't include leading slash
+    const path = url?.cached_url || url?.url || '#';
+    if (path !== '#' && !path.startsWith('/') && !path.startsWith('http')) {
+      return `/${path}`;
+    }
+    return path;
+  };
+  const href = getRawHref();
   const target = url?.target || (href?.startsWith('http') ? '_blank' : undefined);
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;

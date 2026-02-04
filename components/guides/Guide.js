@@ -11,10 +11,10 @@ import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
     <div className="mb-4 prose prose-slate max-w-none" {...storyblokEditable(blok)}>
-      <div className="relative">
+      <div className="relative flex flex-col sm:block">
         <h2
           id={blok.slug}
-          style={{ paddingRight: checklistItemCount > 1 ? '8rem' : '0' }}
+          className={checklistItemCount > 1 ? 'sm:pr-32' : ''}
         >
           <RichText document={blok.title} />
         </h2>
@@ -22,7 +22,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
           <Button
             variant="defaultOutline"
             size="sm"
-            className="gap-2 start print:hidden absolute bottom-0 right-0"
+            className="gap-2 start print:hidden w-full sm:w-auto sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0"
             onClick={onToggleExpand}
           >
             {isExpanded ? (
@@ -163,7 +163,7 @@ const Guide = ({ blok }) => {
           <div className="clear-both"></div>
 
           {sections.map((section, sectionIndex) => {
-            const checklistItemCount = section.blocks.filter(block => block.component === 'checklist-item').length;
+            const checklistItemCount = section.blocks.filter(block => block.component === 'checklist-item' || block.component === 'checklist-item-ref').length;
             let currentIndex = 0;
             
             return (

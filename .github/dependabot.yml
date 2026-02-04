@@ -1,0 +1,28 @@
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Optional: Group minor and patch updates together
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Optional: Limit number of open pull requests
+    open-pull-requests-limit: 10
+    # Optional: Set reviewers/assignees
+    # reviewers:
+    #   - "your-username"
+    # assignees:
+    #   - "your-username"
+
+  # Optional: Also check for GitHub Actions updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
