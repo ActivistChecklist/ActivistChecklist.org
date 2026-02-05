@@ -9,6 +9,6 @@ Redirect 301 /government /federal
   Header set X-Frame-Options "DENY"
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
-  Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
   Header set X-XSS-Protection "0"
 </IfModule>
