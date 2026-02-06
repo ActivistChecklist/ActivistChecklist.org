@@ -190,6 +190,12 @@ async function counterPlugin(fastify, options) {
   });
 
   fastify.post('/counter', {
+    config: {
+      rateLimit: {
+        max: 200,
+        timeWindow: '1 minute'
+      }
+    },
     schema: {
       body: {
         type: 'object',

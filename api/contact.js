@@ -284,6 +284,12 @@ async function handleContactForm(req, reply) {
 // Fastify plugin
 async function contactRoutes(fastify, options) {
   fastify.post('/contact', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '15 minutes'
+      }
+    },
     schema: contactSchema,
     bodyLimit: 10240, // 10KB limit
   }, handleContactForm);
