@@ -61,7 +61,8 @@ public/files/news/
 # Generated OG share images
 public/images/og/
 
-# Metadata cleaner folder 
+# Metadata cleaner folder
 metadata-cleaner/
 
+# SSL check log
 .ssl-check.log

@@ -32,6 +32,12 @@ async function subscribePlugin(fastify, options) {
   });
 
   fastify.post('/subscribe', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '15 minutes'
+      }
+    },
     schema: {
       body: {
         type: 'object',

@@ -18,7 +18,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       API_PORT: process.env.API_PORT || 4321,
-      API_HOST: process.env.API_HOST || '0.0.0.0'
+      API_HOST: process.env.API_HOST || '127.0.0.1'
     },
     
     // Logging disabled by default in production
