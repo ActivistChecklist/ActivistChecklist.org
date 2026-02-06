@@ -1,6 +1,7 @@
 const dotenv = require('dotenv');
 const cors = require('@fastify/cors');
 const helmet = require('@fastify/helmet');
+const rateLimit = require('@fastify/rate-limit');
 const contactRoutes = require('./contact');
 const counterRoutes = require('./counter');
 const subscribeRoutes = require('./subscribe');
@@ -8,6 +9,17 @@ const subscribeRoutes = require('./subscribe');
 dotenv.config();
 
 async function app (fastify, opts) {
+  // Register rate limiting (global default)
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    keyGenerator: (request) => {
+      return request.headers['x-forwarded-for']?.split(',')[0]?.trim()
+        || request.headers['x-real-ip']
+        || request.ip;
+    }
+  });
+
   // Register security plugins
   await fastify.register(helmet, {
     // Enable all security headers including CSP
