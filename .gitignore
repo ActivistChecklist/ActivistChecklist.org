@@ -63,3 +63,5 @@ public/images/og/
 
 # Metadata cleaner folder 
 metadata-cleaner/
+
+.ssl-check.log
