@@ -217,7 +217,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       trackEvent({
         name: 'checklist_item_expanded',
         data: {
-          item_id: window.location.pathname + "#" + blok.slug,
+          item_id: blok.slug,
         }
       });
       hasTrackedExpansion.current = true;
@@ -232,7 +232,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       await trackEvent({
         name: 'checklist_item_checked',
         data: {
-          item_id: window.location.pathname + "#" + blok.slug,
+          item_id: blok.slug,
         }
       });
 
@@ -268,7 +268,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     trackEvent({
       name: 'checklist_item_link_copied',
       data: {
-        item_id: window.location.pathname + "#" + blok.slug,
+        item_id: blok.slug,
       }
     });
   };
