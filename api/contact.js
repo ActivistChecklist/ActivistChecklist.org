@@ -122,11 +122,14 @@ const contactSchema = {
           { type: 'string' }
         ]
       },
-      signalPhone: { 
+      signalPhone: {
         anyOf: [
           { type: 'null' },
           { type: 'string' }
         ]
+      },
+      pagePath: {
+        type: 'string'
       }
     },
     allOf: [
@@ -205,7 +208,8 @@ async function handleContactForm(req, reply) {
 
     // Add timestamp and contact info to message
     const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
-    const messageWithTime = `ActivistChecklist.org Contact Form\n\n## Message received:\n${timestamp}\n\n${contactInfo}\n\n## Message:\n${data.message}`;
+    const pagePath = data.pagePath || 'unknown';
+    const messageWithTime = `ActivistChecklist.org Contact Form\n\n## Message received:\n${timestamp}\n\n## Sent from page:\n${pagePath}\n\n${contactInfo}\n\n## Message:\n${data.message}`;
 
     const config = {
       resendApiKey: process.env.RESEND_API_KEY,
