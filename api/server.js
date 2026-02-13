@@ -27,6 +27,7 @@ async function app (fastify, opts) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],  // Deny everything by default
+        mediaSrc: ["'self'"],
         frameAncestors: ["'none'"],  // Prevent embedding in iframes
       }
     },
