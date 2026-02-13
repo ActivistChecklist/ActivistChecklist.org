@@ -6,7 +6,7 @@ function generatePrivacyPreservingId(ipAddress, salt = '') {
 }
 
 function getDayKey() {
-  // Get current date in YYYY-MM-DD format to use as a daily key
+  // Get the current date in YYYY-MM-DD format to use as a daily key
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
@@ -26,7 +26,7 @@ function createGeoPreservingAnonymousIP(originalIP) {
   // Generate hash for the user
   const userHash = generatePrivacyPreservingId(originalIP, dailySalt);
   
-  // Keep first two octets intact for broad geo accuracy
+  // Keep the first two octets intact for broad geo accuracy
   // For the third octet, preserve some patterns by keeping the high-order bits
   // but randomize the rest (preserves subnet groups while adding anonymity)
   const thirdOctetInt = parseInt(thirdOctet);

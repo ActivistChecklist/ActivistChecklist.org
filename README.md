@@ -60,7 +60,7 @@ mkdir .nvm
 export NVM_DIR="$HOME/include/.nvm"
 # Update this URL to be the latest version of nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-# Install the latest version of node (or speicif your version)
+# Install the latest version of node (or specify your version)
 nvm install --lts
 npm install --global yarn
 yarn config set prefix ~/include/.yarn
