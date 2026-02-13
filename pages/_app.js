@@ -87,6 +87,7 @@ function MyApp({ Component, pageProps }) {
         <meta name="twitter:title" content="Digital Security Checklists for Activists" key="twitter:title" />
         <meta name="twitter:description" content="Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides." key="twitter:description" />
         <meta name="twitter:image" content={defaultOgImage} key="twitter:image" />
+        <meta name="fediverse:creator" content="@activistchecklist@kolektiva.social" />
       </Head>
       <ErrorBoundary>
         <Component key={key} {...props} />
