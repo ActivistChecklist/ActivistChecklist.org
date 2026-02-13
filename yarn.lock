@@ -1336,20 +1336,20 @@
   resolved "https://registry.npmjs.org/@standard-schema/utils/-/utils-0.3.0.tgz"
   integrity sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
 
-"@storyblok/js@4.4.4":
-  version "4.4.4"
-  resolved "https://registry.npmjs.org/@storyblok/js/-/js-4.4.4.tgz"
-  integrity sha512-1U9aUJZu54/A27ug2LJuZenyDGQS4yaBsLk7UwL560NIjL1b/66VEbrSnPiQElQKwOjdIEho+s/Sv/Tt1XHZRA==
+"@storyblok/js@4.4.5":
+  version "4.4.5"
+  resolved "https://registry.yarnpkg.com/@storyblok/js/-/js-4.4.5.tgz#7a7fe270833529090bffbb50778d37476e202a3a"
+  integrity sha512-iOq3dPyABjcU97Ify09tO7kKoGlmaayO/Pn/AM9gRmApn2rLAw0CSKFzBIrFnowiaJwSV8+JTIQrgt88N7c3mg==
   dependencies:
     "@storyblok/richtext" "3.8.2"
-    storyblok-js-client "7.2.2"
+    storyblok-js-client "7.2.3"
 
-"@storyblok/react@^5.4.21":
-  version "5.4.21"
-  resolved "https://registry.npmjs.org/@storyblok/react/-/react-5.4.21.tgz"
-  integrity sha512-2GuGrWLElj+7bDaLQTjwlDq59TqjTPijulIaHgmg6C2RpRrEkUHsz0d0FWbMKnzPebDz5n0mqtwyAt/qfT2UGg==
+"@storyblok/react@^5.4.22":
+  version "5.4.22"
+  resolved "https://registry.yarnpkg.com/@storyblok/react/-/react-5.4.22.tgz#bcdbbe442849ca03368c2e195d9fcf756822e40e"
+  integrity sha512-8WvN48Ur04H2ueB9IJjAMC+vqCAbA4FXT9pfOf7HanBx09Rcsy14Ng/YfQV7rN+Gy2QZw7dSi7j7mXknwMmzuQ==
   dependencies:
-    "@storyblok/js" "4.4.4"
+    "@storyblok/js" "4.4.5"
 
 "@storyblok/richtext@3.8.2":
   version "3.8.2"
@@ -2155,10 +2155,10 @@ dotenv@^16.0.0, dotenv@^16.4.5:
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz"
   integrity sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==
 
-dotenv@^17.2.3:
-  version "17.2.3"
-  resolved "https://registry.npmjs.org/dotenv/-/dotenv-17.2.3.tgz"
-  integrity sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==
+dotenv@^17.2.4:
+  version "17.2.4"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.2.4.tgz#b5a0e2f015e0be287a5330a90bf0e804606504c2"
+  integrity sha512-mudtfb4zRB4bVvdj0xRo+e6duH1csJRM8IukBqfTRvHotn9+LBXB8ynAidP9zHqoRC/fsllXgk4kCKlR21fIhw==
 
 eciesjs@^0.4.10:
   version "0.4.12"
@@ -4704,10 +4704,10 @@ storyblok-backup@^0.5.0:
     storyblok-js-client "^6.7.3"
     zip-lib "^1.0.4"
 
-storyblok-js-client@7.2.2:
-  version "7.2.2"
-  resolved "https://registry.npmjs.org/storyblok-js-client/-/storyblok-js-client-7.2.2.tgz"
-  integrity sha512-nz/foM7C4eUR17r3NekdQZOIuKoa6YTFT6hS2UHcv1KKP1705VKTQ/LVDiHx8JVe6EeXNm+bKKQ5qZfBpAQgYg==
+storyblok-js-client@7.2.3:
+  version "7.2.3"
+  resolved "https://registry.yarnpkg.com/storyblok-js-client/-/storyblok-js-client-7.2.3.tgz#f09f704cb8909aeb54f2b6261adf20d394c49900"
+  integrity sha512-o/AjgNULoflv/7ei68d2Bh4Nb5ZCnpcqma19sCijvYrPtJinAuWW//JHT4q06y9op05HkWQpU2jrfata9iYONQ==
 
 storyblok-js-client@^6.11.0, storyblok-js-client@^6.7.3:
   version "6.11.0"
