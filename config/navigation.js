@@ -1,4 +1,4 @@
-import { IoArrowForward, IoLogoGithub } from "react-icons/io5"
+import {IoArrowForward, IoLogoGithub, IoLogoMastodon} from "react-icons/io5"
 import { SiBluesky } from "react-icons/si"
 import { ROUTES } from './routes'
 import { GUIDE_ICONS } from './icons'
@@ -16,6 +16,14 @@ export const SOCIAL_LINKS = {
     href: "https://bsky.app/profile/activistchecklist.bsky.social",
     icon: SiBluesky,
     ariaLabel: "Follow us on Bluesky"
+  },
+  MASTODON: {
+    key: 'mastodon',
+    label: "Mastodon",
+    username: "@ActivistChecklist",
+    href: "https://kolektiva.social/@activistchecklist",
+    icon: IoLogoMastodon,
+    ariaLabel: "Follow us on Mastodon"
   },
   GITHUB: {
     key: 'github',
@@ -292,6 +300,7 @@ export const footerConfig = {
   ],
   socialLinks: [
     SOCIAL_LINKS.BLUESKY,
+    SOCIAL_LINKS.MASTODON,
     SOCIAL_LINKS.GITHUB
   ]
 }
