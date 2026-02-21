@@ -112,7 +112,7 @@
     "satori": "^0.19.2",
     "sharp": "^0.34.5",
     "storyblok-backup": "^0.6.0",
-    "storyblok-js-client": "^6.11.0",
+    "storyblok-js-client": "^7.2.3",
     "tailwindcss": "^4.2.0",
     "vitest": "^4.0.18",
     "yarn": "^1.22.22"
