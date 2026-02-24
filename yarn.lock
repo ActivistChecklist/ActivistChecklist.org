@@ -3040,10 +3040,10 @@ lru-cache@^7.14.1:
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-7.18.3.tgz"
   integrity sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==
 
-lucide-react@^0.566.0:
-  version "0.566.0"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.566.0.tgz#c53219b167c9e861b7efd9b5a2820c0d84b1f581"
-  integrity sha512-b18qC/JAh1X9rVKlF5EtSIyumdIYuh78b0JShynZnHbcaWR4AW4oZyi8Ms/aQYVSnLPlAnMhug2hSr19BgVZAw==
+lucide-react@^0.575.0:
+  version "0.575.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.575.0.tgz#90feaa4c140e9693e4ee9426d9927a6b833267ac"
+  integrity sha512-VuXgKZrk0uiDlWjGGXmKV6MSk9Yy4l10qgVvzGn2AWBx1Ylt0iBexKOAoA6I7JO3m+M9oeovJd3yYENfkUbOeg==
 
 magic-string@^0.30.21:
   version "0.30.21"
@@ -4185,20 +4185,20 @@ react-dom@^19.2.4:
   dependencies:
     scheduler "^0.27.0"
 
-react-hook-form@^7.71.1:
-  version "7.71.1"
-  resolved "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.71.1.tgz"
-  integrity sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==
+react-hook-form@^7.71.2:
+  version "7.71.2"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.71.2.tgz#a5f1d2b855be9ecf1af6e74df9b80f54beae7e35"
+  integrity sha512-1CHvcDYzuRUNOflt4MOq3ZM46AronNJtQ1S7tnX6YN4y72qhgiUItpacZUAQ0TyWYci3yz1X+rXaSxiuEm86PA==
 
 react-icons@^5.5.0:
   version "5.5.0"
   resolved "https://registry.npmjs.org/react-icons/-/react-icons-5.5.0.tgz"
   integrity sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==
 
-react-intersection-observer@^10.0.2:
-  version "10.0.2"
-  resolved "https://registry.npmjs.org/react-intersection-observer/-/react-intersection-observer-10.0.2.tgz"
-  integrity sha512-lAMzxVWrBko6SLd1jx6l84fVrzJu91hpxHlvD2as2Wec9mDCjdYXwc5xNOFBchpeBir0Y7AGBW+C/AYMa7CSFg==
+react-intersection-observer@^10.0.3:
+  version "10.0.3"
+  resolved "https://registry.yarnpkg.com/react-intersection-observer/-/react-intersection-observer-10.0.3.tgz#58b2c0406f71cfb5981afb8a5ee7f4eb06512479"
+  integrity sha512-luICLMbs0zxTO/70Zy7K5jOXkABPEVSAF8T3FdZUlctsrIaPLmx8TZe2SSA+CY2HGWfz2INyNTnp82pxNNsShA==
 
 react-json-view@^1.21.3:
   version "1.21.3"
