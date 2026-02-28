@@ -20,7 +20,7 @@ export default class SbExport {
       accessToken: token,
       region: 'us'
     })
-    this.mediaHandler = new MediaHandler(imagesDir, verbose)
+    this.mediaHandler = new MediaHandler(imagesDir, verbose, '/images')
     this.resolveRelations = RESOLVE_RELATIONS.join(',')
 
     // Define how different components should be handled
