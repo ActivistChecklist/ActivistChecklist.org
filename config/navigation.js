@@ -12,8 +12,8 @@ export const SOCIAL_LINKS = {
   BLUESKY: {
     key: 'bluesky',
     label: "Bluesky",
-    username: "@ActivistChecklist",
-    href: "https://bsky.app/profile/activistchecklist.bsky.social",
+    username: "@activistchecklist.org",
+    href: "https://bsky.app/profile/activistchecklist.org",
     icon: SiBluesky,
     ariaLabel: "Follow us on Bluesky"
   },
@@ -300,7 +300,7 @@ export const footerConfig = {
   ],
   socialLinks: [
     SOCIAL_LINKS.BLUESKY,
-    SOCIAL_LINKS.MASTODON,
+    // SOCIAL_LINKS.MASTODON,
     SOCIAL_LINKS.GITHUB
   ]
 }

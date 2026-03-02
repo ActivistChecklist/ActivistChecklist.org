@@ -52,6 +52,9 @@ public/pagefind
 # URL scanner
 .approved-urls.json
 
+# Storyblok image cache (persists across builds to avoid re-download/re-scrub)
+.cache/
+
 # Backups
 buildbackups/
 
