@@ -124,7 +124,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
   const cardRef = useRef(null);
   const storageKey = `checklist-checked-${blok?._uid || 111}`;
   const expandedStorageKey = `checklist-expanded-${blok?._uid || 222}`;
-  const checkedOpacity = 75;
+  const checkedOpacity = 60;
 
   const setExpandedWithStorage = (expanded) => {
     setIsExpanded(expanded);
@@ -281,7 +281,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
         "checklist-item group/checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t-1",
         "hover:z-20 relative",
-        !isExpanded && "hover:bg-muted/40",
+        !isExpanded && !isChecked && "hover:bg-muted/40",
         isExpanded && "mb-4 rounded-lg border-transparent",
         isExpanded && "bg-muted",
         "[transition:margin_300ms,border-radius_300ms,border_300ms,box-shadow_300ms]"
@@ -325,10 +325,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <h3 className={cn(
-                  "inline mt-0 text-lg",
-                  isChecked && "line-through decoration-1"
-                )}
+              <h3 className="inline mt-0 text-lg"
                 id={hasMounted ? blok.slug : undefined}
                 data-slug={blok.slug} 
               >
