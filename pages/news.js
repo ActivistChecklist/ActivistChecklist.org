@@ -1,12 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
 import NewsItem from '@/components/NewsItem';
 import RSSButton from '@/components/ui/RSSButton';
 import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
+import { YearMonthFilter } from '@/components/NewsYearMonthFilter';
 
 const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
+  const handleFilterChange = (year, month) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+  };
+
+  // Filter news items based on selected year/month
+  const filterNewsItems = (items) => {
+    if (!selectedYear) return items;
+
+    return items.filter(item => {
+      const itemDate = new Date(item.content.date || item.first_published_at || item.created_at);
+      const itemYear = itemDate.getFullYear();
+      const itemMonth = itemDate.getMonth();
+
+      if (selectedMonth !== null) {
+        return itemYear === selectedYear && itemMonth === selectedMonth;
+      }
+      return itemYear === selectedYear;
+    });
+  };
+
+  const filteredNewsItems = filterNewsItems(newsItems);
+
   // Group news items by year
   const groupNewsByYear = (items) => {
     const groups = {};
@@ -24,7 +51,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
     return groups;
   };
 
-  const groupedNews = groupNewsByYear(newsItems);
+  const groupedNews = groupNewsByYear(filteredNewsItems);
   
   // Get sorted years (newest first)
   const sortedYears = Object.keys(groupedNews)
@@ -58,7 +85,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
         <meta name="description" content="Latest news about state surveillance and threats facing social movements." />
       </Head>
       <Layout>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <header className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -89,21 +116,49 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
             </p>
           </div>
 
-          {newsItems.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No news items found.</p>
+          {/* Main content with sidebar */}
+          <div className="flex gap-8">
+            {/* Sidebar */}
+            <aside className="hidden lg:block w-48 flex-shrink-0">
+              <YearMonthFilter
+                newsItems={newsItems}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onFilterChange={handleFilterChange}
+              />
+            </aside>
+
+            {/* Main content */}
+            <div className="flex-1 min-w-0 max-w-4xl">
+              {filteredNewsItems.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    {newsItems.length === 0 
+                      ? "No news items found." 
+                      : "No news items found for the selected period."}
+                  </p>
+                  {selectedYear && (
+                    <button
+                      onClick={() => handleFilterChange(null, null)}
+                      className="mt-4 text-primary hover:underline text-sm"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-0">
+                  {sortedYears.map(year => (
+                    <YearSection 
+                      key={year}
+                      year={year}
+                      items={groupedNews[year]}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-0">
-              {sortedYears.map(year => (
-                <YearSection 
-                  key={year}
-                  year={year}
-                  items={groupedNews[year]}
-                />
-              ))}
-            </div>
-          )}
+          </div>
         </div>
       </Layout>
     </div>
