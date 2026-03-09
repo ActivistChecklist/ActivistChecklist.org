@@ -211,7 +211,7 @@ async function generateNewsRSS() {
       return {
         title: story.name || 'News Item',
         id: articleUrl,
-        link: articleUrl,
+        link: archiveUrl || articleUrl,
         description: enhancedDescription,
         content: enhancedDescription,
         author: [{
