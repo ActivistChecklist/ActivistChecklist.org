@@ -67,7 +67,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
       {status === 'error' && (
         <Alert 
           variant="error" 
-          className="mb-4"
+          className="mb-4 newsletter-alert"
         >
           {error}
         </Alert>
@@ -76,7 +76,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
       {status === 'success' && !showForm && (
         <Alert 
           variant="success" 
-          className="mb-4"
+          className="mb-4 newsletter-alert"
         >
           You're subscribed! Want to message a friend on Signal to let them know about this project?
         </Alert>
@@ -130,7 +130,7 @@ export function CompactNewsletterSubscribe() {
       {status === 'error' && (
         <Alert 
           variant="error" 
-          className="text-sm"
+          className="text-sm newsletter-alert"
         >
           {error}
         </Alert>
@@ -139,7 +139,7 @@ export function CompactNewsletterSubscribe() {
       {status === 'success' && !showForm && (
         <Alert 
           variant="success" 
-          className="text-sm"
+          className="text-sm newsletter-alert"
         >
           Thanks for subscribing!
         </Alert>
