@@ -15,13 +15,10 @@ async function sendUmamiEvent(payload, userAgent) {
   
   if (!umamiHost) {
     console.error('Missing endpoint configuration - UMAMI_API_CLIENT_ENDPOINT or UMAMI_HOST required');
-    return {
-      success: false,
-      error: 'Missing endpoint configuration',
-      details: {
-        message: 'Either UMAMI_API_CLIENT_ENDPOINT or UMAMI_HOST must be set'
-      }
-    };
+    const err = process.env.NODE_ENV === 'production'
+      ? 'Something went wrong.'
+      : 'Missing endpoint configuration - UMAMI_API_CLIENT_ENDPOINT or UMAMI_HOST required';
+    return { success: false, error: err };
   }
   
   // For self-hosted configuration
@@ -43,15 +40,12 @@ async function sendUmamiEvent(payload, userAgent) {
       hasAppSecret: !!appSecret,
       hasUmamiHost: !!umamiHost
     });
-    return {
-      success: false,
-      error: 'Invalid configuration',
-      details: {
-        message: 'Either Cloud (UMAMI_API_KEY and UMAMI_WEBSITE_ID) or Self-hosted (UMAMI_WEBSITE_ID, UMAMI_API_CLIENT_USER_ID, UMAMI_API_CLIENT_SECRET) configuration must be provided'
-      }
-    };
+    const err = process.env.NODE_ENV === 'production'
+      ? 'Something went wrong.'
+      : 'Invalid Umami configuration (Cloud or Self-hosted credentials required)';
+    return { success: false, error: err };
   }
-  
+
   // For Cloud, use the default Umami Cloud endpoint if not specified
   if (isCloud && !umamiHost) {
     umamiHost = 'https://cloud.umami.is';
@@ -129,19 +123,20 @@ async function sendUmamiEvent(payload, userAgent) {
             data,
             headers: res.headers
           });
-          resolve({
-            success: false,
-            httpCode: res.statusCode,
-            response: data,
-            statusText: res.statusMessage
-          });
+          const err = process.env.NODE_ENV === 'production'
+            ? 'Something went wrong.'
+            : (data || res.statusMessage || `HTTP ${res.statusCode}`);
+          resolve({ success: false, error: err });
         }
       });
     });
 
     req.on('error', (error) => {
       console.error('Error sending Umami event:', error);
-      resolve({ success: false, error: error.message });
+      const err = process.env.NODE_ENV === 'production'
+        ? 'Something went wrong.'
+        : error.message;
+      resolve({ success: false, error: err });
     });
 
     req.write(postData);

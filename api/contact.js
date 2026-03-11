@@ -228,11 +228,11 @@ async function handleContactForm(req, reply) {
     try {
       encrypted = await mailer.encryptMessage(messageWithTime);
     } catch (error) {
-      reply.code(500).send({
-        error: 'Encryption Error',
-        message: 'Failed to encrypt message',
-        details: error.message
-      });
+      console.error('Encryption error:', error);
+      const message = process.env.NODE_ENV === 'production'
+        ? 'Something went wrong. Please try again later.'
+        : error.message;
+      reply.code(500).send({ error: message });
       return;
     }
 
@@ -248,40 +248,42 @@ async function handleContactForm(req, reply) {
       if (result.success) {
         return { success: true, message: 'Message sent successfully' };
       } else {
-        reply.code(result.httpCode || 500).send({
-          error: 'Email Service Error',
-          message: 'Failed to send encrypted email',
-          details: result.response?.error || result.response
-        });
+        console.error('Email send failed:', result.response);
+        const message = process.env.NODE_ENV === 'production'
+          ? 'Something went wrong. Please try again later.'
+          : (result.response?.error || JSON.stringify(result.response));
+        reply.code(result.httpCode || 500).send({ error: message });
       }
     } catch (error) {
-      reply.code(500).send({
-        error: 'Email Service Error',
-        message: 'Failed to send encrypted email',
-        details: error.message
-      });
+      console.error('Email send error:', error);
+      const message = process.env.NODE_ENV === 'production'
+        ? 'Something went wrong. Please try again later.'
+        : error.message;
+      reply.code(500).send({ error: message });
     }
   } catch (error) {
     // Handle validation errors specifically
     if (error.validation) {
-      reply.code(400).send({
-        error: 'Validation Error',
-        message: 'Invalid form data',
-        details: error.validation.map(err => ({
-          field: err.instancePath.replace('/', '') || 'form',
-          message: err.message
-        }))
-      });
+      const payload = process.env.NODE_ENV === 'production'
+        ? { error: 'Invalid form data' }
+        : {
+            error: 'Validation Error',
+            message: 'Invalid form data',
+            details: error.validation.map(err => ({
+              field: err.instancePath.replace('/', '') || 'form',
+              message: err.message
+            }))
+          };
+      reply.code(400).send(payload);
       return;
     }
 
     // Handle other errors
     console.error('Contact form error:', error);
-    reply.code(500).send({
-      error: 'Server Error',
-      message: 'An unexpected error occurred',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Please try again later'
-    });
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Something went wrong. Please try again later.'
+      : error.message;
+    reply.code(500).send({ error: message });
   }
 }
 
