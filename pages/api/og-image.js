@@ -27,6 +27,9 @@ export default async function handler(req, res) {
     return res.send(buffer);
   } catch (error) {
     console.error('OG image generation error:', error);
-    return res.status(500).json({ error: error.message });
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Failed to generate image'
+      : error.message;
+    return res.status(500).json({ error: message });
   }
 }

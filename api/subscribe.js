@@ -14,10 +14,10 @@ async function addSubscriber(request) {
     return result;
   } catch (error) {
     console.error('Listmonk subscription error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Something went wrong. Please try again.'
+      : error.message;
+    return { success: false, error: message };
   }
 }
 
