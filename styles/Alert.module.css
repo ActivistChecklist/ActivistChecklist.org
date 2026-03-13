@@ -49,6 +49,11 @@
   @apply !text-base;
 }
 
+/* Newsletter subscribe alerts: align text with icon (top padding so text matches icon placement) */
+:global(.newsletter-alert) .alertContentWithIcon {
+  @apply pt-1;
+}
+
 /* Variant styles */
 .default {
   @apply bg-slate-100 text-foreground border-muted-foreground;

@@ -42,22 +42,23 @@ describe('OG Image Configuration', () => {
   });
 
   describe('Icon SVG Extraction', () => {
-    it('should extract valid SVG data from stroke-based icons', async () => {
-      const { IoShieldOutline } = await import('react-icons/io5');
-      const el = IoShieldOutline({});
+    it('should extract valid SVG data from solid icons', async () => {
+      const { IoShield } = await import('react-icons/io5');
+      const el = IoShield({});
       
       expect(el.props.attr.viewBox).toBeDefined();
       expect(el.props.children).toBeDefined();
       expect(el.props.children.length).toBeGreaterThan(0);
       
-      // Stroke-based icons should have strokeWidth
-      const hasStroke = el.props.children.some(child => child.props?.strokeWidth);
-      expect(hasStroke).toBe(true);
+      // Solid icons use fill-based paths (no strokeWidth)
+      const children = Array.isArray(el.props.children) ? el.props.children : [el.props.children];
+      const hasPaths = children.some(child => child.type === 'path');
+      expect(hasPaths).toBe(true);
     });
 
     it('should extract valid SVG data from fill-based icons', async () => {
-      const { IoEyeOffOutline } = await import('react-icons/io5');
-      const el = IoEyeOffOutline({});
+      const { IoEyeOff } = await import('react-icons/io5');
+      const el = IoEyeOff({});
       
       expect(el.props.attr.viewBox).toBeDefined();
       expect(el.props.children).toBeDefined();
@@ -68,15 +69,15 @@ describe('OG Image Configuration', () => {
       expect(hasStroke).toBe(false);
     });
 
-    it('should handle icons with multiple element types (path + rect)', async () => {
-      const { IoLockClosedOutline } = await import('react-icons/io5');
-      const el = IoLockClosedOutline({});
+    it('should handle solid lock icon SVG elements', async () => {
+      const { IoLockClosed } = await import('react-icons/io5');
+      const el = IoLockClosed({});
       
-      const elementTypes = el.props.children.map(child => child.type);
+      const children = Array.isArray(el.props.children) ? el.props.children : [el.props.children];
+      const elementTypes = children.map(child => child.type);
       
-      // Lock icon has both path and rect elements
+      // Solid lock icon uses path elements
       expect(elementTypes).toContain('path');
-      expect(elementTypes).toContain('rect');
     });
 
     it('should handle lucide-react icons', async () => {

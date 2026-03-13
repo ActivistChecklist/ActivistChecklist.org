@@ -1,7 +1,17 @@
 const ListmonkClient = require('../lib/listmonk');
 
+function isUsernameValid(email) {
+  const local = (email || '').split('@')[0];
+  const periodCount = (local.match(/\./g) || []).length;
+  return periodCount <= 3;
+}
+
 async function addSubscriber(request) {
   const { email, name } = request.body;
+
+  if (!email || !isUsernameValid(email)) {
+    return { success: false, error: 'Invalid email address.' };
+  }
 
   try {
     const listmonk = new ListmonkClient();
