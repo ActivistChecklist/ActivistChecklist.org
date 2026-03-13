@@ -3,10 +3,11 @@ import { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { RichText } from "../RichText";
 import { Button } from "@/components/ui/button";
-import { Clock, Expand as ExpandIcon, Collapse as CollapseIcon } from 'lucide-react';
+import { Clock, Calendar, Expand as ExpandIcon, Collapse as CollapseIcon } from 'lucide-react';
 import { FeedbackCTA } from "@/components/guides/FeedbackCTA";
 import { useLayout } from "@/contexts/LayoutContext";
 import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
+import { getGuideIcon } from "@/config/icons";
 
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
@@ -48,7 +49,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
   );
 };
 
-const Guide = ({ blok }) => {
+const Guide = ({ blok, story }) => {
   const { setSidebarType } = useLayout();
   const [sectionExpandStates, setSectionExpandStates] = useState({});
   const [expandTriggers, setExpandTriggers] = useState({});
@@ -104,14 +105,21 @@ const Guide = ({ blok }) => {
     }));
   };
 
-  const disableImage = true;
+  const guideSlug = story?.slug || '';
+  const GuideIcon = getGuideIcon(guideSlug);
 
   const metaBarItems = [];
   
   if (blok.last_updated) {
-    metaBarItems.push(
-      getDateMetaItem(blok.last_updated, "Last reviewed on")
-    );
+    metaBarItems.push({
+      icon: <Calendar className="h-4 w-4 mr-1" />,
+      label: "Last reviewed on",
+      value: new Date(blok.last_updated).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    });
   }
 
   if (blok.estimated_time) {
@@ -124,37 +132,30 @@ const Guide = ({ blok }) => {
 
   return (
     <>
-      {disableImage ? (
-        <h1 className="mb-6 print:mb-0" {...storyblokEditable(blok)}>
+      <div className="relative bg-gradient-to-r from-primary/15 via-primary/10 to-transparent rounded-lg px-6 py-6 mb-6 overflow-hidden print:bg-transparent print:p-0 print:mb-2">
+        <div className="absolute top-1.5 bottom-1.5 right-3 aspect-square flex items-center justify-center pointer-events-none print:hidden">
+          <GuideIcon className="h-5/6 w-5/6 text-primary/[0.15]" />
+        </div>
+        <h1 className="relative mb-3 print:mb-0" {...storyblokEditable(blok)}>
           {blok.title}
         </h1>
-      ) : (
-        <div className="relative w-[calc(100%+4rem)] h-[200px] mb-6 -mx-8">
-          {blok.image?.filename ? (
-            <Image
-              src={blok.image.filename}
-              alt=""
-              fill
-              className="object-cover rounded-t-xl"
-              priority
-            />
-          ) : (
-            <div className="absolute inset-0 bg-muted rounded-t-xl" />
-          )}
-          <div className={cn(
-            "absolute inset-0 bg-gradient-to-bl from-transparent via-background/80 to-background",
-          )} />
-          <div className="absolute bottom-6 left-8 right-8">
-            <h1 className="text-shadow-white" {...storyblokEditable(blok)}>
-              {blok.title}
-            </h1>
+        {metaBarItems.length > 0 && (
+          <div className="relative flex flex-wrap items-center gap-y-2 gap-x-6 text-sm text-muted-foreground print:mb-0">
+            {metaBarItems.map((item, index) => (
+              <div key={index} className="flex items-center whitespace-nowrap">
+                {item.icon}&nbsp;
+                <span>
+                  {item.label}&nbsp;
+                  <span className="text-foreground font-semibold">{item.value}</span>
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
       
       <div className="mx-auto">
         <div className="relative">
-          <MetaBar items={metaBarItems} {...storyblokEditable(blok)} />
 
           <div {...storyblokEditable(blok)} className="mb-0">
             <RichText document={blok.body} />
