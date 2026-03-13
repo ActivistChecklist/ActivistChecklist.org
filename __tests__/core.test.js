@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { slugify, truncateText, renderRichTextTreeAsPlainText } from '../utils/core'
+import { describe, it, expect, vi } from 'vitest'
+import { slugify, truncateText, renderRichTextTreeAsPlainText, storyblokFetch } from '../utils/core'
 
 describe('slugify', () => {
   it('converts basic text to slug', () => {
@@ -140,5 +140,64 @@ describe('renderRichTextTreeAsPlainText', () => {
     }
     // Empty text returns '', which gets filtered
     expect(renderRichTextTreeAsPlainText(tree)).toBe('hello')
+  })
+})
+
+describe('storyblokFetch', () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+  it('returns result on first successful call', async () => {
+    const result = await storyblokFetch(() => Promise.resolve({ data: 'ok' }))
+    expect(result).toEqual({ data: 'ok' })
+  })
+
+  it('retries on 429 and eventually succeeds', async () => {
+    let calls = 0
+    const apiCall = () => {
+      calls++
+      if (calls < 3) {
+        const err = new Error('Too Many Requests')
+        err.status = 429
+        return Promise.reject(err)
+      }
+      return Promise.resolve({ data: 'ok' })
+    }
+
+    const result = await storyblokFetch(apiCall, { baseDelay: 10 })
+    expect(result).toEqual({ data: 'ok' })
+    expect(calls).toBe(3)
+  })
+
+  it('retries on 500 errors', async () => {
+    let calls = 0
+    const apiCall = () => {
+      calls++
+      if (calls < 2) {
+        const err = new Error('Internal Server Error')
+        err.status = 500
+        return Promise.reject(err)
+      }
+      return Promise.resolve({ data: 'ok' })
+    }
+
+    const result = await storyblokFetch(apiCall, { baseDelay: 10 })
+    expect(result).toEqual({ data: 'ok' })
+    expect(calls).toBe(2)
+  })
+
+  it('throws immediately on non-retryable errors (e.g. 404)', async () => {
+    const err = new Error('Not Found')
+    err.status = 404
+    await expect(
+      storyblokFetch(() => Promise.reject(err), { baseDelay: 10 })
+    ).rejects.toThrow('Not Found')
+  })
+
+  it('throws after exhausting all retries', async () => {
+    const err = new Error('Too Many Requests')
+    err.status = 429
+    await expect(
+      storyblokFetch(() => Promise.reject(err), { maxRetries: 2, baseDelay: 10 })
+    ).rejects.toThrow('Too Many Requests')
   })
 })
