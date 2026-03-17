@@ -35,7 +35,7 @@ export const HowTo = ({ blok }) => {
               />
               {/* <div className="flex items-start"> */}
                 {/* <Settings className="h-4 w-4 mr-2 mt-0.5" /> */}
-                <h4 className="!text-sm !font-semibold !mb-4 uppercase tracking-tight text-muted-foreground">
+                <h4 className="!text-sm !font-semibold !mb-4 uppercase tracking-tight text-muted-foreground pr-8 md:pr-0">
                   {blok.title}
                 </h4>
               {/* </div> */}

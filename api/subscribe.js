@@ -1,7 +1,17 @@
 const ListmonkClient = require('../lib/listmonk');
 
+function isUsernameValid(email) {
+  const local = (email || '').split('@')[0];
+  const periodCount = (local.match(/\./g) || []).length;
+  return periodCount <= 3;
+}
+
 async function addSubscriber(request) {
   const { email, name } = request.body;
+
+  if (!email || !isUsernameValid(email)) {
+    return { success: false, error: 'Invalid email address.' };
+  }
 
   try {
     const listmonk = new ListmonkClient();
@@ -14,10 +24,10 @@ async function addSubscriber(request) {
     return result;
   } catch (error) {
     console.error('Listmonk subscription error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Something went wrong. Please try again.'
+      : error.message;
+    return { success: false, error: message };
   }
 }
 
@@ -32,6 +42,12 @@ async function subscribePlugin(fastify, options) {
   });
 
   fastify.post('/subscribe', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '15 minutes'
+      }
+    },
     schema: {
       body: {
         type: 'object',

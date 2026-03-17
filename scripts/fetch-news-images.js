@@ -26,6 +26,15 @@ try {
   sharp = null;
 }
 
+// Try to load MetadataStripper for thorough metadata removal
+let MetadataStripper;
+try {
+  MetadataStripper = require('../lib/metadata-library.cjs').MetadataStripper;
+} catch (error) {
+  // MetadataStripper not available, will use basic Sharp metadata stripping
+  MetadataStripper = null;
+}
+
 // Load environment variables
 require('dotenv').config();
 
@@ -259,13 +268,28 @@ async function downloadImage(imageUrl, resizedFilePath, quietMode = false) {
             return;
           }
           
-          // Process image with sharp: resize to max 720px width, convert to JPG, strip metadata
-          const processedBuffer = await sharp(imageBuffer)
+          // Strip metadata thoroughly (same as other images)
+          let strippedBuffer = imageBuffer;
+          if (MetadataStripper) {
+            try {
+              const stripper = new MetadataStripper({ verbose: false });
+              strippedBuffer = await stripper.stripImageMetadata(imageBuffer);
+            } catch (metadataError) {
+              // If metadata stripping fails, fall back to basic Sharp stripping
+              if (!quietMode) {
+                console.warn(`⚠️ Advanced metadata stripping failed, using basic method: ${metadataError.message}`);
+              }
+              // Continue with basic stripping below
+            }
+          }
+          
+          // Process image with sharp: resize to max 720px width, convert to JPG, ensure no metadata
+          const processedBuffer = await sharp(strippedBuffer)
             .resize(720, null, {
               withoutEnlargement: true,
               fit: 'inside'
             })
-            .withMetadata(false) // Strip all metadata including EXIF
+            .withMetadata(false) // Ensure no metadata (redundant but safe)
             .jpeg({
               quality: 85,
               progressive: true,
@@ -301,6 +325,36 @@ async function downloadImage(imageUrl, resizedFilePath, quietMode = false) {
 // Generate resized filename
 function getResizedFileName(storySlug) {
   return `${storySlug}-resized.jpg`;
+}
+
+// Get image override URL from story content
+function getImageOverrideUrl(story) {
+  const imageOverride = story.content?.image_override;
+  if (!imageOverride) {
+    return null;
+  }
+  
+  // Handle string directly
+  if (typeof imageOverride === 'string' && imageOverride.trim()) {
+    return imageOverride.trim();
+  }
+  
+  // Handle Storyblok image object - check cached_url, filename, url (in that order)
+  // First try direct properties
+  const directUrl = imageOverride.cached_url || imageOverride.filename || imageOverride.url;
+  if (directUrl && typeof directUrl === 'string' && directUrl.trim()) {
+    return directUrl.trim();
+  }
+  
+  // Then try nested image object (image_override.image.*)
+  if (imageOverride.image) {
+    const nestedUrl = imageOverride.image.cached_url || imageOverride.image.filename || imageOverride.image.url;
+    if (nestedUrl && typeof nestedUrl === 'string' && nestedUrl.trim()) {
+      return nestedUrl.trim();
+    }
+  }
+  
+  return null;
 }
 
 // Generate image manifest based on existing files
@@ -342,19 +396,6 @@ function log(message, quietMode = false) {
   }
 }
 
-// Progress logging helper - always overwrites the same line
-function logProgress(message, quietMode = false) {
-  process.stdout.write(`\r${message}`);
-}
-
-// Simple progress bar
-function createProgressBar(current, total, width = 30) {
-  const percentage = Math.round((current / total) * 100);
-  const filled = Math.round((current / total) * width);
-  const empty = width - filled;
-  const bar = '█'.repeat(filled) + '░'.repeat(empty);
-  return `[${bar}] ${percentage}% (${current}/${total})`;
-}
 
 // Main function
 async function main() {
@@ -390,9 +431,7 @@ async function main() {
     let skipped = 0;
     let errors = 0;
     let currentIndex = 0;
-    
-    // Show initial progress
-    logProgress(`🚀 Starting processing: ${createProgressBar(0, stories.length)}`, quietMode);
+    const missingImages = []; // Track stories with missing images
     
     for (const story of stories) {
       currentIndex++;
@@ -403,7 +442,6 @@ async function main() {
       if (!url) {
         log(`⏭️ Skipping story ${storyId} (${storySlug}): No URL`, quietMode);
         skipped++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -413,7 +451,6 @@ async function main() {
       if (!forceMode && fs.existsSync(resizedImagePath)) {
         log(`✅ Resized image already exists for story ${storyId} (${storySlug})`, quietMode);
         skipped++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
         continue;
       }
       
@@ -425,25 +462,41 @@ async function main() {
       }
       
       try {
-        // Get social graph image
-        const imageUrl = await getSocialGraphImage(url, quietMode);
-        
-        if (!imageUrl) {
-          log(`❌ No social graph image found for story ${storyId} (${storySlug})`, quietMode);
-          errors++;
-          logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
-          continue;
-        }
-        
         // Generate image path
         const resizedImagePath = path.join(NEWS_IMAGES_DIR, getResizedFileName(storySlug));
         
-        // Download and process image
-        await downloadImage(imageUrl, resizedImagePath, quietMode);
-        log(`✅ Downloaded and processed image for story ${storyId} (${storySlug})`, quietMode);
-        log(`   📁 Resized: ${resizedImagePath}`, quietMode);
-        processed++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
+        // Check for image override first
+        const overrideUrl = getImageOverrideUrl(story);
+        let imageUrl = null;
+        let imageSource = null;
+        
+        if (overrideUrl) {
+          imageUrl = overrideUrl;
+          imageSource = 'override';
+          log(`📎 Using image override for story ${storyId} (${storySlug})`, quietMode);
+        } else {
+          // Fallback to Open Graph image
+          imageUrl = await getSocialGraphImage(url, quietMode);
+          imageSource = 'opengraph';
+        }
+        
+        if (imageUrl) {
+          // Download and process image
+          await downloadImage(imageUrl, resizedImagePath, quietMode);
+          log(`✅ Downloaded and processed image for story ${storyId} (${storySlug}) from ${imageSource}`, quietMode);
+          log(`   📁 Resized: ${resizedImagePath}`, quietMode);
+          processed++;
+        } else {
+          // Only report error if no override is set
+          if (!overrideUrl) {
+            log(`❌ No image found (Open Graph) for story ${storyId} (${storySlug})`, quietMode);
+            errors++;
+            missingImages.push({ slug: storySlug, url: url });
+          } else {
+            // Override was set but URL was invalid/empty - this shouldn't happen but handle gracefully
+            log(`⚠️ Image override set but URL is invalid for story ${storyId} (${storySlug})`, quietMode);
+          }
+        }
         
         // Small delay to be respectful to the API
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -457,7 +510,12 @@ async function main() {
       } catch (error) {
         console.error(`❌ Error processing story ${storyId} (${storySlug}):`, error.message);
         errors++;
-        logProgress(`📊 Progress: ${createProgressBar(currentIndex, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
+        
+        // Check if image_override is set - if not, add to missing images list
+        const overrideUrl = getImageOverrideUrl(story);
+        if (!overrideUrl) {
+          missingImages.push({ slug: storySlug, url: url });
+        }
         
         // In test mode, exit even on error
         if (testMode) {
@@ -467,12 +525,6 @@ async function main() {
       }
     }
     
-    // Show final progress
-    logProgress(`🏁 Completed: ${createProgressBar(stories.length, stories.length)} | ✅${processed} ⏭️${skipped} ❌${errors}`, quietMode);
-    
-    // Add newline after final progress bar
-    console.log('');
-    
     console.log('\n📊 Summary:');
     console.log(`✅ Processed: ${processed}`);
     console.log(`⏭️ Skipped: ${skipped}`);
@@ -480,6 +532,29 @@ async function main() {
     
     // Generate image manifest after processing all images
     generateImageManifest(quietMode);
+    
+    // Show failures (only for items without image_override set)
+    if (missingImages.length > 0) {
+      console.log('\n❌ Articles missing images (no image_override set):');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('');
+      console.log('To fix these missing images:');
+      console.log('');
+      console.log('1. Open Storyblok and navigate to each news item listed below');
+      console.log('2. Find the "image_override" field in the content');
+      console.log('3. Upload an image or paste an image URL');
+      console.log('4. Save and publish the story');
+      console.log('5. Run this script again to process the override images');
+      console.log('');
+      console.log('Missing images for these articles:');
+      missingImages.forEach(({ slug, url }) => {
+        console.log(`   📄 ${slug}`);
+        console.log(`      🔗 ${url}`);
+        console.log(`      → Add image_override in Storyblok for this news item`);
+      });
+      console.log('');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
     
     console.log('🎉 Script completed successfully!');
     process.exit(0);

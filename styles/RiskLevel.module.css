@@ -1,0 +1,156 @@
+/* Risk Level block - tinted background, no border. Bullets rendered as arrows. */
+.riskLevel {
+  @apply relative w-full rounded-md p-4 [&:not(:first-child)]:mt-3 !text-inherit;
+  border: none;
+}
+
+.riskLevelBadge {
+  @apply inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide;
+  border: none;
+}
+
+.riskLevelBadgeInline {
+  @apply mr-2;
+}
+
+.riskLevelFloatWrap {
+  overflow: auto;
+}
+
+.riskLevelBadgeFloat {
+  float: left;
+  @apply mr-2 mt-0.5;
+}
+
+.riskLevelFirstRow {
+  /* row with badge and either inline body or intro text */
+}
+
+.riskLevelIntro {
+  /* "This section might be for you if:" - bold, same line as badge when multi */
+}
+
+.riskLevelBody {
+  @apply mt-2;
+}
+
+.riskLevelBodyInline {
+  @apply mt-0;
+}
+
+/* Bullets as right arrows - override prose list styling */
+.riskLevelBody ul {
+  list-style: none;
+  @apply pl-0 ml-0 space-y-1;
+}
+
+.riskLevelBody ul li {
+  @apply relative pl-6 ml-0;
+}
+
+.riskLevelBody ul li::before {
+  content: "→ ";
+  @apply absolute left-0 font-normal;
+}
+
+/* Level-specific background and arrow/badge colors.
+   Block uses light tint; badge uses darker tint for clear separation.
+   All text is colored to match the level (green/yellow/red) with dark shades for contrast.
+   Everyone level uses green-200/900 to match saturation/hue of amber-200/900 and red-200/900. */
+.everyone {
+  @apply bg-green-50 dark:bg-green-950/40 text-green-900 dark:text-green-200;
+}
+
+.everyone .riskLevelBadge {
+  @apply bg-green-200 dark:bg-green-800/70 text-green-900 dark:text-green-100;
+}
+
+.everyone .riskLevelBody ul li::before {
+  @apply text-green-800 dark:text-green-200;
+}
+
+.everyone .riskLevelIntro {
+  @apply text-green-900 dark:text-green-200;
+}
+
+.everyone a {
+  @apply text-green-900 dark:text-green-200 underline;
+}
+
+.everyone .riskLevelBody * {
+  @apply !text-green-900 dark:!text-green-200;
+}
+
+.everyone .riskLevelBody a {
+  @apply text-green-900 dark:text-green-200 underline;
+}
+
+.medium_risk,
+.medium {
+  @apply bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200;
+}
+
+.medium_risk .riskLevelBadge,
+.medium .riskLevelBadge {
+  @apply bg-amber-200 dark:bg-amber-800/70 text-amber-900 dark:text-amber-100;
+}
+
+.medium_risk .riskLevelBody ul li::before,
+.medium .riskLevelBody ul li::before {
+  @apply text-amber-800 dark:text-amber-200;
+}
+
+.medium_risk .riskLevelIntro,
+.medium .riskLevelIntro {
+  @apply text-amber-900 dark:text-amber-200;
+}
+
+.high_risk,
+.high {
+  @apply bg-red-50 dark:bg-red-950/40 text-red-900 dark:text-red-200;
+}
+
+.high_risk .riskLevelBadge,
+.high .riskLevelBadge {
+  @apply bg-red-200 dark:bg-red-800/70 text-red-900 dark:text-red-100;
+}
+
+.high_risk .riskLevelBody ul li::before,
+.high .riskLevelBody ul li::before {
+  @apply text-red-800 dark:text-red-200;
+}
+
+.high_risk .riskLevelIntro,
+.high .riskLevelIntro {
+  @apply text-red-900 dark:text-red-200;
+}
+
+.medium_risk a,
+.medium a {
+  @apply text-amber-900 dark:text-amber-200 underline;
+}
+
+.medium_risk .riskLevelBody *,
+.medium .riskLevelBody * {
+  @apply !text-amber-900 dark:!text-amber-200;
+}
+
+.medium_risk .riskLevelBody a,
+.medium .riskLevelBody a {
+  @apply text-amber-900 dark:text-amber-200 underline;
+}
+
+.high_risk a,
+.high a {
+  @apply text-red-900 dark:text-red-200 underline;
+}
+
+.high_risk .riskLevelBody *,
+.high .riskLevelBody * {
+  @apply !text-red-900 dark:!text-red-200;
+}
+
+.high_risk .riskLevelBody a,
+.high .riskLevelBody a {
+  @apply text-red-900 dark:text-red-200 underline;
+}

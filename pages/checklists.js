@@ -1,54 +1,82 @@
 import { getStoryblokApi, storyblokEditable } from "@storyblok/react";
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
-import Link from '@/components/Link';
-import { ArrowRight } from 'lucide-react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card"
 import { getStoryblokVersion, fetchAllStories } from "@/utils/core";
-import { RichText } from '@/components/RichText';
-import { ROUTES } from '../config/routes'
+import { SECURITY_CHECKLISTS, NAV_ITEMS } from '../config/navigation';
+import GuideCard from '@/components/GuideCard';
 
+// Build a map from slug to nav item for easy lookup
+const buildSlugToNavItem = () => {
+  const map = {};
+  Object.values(NAV_ITEMS).forEach(item => {
+    if (item.href && item.icon) {
+      // Extract slug from href (e.g., "/security-essentials" -> "security-essentials")
+      const slug = item.href.replace(/^\//, '');
+      map[slug] = item;
+    }
+  });
+  return map;
+};
 
-const GuideList = ({ blok, guides }) => {
+const SLUG_TO_NAV_ITEM = buildSlugToNavItem();
+
+// Get the top 8 slugs for categorization
+const TOP_8_SLUGS = SECURITY_CHECKLISTS.items.map(item => item.href.replace(/^\//, ''));
+
+const GuideList = ({ guides }) => {
+  // Separate guides into top 8 and others
+  const otherGuides = guides.filter(guide => !TOP_8_SLUGS.includes(guide.slug));
+  
+  // Convert other guides to GuideCard format using nav item data
+  const otherGuideItems = otherGuides
+    .map(guide => {
+      const navItem = SLUG_TO_NAV_ITEM[guide.slug];
+      if (navItem) {
+        return {
+          href: navItem.href,
+          icon: navItem.icon,
+          title: navItem.title,
+          description: navItem.description
+        };
+      }
+      return null;
+    })
+    .filter(Boolean)
+    // Sort alphabetically by title
+    .sort((a, b) => a.title.localeCompare(b.title));
+
   return (
     <div> 
       <Head>
         <title>Checklists</title>
       </Head>
-      <Layout searchable={false} sidebarType={null}>
-        <div {...storyblokEditable(blok)} className="">
+      <Layout searchable={false} sidebarType={null} fullWidthMain={true}>
+        <div className="">
           <h1 className="page-title">
             Checklists
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {guides.map((guide) => (
-              <Link href={`/${guide.slug}`} key={guide.uuid} className="block hover:no-underline group">
-                <Card className="h-full transition-all duration-200 group-hover:shadow-lg group-hover:scale-[1.02] group-hover:border-primary/50">
-                  <CardHeader>
-                    <CardTitle className="text-xl group-hover:text-primary">
-                      {guide.content.title}
-                    </CardTitle>
-                    <CardDescription>
-                      {guide.content.summary && (
-                        <RichText document={guide.content.summary} className="text-sm text-muted-foreground border-t pt-2" />
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter>
-                    <span className="text-primary font-medium inline-flex items-center">
-                      Read Guide <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
-                    </span>
-                  </CardFooter>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          
+          {/* Top 8 Checklists */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold mb-4 text-muted-foreground">Featured Checklists</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {SECURITY_CHECKLISTS.items.map((guideItem, index) => (
+                <GuideCard key={index} guideItem={guideItem} size="large" />
+              ))}
+            </div>
+          </section>
+          
+          {/* Other Checklists */}
+          {otherGuideItems.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-4 text-muted-foreground">More Checklists</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {otherGuideItems.map((guideItem, index) => (
+                  <GuideCard key={index} guideItem={guideItem} size="large" />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </Layout>
     </div>

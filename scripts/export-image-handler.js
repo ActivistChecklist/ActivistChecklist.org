@@ -8,12 +8,22 @@ const require = createRequire(import.meta.url)
 const { MetadataStripper } = require('../lib/metadata-library.cjs')
 
 export class MediaHandler {
-  constructor(mediaDir, verbose = false) {
+  constructor(mediaDir, verbose = false, urlPathPrefix = null) {
     this.mediaDir = mediaDir
     this.verbose = verbose
+    this.urlPathPrefix = urlPathPrefix // e.g. '/images' for final URL in built site
     this.mediaCache = new Map()
     this.urlMappings = new Map() // Maps original URLs to local paths
     this.metadataStripper = new MetadataStripper({ verbose })
+  }
+
+  urlPathFor(filename, relativePath) {
+    if (this.urlPathPrefix) {
+      return `${this.urlPathPrefix.replace(/\/$/, '')}/${filename}`
+    }
+    return relativePath.startsWith('out/')
+      ? relativePath.replace('out/', '/')
+      : `/${relativePath}`
   }
 
   /**
@@ -76,7 +86,7 @@ export class MediaHandler {
       }
 
       // Handle special array properties that need recursive processing
-      const arrayProps = ['content', 'body']
+      const arrayProps = ['content', 'body', 'blocks']
       arrayProps.forEach(prop => {
         if (obj[prop] && Array.isArray(obj[prop])) {
           obj[prop].forEach(item => this.findMedia(item, media))
@@ -90,7 +100,12 @@ export class MediaHandler {
 
       // Recursively process all other object values
       Object.values(obj).forEach(value => {
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === 'string') {
+          // Check if string values are storyblok asset URLs (e.g., image fields stored as strings)
+          if (this.isStoryblokAsset(value)) {
+            media.add(value)
+          }
+        } else if (typeof value === 'object' && value !== null) {
           this.findMedia(value, media)
         }
       })
@@ -99,9 +114,36 @@ export class MediaHandler {
     return media
   }
 
+  /**
+   * Get local filename from Storyblok URL (no query string)
+   */
+  getFilenameFromUrl(url) {
+    const pathname = url.split('?')[0]
+    return pathname.split('/').pop()
+  }
+
   async downloadMedia(url) {
-    const filename = url.split('/').pop()
+    const filename = this.getFilenameFromUrl(url)
     const filepath = path.join(this.mediaDir, filename)
+
+    // Skip download and metadata stripping if file already exists (from a previous build)
+    try {
+      await fs.access(filepath)
+      const relativePath = path.relative(process.cwd(), filepath)
+      const urlPath = this.urlPathFor(filename, relativePath)
+      this.urlMappings.set(url, urlPath)
+      if (this.verbose) {
+        logger.detail(`    Skipped (exists): ${filename}`)
+      }
+      return {
+        filename,
+        filepath,
+        skipped: true,
+        localPath: relativePath
+      }
+    } catch {
+      // File doesn't exist, proceed with download
+    }
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -132,9 +174,7 @@ export class MediaHandler {
           // For videos, we don't need to write the buffer since ffmpeg handles it
           // Store the URL mapping for replacement
           const relativePath = path.relative(process.cwd(), filepath)
-          const urlPath = relativePath.startsWith('out/') 
-            ? relativePath.replace('out/', '/')
-            : `/${relativePath}`
+          const urlPath = this.urlPathFor(filename, relativePath)
           this.urlMappings.set(url, urlPath)
 
           return {
@@ -165,9 +205,7 @@ export class MediaHandler {
 
     // Store the URL mapping for replacement
     const relativePath = path.relative(process.cwd(), filepath)
-    const urlPath = relativePath.startsWith('out/') 
-      ? relativePath.replace('out/', '/')
-      : `/${relativePath}`
+    const urlPath = this.urlPathFor(filename, relativePath)
     this.urlMappings.set(url, urlPath)
 
     if (this.verbose) {
@@ -187,15 +225,18 @@ export class MediaHandler {
 
   async processMedia(stories) {
     await fs.mkdir(this.mediaDir, { recursive: true })
-    
+
     const mediaUrls = new Set()
+    const urlToSlugs = new Map() // url -> Set of story full_slug (for error messages)
     stories.forEach(story => {
-      this.findMedia(story.content, mediaUrls)
-      if (this.verbose) {
-        const storyMedia = this.findMedia(story.content, new Set())
-        if (storyMedia.size > 0) {
-          logger.detail(`  Found ${storyMedia.size} files in ${story.full_slug}`)
-        }
+      const storyUrls = this.findMedia(story.content, new Set())
+      storyUrls.forEach(url => {
+        mediaUrls.add(url)
+        if (!urlToSlugs.has(url)) urlToSlugs.set(url, new Set())
+        urlToSlugs.get(url).add(story.full_slug)
+      })
+      if (this.verbose && storyUrls.size > 0) {
+        logger.detail(`  Found ${storyUrls.size} files in ${story.full_slug}`)
       }
     })
 
@@ -205,7 +246,7 @@ export class MediaHandler {
 
     logger.info('\n🖼  Processing images, PDFs, and videos...')
     logger.detail(`  Found ${mediaUrls.size} unique files`)
-    
+
     let downloaded = 0
     let skipped = 0
     let errors = 0
@@ -216,21 +257,27 @@ export class MediaHandler {
         if (this.mediaCache.has(urlHash)) {
           skipped++
           if (this.verbose) {
-            logger.detail(`    Skipped: ${url.split('/').pop()} (cached)`)
+            logger.detail(`    Skipped: ${this.getFilenameFromUrl(url)} (cached this run)`)
           }
           continue
         }
 
-        await this.downloadMedia(url)
+        const result = await this.downloadMedia(url)
         this.mediaCache.set(urlHash, true)
-        downloaded++
+        if (result.skipped) {
+          skipped++
+        } else {
+          downloaded++
+        }
 
         // Log progress every 10 files if not in verbose mode
         if (!this.verbose && downloaded % 10 === 0) {
           logger.detail(`  Progress: ${downloaded}/${mediaUrls.size} files`)
         }
       } catch (error) {
-        logger.warn(`  Failed to download ${url}: ${error.message}`)
+        const slugs = urlToSlugs.get(url)
+        const slugList = slugs ? [...slugs].join(', ') : 'unknown'
+        logger.warn(`  Failed to download ${url}: ${error.message} (used in: ${slugList})`)
         errors++
       }
     }

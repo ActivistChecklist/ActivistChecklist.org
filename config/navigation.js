@@ -1,17 +1,7 @@
-import {
-  IoShieldOutline,
-  IoMegaphoneOutline,
-  IoGlobeOutline,
-  IoPhonePortraitOutline,
-  IoArrowForward,
-  IoPeopleOutline,
-  IoChatbubbleOutline,
-  IoAirplaneOutline,
-  IoEyeOffOutline,
-  IoNotificationsOutline,
-} from "react-icons/io5"
-import { Landmark } from "lucide-react"
+import {IoArrowForward, IoLogoGithub, IoLogoMastodon} from "react-icons/io5"
+import { SiBluesky } from "react-icons/si"
 import { ROUTES } from './routes'
+import { GUIDE_ICONS } from './icons'
 
 // Helper function to get translations
 function getT() {
@@ -27,7 +17,36 @@ export const SITE_BRANDING = {
   description: "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
 }
 
+export const SOCIAL_LINKS = {
+  BLUESKY: {
+    key: 'bluesky',
+    label: "Bluesky",
+    username: "@activistchecklist.org",
+    href: "https://bsky.app/profile/activistchecklist.org",
+    icon: SiBluesky,
+    ariaLabel: "Follow us on Bluesky"
+  },
+  MASTODON: {
+    key: 'mastodon',
+    label: "Mastodon",
+    username: "@ActivistChecklist",
+    href: "https://kolektiva.social/@activistchecklist",
+    icon: IoLogoMastodon,
+    ariaLabel: "Follow us on Mastodon"
+  },
+  GITHUB: {
+    key: 'github',
+    label: "GitHub",
+    username: "ActivistChecklist",
+    href: "https://github.com/ActivistChecklist/ActivistChecklist.org",
+    icon: IoLogoGithub,
+    ariaLabel: "View our GitHub repository"
+  }
+}
+
 // Define all navigation items by key for reuse
+
+// IMPORTANT REMINDER: Always add an icon to the GUIDE_ICONS so that the OG image generator works.
 export const NAV_ITEMS = {
   HOME: {
     key: 'home',
@@ -36,74 +55,95 @@ export const NAV_ITEMS = {
     type: "link"
   },
   SECURITY_ESSENTIALS: {
-    key: 'security-essentials',
+    key: 'essentials',
     title: "Security essentials",
     href: ROUTES.CHECKLISTS.ESSENTIALS,
     description: "Core security practices every activist should follow.",
-    icon: IoShieldOutline
+    icon: GUIDE_ICONS['essentials']
   },
   PROTEST_PREP: {
-    key: 'protest-prep',
+    key: 'protest',
     title: "Prepare for a protest",
     href: ROUTES.CHECKLISTS.PROTEST,
     description: "Digital security for anyone attending a protest.",
-    icon: IoPeopleOutline
+    icon: GUIDE_ICONS['protest']
   },
   TRAVEL: {
     key: 'travel',
     title: "Travel & flight security",
     href: ROUTES.CHECKLISTS.TRAVEL,
     description: "Digital security practices for activists traveling.",
-    icon: IoAirplaneOutline
+    icon: GUIDE_ICONS['travel']
   },
   SIGNAL: {
     key: 'signal',
-    title: "Signal security checklist",
+    title: "Signal security",
     href: ROUTES.CHECKLISTS.SIGNAL,
     description: "Secure your Signal messaging app for safer communications.",
-    icon: IoChatbubbleOutline
+    icon: GUIDE_ICONS['signal']
   },
   SECONDARY_PHONE: {
-    key: 'secondary-phone',
+    key: 'secondary',
     title: "Secondary phone",
     href: ROUTES.CHECKLISTS.SECONDARY_PHONE,
     description: "Set up an extra phone for activism and protests.",
-    icon: IoPhonePortraitOutline
+    icon: GUIDE_ICONS['secondary']
   },
   EMERGENCY: {
     key: 'emergency',
     title: "Emergency planning",
     href: ROUTES.CHECKLISTS.EMERGENCY,
     description: "Establish an emergency support network in case you're detained or threatened.",
-    icon: IoNotificationsOutline
+    icon: GUIDE_ICONS['emergency']
   },
   SPYWARE: {
     key: 'spyware',
     title: "Spyware protection",
     href: ROUTES.CHECKLISTS.SPYWARE,
     description: "Protect yourself from spyware and surveillance software.",
-    icon: IoEyeOffOutline
+    icon: GUIDE_ICONS['spyware']
   },
   ORGANIZER: {
-    key: 'organizer',
+    key: 'organizing',
     title: "Action organizer checklist",
     href: ROUTES.CHECKLISTS.ORGANIZER,
     description: "For movement organizers and coordinators.",
-    icon: IoMegaphoneOutline
+    icon: GUIDE_ICONS['organizing']
   },
   ACTION_RESEARCH: {
     key: 'research',
     title: "Action research & scouting",
     href: ROUTES.CHECKLISTS.RESEARCH,
     description: "How to conduct research and browse the web anonymously.",
-    icon: IoGlobeOutline
+    icon: GUIDE_ICONS['research']
   },
   FEDERAL: {
     key: 'federal',
     title: "Federal workers",
     href: ROUTES.CHECKLISTS.FEDERAL,
     description: "Digital security guidance for federal employees.",
-    icon: Landmark
+    icon: GUIDE_ICONS['federal']
+  },
+  DOXXING: {
+    key: 'doxxing',
+    title: "Doxxing defense",
+    href: ROUTES.CHECKLISTS.DOXXING,
+    description: "Protect yourself from doxxing and online harassment.",
+    icon: GUIDE_ICONS['doxxing']
+  },
+  ACTION: {
+    key: 'action',
+    title: "Prepare for a direct action",
+    href: ROUTES.CHECKLISTS.ACTION,
+    description: "Digital security for direct actions and civil disobedience.",
+    icon: GUIDE_ICONS['action']
+  },
+  ICE: {
+    key: 'ice',
+    title: "ICE watch digital security",
+    href: ROUTES.CHECKLISTS.ICE,
+    description: "Digital security for ICE watch and rapid response networks.",
+    icon: GUIDE_ICONS['ice']
   },
   MOVIES: {
     key: 'movies',
@@ -129,7 +169,7 @@ export const NAV_ITEMS = {
     key: 'about',
     label: "About",
     href: ROUTES.ABOUT.INDEX,
-    title: "About This Site"
+    title: "About this site"
   },
   CONTACT: {
     key: 'contact',
@@ -180,14 +220,14 @@ export const SECURITY_CHECKLISTS = {
   columns: 2,
   items: [
     NAV_ITEMS.SECURITY_ESSENTIALS,
-    NAV_ITEMS.PROTEST_PREP,
     NAV_ITEMS.SIGNAL,
+    NAV_ITEMS.PROTEST_PREP,
+    NAV_ITEMS.ICE,
+    NAV_ITEMS.DOXXING,
     NAV_ITEMS.TRAVEL,
-    NAV_ITEMS.SECONDARY_PHONE,
-    NAV_ITEMS.SPYWARE,
     NAV_ITEMS.EMERGENCY,
-    NAV_ITEMS.ORGANIZER,
-  ].slice(0, 8), // Limit to 9 items maximum
+    NAV_ITEMS.SECONDARY_PHONE,
+  ].slice(0, 8), // Limit to 8 items maximum
   footerLink: {
     title: "Browse all checklists",
     href: ROUTES.CHECKLISTS.LIST,
@@ -239,6 +279,9 @@ export const navigationConfig = {
     NAV_ITEMS.NEWS,
     RESOURCES_SECTION,
     ABOUT_SECTION
+  ],
+  socialLinks: [
+    SOCIAL_LINKS.BLUESKY
   ]
 }
 
@@ -263,6 +306,11 @@ export const footerConfig = {
       title: "Top Checklists",
       items: SECURITY_CHECKLISTS.items
     }
+  ],
+  socialLinks: [
+    SOCIAL_LINKS.BLUESKY,
+    // SOCIAL_LINKS.MASTODON,
+    SOCIAL_LINKS.GITHUB
   ]
 }
 

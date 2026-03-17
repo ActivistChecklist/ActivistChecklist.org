@@ -8,52 +8,47 @@ const GuideCard = ({
   guideItem, 
   size = "medium" 
 }) => {
-  const sizeVariants = {
-    medium: {
-      card: "h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card flex flex-col",
-      header: "py-3 px-4",
-      content: "py-3 px-4 pt-0 flex-1",
-      footer: "py-3 px-4 pt-0 mt-auto",
-      iconContainer: "p-2 rounded-lg bg-primary/10 text-primary",
-      icon: "h-5 w-5",
-      title: "text-lg",
-      description: "text-sm",
-      footerText: "text-sm"
-    },
-    large: {
-      card: "h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card flex flex-col",
-      header: "",
-      content: "flex-1",
-      footer: "mt-auto",
-      iconContainer: "p-2 rounded-lg bg-primary/10 text-primary",
-      icon: "h-6 w-6",
-      title: "text-lg",
-      description: "text-lg",
-      footerText: "text-base"
-    }
-  };
-
-  const variant = sizeVariants[size];
-
-  // Extract properties from guideItem
   const { href, icon: Icon, title, description } = guideItem;
+
+  if (size === "large") {
+    return (
+      <Link href={href} className="block group">
+        <Card className="relative h-full overflow-hidden rounded-lg border border-primary/15 shadow-sm transition-all duration-200 hover:shadow-xl hover:scale-[1.01] hover:border-primary/40 flex flex-col bg-gradient-to-br from-card via-card to-primary/15">
+          <div className="absolute top-1/2 right-3 -translate-y-1/2 w-44 h-44 flex items-center justify-center pointer-events-none">
+            <Icon className="h-36 w-36 text-primary/[0.09]" strokeWidth={0.9} />
+          </div>
+          <CardHeader className="relative py-4 pb-2">
+            <CardTitle className="text-2xl">{title}</CardTitle>
+          </CardHeader>
+          <CardContent className="relative pb-4 flex-1 pt-0">
+            <CardDescription className="text-lg">{description}</CardDescription>
+          </CardContent>
+          <CardFooter className="relative mt-auto pt-0">
+            <span className="text-primary font-medium inline-flex items-center text-base">
+              View checklist <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+            </span>
+          </CardFooter>
+        </Card>
+      </Link>
+    );
+  }
 
   return (
     <Link href={href} className="block group">
-      <Card className={cn(variant.card, "to-primary/5")}>
-        <CardHeader className={variant.header}>
+      <Card className="h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 flex flex-col">
+        <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-3">
-            <div className={variant.iconContainer}>
-              <Icon className={variant.icon} />
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
             </div>
-            <CardTitle className={variant.title}>{title}</CardTitle>
+            <CardTitle className="text-lg">{title}</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className={variant.content}>
-          <CardDescription className={variant.description}>{description}</CardDescription>
+        <CardContent className="py-3 px-4 pt-0 flex-1">
+          <CardDescription className="text-sm">{description}</CardDescription>
         </CardContent>
-        <CardFooter className={variant.footer}>
-          <span className={cn("text-primary font-medium inline-flex items-center", variant.footerText)}>
+        <CardFooter className="py-3 px-4 pt-0 mt-auto">
+          <span className="text-primary font-medium inline-flex items-center text-sm">
             View checklist <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
           </span>
         </CardFooter>

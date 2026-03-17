@@ -1,8 +1,12 @@
 import 'dotenv/config'
 import path from 'path'
+import fs from 'fs'
 import { Command } from 'commander'
 import { logger } from './utils.js'
 import SbExport from './export-library.js'
+
+// Persistent cache so we don't re-download/re-scrub after next build wipes out/
+const STORYBLOK_IMAGES_CACHE = path.join(process.cwd(), '.cache', 'storyblok-images')
 
 // CLI setup
 const program = new Command()
@@ -29,13 +33,14 @@ const run = async () => {
   if (options.verbose) logger.detail('Verbose mode enabled')
   logger.detail(`Content directory: ${options.content}`)
   if (options.mode === 'all' || options.mode === 'images') {
-    logger.detail(`Images directory: ${options.images}`)
+    logger.detail(`Images cache: ${STORYBLOK_IMAGES_CACHE}`)
+    logger.detail(`Images output: ${options.images}`)
   }
 
   const exporter = new SbExport({
     token: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
     contentDir: options.content,
-    imagesDir: options.images,
+    imagesDir: STORYBLOK_IMAGES_CACHE,
     verbose: options.verbose,
     draft: options.draft,
     yaml: options.yaml
@@ -53,7 +58,7 @@ const run = async () => {
       storiesCount = result.count
     }
 
-    // Export images if needed
+    // Export images if needed (download to cache, then copy to output)
     if (options.mode === 'all' || options.mode === 'images') {
       // If we haven't fetched stories yet, do it now
       if (stories.length === 0 && options.mode === 'images') {
@@ -61,6 +66,9 @@ const run = async () => {
         stories = result.stories
       }
       imageStats = await exporter.exportImages(stories)
+      // Copy cache to output dir (next build wipes out/, so we write to persistent cache first)
+      fs.mkdirSync(path.dirname(options.images), { recursive: true })
+      fs.cpSync(STORYBLOK_IMAGES_CACHE, options.images, { recursive: true })
     }
 
     // Final summary

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Link2 } from 'lucide-react';
 import { storyblokEditable } from '@storyblok/react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,67 @@ const InfoItemIcon = () => {
   );
 }
 
+const CopyLinkButton = ({ slug, onCopy }) => {
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  const handleCopy = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}${window.location.pathname}#${slug}`;
+    
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTooltipOpen(true);
+      
+      // Call the parent's copy handler if provided
+      if (onCopy) {
+        onCopy(url);
+      }
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setLinkCopied(false);
+        setTooltipOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={0} open={tooltipOpen} onOpenChange={setTooltipOpen}>
+        <TooltipTrigger asChild>
+          <button
+            onClick={handleCopy}
+            className={cn(
+              "relative inline-block p-1.5 rounded-md transition-all duration-200 ml-2 align-middle",
+              "hover:bg-neutral-200/60",
+              "text-neutral-500 hover:text-neutral-700",
+              "print:hidden",
+              linkCopied && "text-green-600"
+            )}
+            aria-label="Copy link to this item"
+          >
+            <Link2 className={cn(
+              "h-4 w-4 transition-all",
+              linkCopied && "opacity-0 scale-0"
+            )} />
+            <Check className={cn(
+              "h-4 w-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all text-green-600",
+              linkCopied ? "opacity-100 scale-100" : "opacity-0 scale-0"
+            )} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={5}>
+          {linkCopied ? "Link copied!" : "Copy link to this item"}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
   if (!blok) {
     console.log('⚠️⚠️⚠️⚠️ ChecklistItem: blok is undefined. Skipping');
@@ -56,12 +117,14 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [enableTransitions, setEnableTransitions] = useState(false);
   const { trackEvent } = useAnalytics();
   const hasTrackedExpansion = useRef(false);
   const cardRef = useRef(null);
   const storageKey = `checklist-checked-${blok?._uid || 111}`;
   const expandedStorageKey = `checklist-expanded-${blok?._uid || 222}`;
-  const checkedOpacity = 75;
+  const checkedOpacity = 60;
 
   const setExpandedWithStorage = (expanded) => {
     setIsExpanded(expanded);
@@ -72,22 +135,21 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     setIsChecked(checked);
     localStorage.setItem(storageKey, checked);
   };
+
+  // Track when component has mounted (client-side only)
+  // This prevents the browser from scrolling to the hash on initial page load
+  // because the id attribute won't be rendered until after mount
+  useEffect(() => {
+    setHasMounted(true);
+    // Enable transitions after a brief delay to allow initial state restoration
+    // to happen without animation
+    const timer = setTimeout(() => {
+      setEnableTransitions(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
   
   useEffect(() => {
-    // Auto expand items if they've been linked to directly with an anchor $ in the URL
-    const checkUrlHash = () => {
-      const hash = window.location.hash.slice(1); // Remove the # symbol
-      if (hash === blok.slug && !isChecked) {
-        setExpandedWithStorage(true);
-      }
-    };
-
-    // Initial check
-    checkUrlHash();
-
-    // Add hash change listener
-    window.addEventListener('hashchange', checkUrlHash);
-    
     // Load checked state
     const stored = localStorage.getItem(storageKey);
     if (stored !== null) {
@@ -100,8 +162,44 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       setExpandedWithStorage(storedExpanded === 'true');
     }
 
+    // Auto expand items if they've been linked to directly with an anchor in the URL
+    // and scroll to them AFTER all items have restored their expanded states
+    const checkUrlHash = (shouldScroll = false) => {
+      const hash = window.location.hash.slice(1); // Remove the # symbol
+      if (hash === blok.slug && !isChecked) {
+        setExpandedWithStorage(true);
+        
+        // Scroll to this item after a delay to allow all other items to restore their states
+        // This fixes the issue where other items expanding pushes the target down
+        if (shouldScroll && cardRef.current) {
+          // Use requestAnimationFrame + setTimeout to ensure DOM has updated
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (cardRef.current) {
+                const headerHeight = 80; // Approximate header/nav height buffer
+                const cardTop = cardRef.current.getBoundingClientRect().top + window.scrollY;
+                const targetScrollPosition = cardTop - headerHeight;
+                
+                window.scrollTo({
+                  top: Math.max(0, targetScrollPosition),
+                  behavior: 'smooth'
+                });
+              }
+            }, 100); // Small delay to let layout stabilize (transitions are disabled on initial load)
+          });
+        }
+      }
+    };
+
+    // Initial check - with scroll since this is page load
+    checkUrlHash(true);
+
+    // Add hash change listener - also scroll on hash change
+    const handleHashChange = () => checkUrlHash(true);
+    window.addEventListener('hashchange', handleHashChange);
+
     // Cleanup listener
-    return () => window.removeEventListener('hashchange', checkUrlHash);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [storageKey, expandedStorageKey, blok, isChecked]);
 
   // Handle expand/collapse trigger
@@ -119,7 +217,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       trackEvent({
         name: 'checklist_item_expanded',
         data: {
-          item_id: window.location.pathname + "#" + blok.slug,
+          item_id: blok.slug,
         }
       });
       hasTrackedExpansion.current = true;
@@ -134,7 +232,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       await trackEvent({
         name: 'checklist_item_checked',
         data: {
-          item_id: window.location.pathname + "#" + blok.slug,
+          item_id: blok.slug,
         }
       });
 
@@ -165,6 +263,16 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     }
   };
 
+  const handleLinkCopy = (url) => {
+    // Track the copy event
+    trackEvent({
+      name: 'checklist_item_link_copied',
+      data: {
+        item_id: blok.slug,
+      }
+    });
+  };
+
   return (
     <Card
       ref={cardRef}
@@ -173,7 +281,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
         "checklist-item group/checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t-1",
         "hover:z-20 relative",
-        !isExpanded && "hover:bg-muted/40",
+        !isExpanded && !isChecked && "hover:bg-muted/40",
         isExpanded && "mb-4 rounded-lg border-transparent",
         isExpanded && "bg-muted",
         "[transition:margin_300ms,border-radius_300ms,border_300ms,box-shadow_300ms]"
@@ -213,16 +321,12 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
           <div>
             <CardTitle 
               className={cn(
-                "flex items-start",
                 isChecked && "text-muted-foreground",
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <h3 className={cn(
-                  "flex-grow mt-0 text-lg",
-                  isChecked && "line-through decoration-1"
-                )}
-                id={blok.slug}
+              <h3 className="inline mt-0 text-lg"
+                id={hasMounted ? blok.slug : undefined}
                 data-slug={blok.slug} 
               >
                 {/* Render title badges inline at the beginning */}
@@ -250,6 +354,13 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
                 {/* <Markdown inlineOnly={true} content={blok.title} /> */}
                 {blok.title}
+                
+                {/* Copy link button - inline, only visible when expanded */}
+                {isExpanded && (
+                  <span className="inline-block ml-2">
+                    <CopyLinkButton slug={blok.slug} onCopy={handleLinkCopy} />
+                  </span>
+                )}
               </h3>
             </CardTitle>
             <CardDescription 
@@ -264,7 +375,8 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
           <ChevronDown 
             className={cn(
-              "h-8 w-8 transition-transform duration-300 mt-1 text-neutral-500",
+              "h-8 w-8 mt-1 text-neutral-500",
+              enableTransitions ? "transition-transform duration-300" : "transition-none",
               "p-1 rounded-full group-hover:bg-neutral-200/60",
               "print:hidden",
               isExpanded && "rotate-180",
@@ -278,8 +390,8 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       
       <div
         className={cn(
-          "grid transition-all duration-300",
-          "mt-2",
+          "grid mt-2",
+          enableTransitions ? "transition-all duration-300" : "transition-none",
           isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
           isChecked && `opacity-${checkedOpacity}`,
         )}

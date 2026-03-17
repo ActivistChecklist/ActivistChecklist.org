@@ -1,4 +1,5 @@
 import React from 'react';
+import { storyblokEditable } from '@storyblok/react';
 import GuideCardBlock from '@/components/GuideCardBlock';
 import { RichText } from '@/components/RichText';
 import { cn } from '@/lib/utils';
@@ -23,13 +24,16 @@ const RelatedGuides = ({ blok, isBlock = false }) => {
       case 1:
         return "grid grid-cols-1 max-w-md mx-auto";
       case 2:
-        return "grid grid-cols-1 md:grid-cols-2 gap-8";
-      case 3:
-        return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8";
+        // 2 and 4 should behave the same way
       case 4:
-        return "grid grid-cols-1 md:grid-cols-2 gap-8";
+        // 2x2 grid - break to single column sooner (use lg instead of md)
+        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
+      case 3:
+        // 2 columns on medium, 3rd item breaks to new row at 1/2 width
+        // Only use 3 columns on very large screens
+        return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8";
       default:
-        return "grid grid-cols-1 md:grid-cols-2 gap-8";
+        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
     }
   };
 
@@ -47,7 +51,7 @@ const RelatedGuides = ({ blok, isBlock = false }) => {
     : "If you found this helpful, also check out these guides";
 
   return (
-    <div className={containerClass}>
+    <div {...storyblokEditable(blok)} className={containerClass}>
       {/* Title section */}
       <div className="mb-6">
         <h3 className={cn(titleClass)}

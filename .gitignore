@@ -20,9 +20,11 @@
 .DS_Store
 *.pem
 
-# cusror
+# IDEs
+.idea
 .cursorrules
-.cursor/ 
+.cursor/
+.idea
 
 # debug
 npm-debug.log*
@@ -51,11 +53,23 @@ public/pagefind
 # URL scanner
 .approved-urls.json
 
+# Storyblok image cache (persists across builds to avoid re-download/re-scrub)
+.cache/
+
 # Backups
 buildbackups/
 
 # News image caching
 public/files/news/
 
-# Metadata cleaner folder 
+# Generated OG share images
+public/images/og/
+
+# Metadata cleaner folder
 metadata-cleaner/
+
+# SSL check log
+.ssl-check.log
+
+# Deploy/upload script (host-specific, not committed)
+scripts/deploy-remote.sh
