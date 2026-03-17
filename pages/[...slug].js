@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Layout from "../components/layout/Layout";
-import { getStoryblokVersion, getRevalidate, fetchAllStories, renderRichTextTreeAsPlainText } from "../utils/core";
+import { getStoryblokVersion, getRevalidate, fetchAllStories, storyblokFetch, renderRichTextTreeAsPlainText } from "../utils/core";
 import {
   useStoryblokState,
   getStoryblokApi,
@@ -114,11 +114,12 @@ export async function getStaticProps({ params, preview = false }) {
   let slug = params?.slug ? params.slug.join("/") : "home";
   const storyblokApi = getStoryblokApi();
 
-  // First get the main story
-  let { data } = await storyblokApi.get(`cdn/stories/${slug}`, {
-    version: getStoryblokVersion(preview),
-    resolve_relations: RESOLVE_RELATIONS.join(',')
-  });
+  let { data } = await storyblokFetch(() =>
+    storyblokApi.get(`cdn/stories/${slug}`, {
+      version: getStoryblokVersion(preview),
+      resolve_relations: RESOLVE_RELATIONS.join(',')
+    })
+  );
 
   if (!data?.story) {
     return { notFound: true };
@@ -170,10 +171,11 @@ export async function getStaticProps({ params, preview = false }) {
             const { guideId, itemId } = item;
             
             try {
-              // Get the guide content
-              const { data: guideData } = await storyblokApi.get(`cdn/stories/${guideId}`, {
-                version: getStoryblokVersion()
-              });
+              const { data: guideData } = await storyblokFetch(() =>
+                storyblokApi.get(`cdn/stories/${guideId}`, {
+                  version: getStoryblokVersion()
+                })
+              );
 
               if (!guideData?.story?.content) {
                 return { error: `Guide ${guideId} not found` };

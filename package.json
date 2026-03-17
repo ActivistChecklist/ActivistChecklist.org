@@ -66,7 +66,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@storyblok/react": "^5.4.22",
+    "@storyblok/react": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -111,7 +111,7 @@
     "satori": "^0.25.0",
     "sharp": "^0.34.5",
     "storyblok-backup": "^0.6.0",
-    "storyblok-js-client": "^6.11.0",
+    "storyblok-js-client": "^7.2.4",
     "tailwindcss": "^3.4.19",
     "vitest": "^4.0.18",
     "yarn": "^1.22.22"
@@ -122,7 +122,9 @@
     "markdown-it": ">=14.1.1",
     "ajv": ">=8.18.0",
     "rollup": ">=4.59.0",
-    "basic-ftp": ">=5.2.0"
+    "basic-ftp": ">=5.2.0",
+    "undici": ">=7.24.0",
+    "yauzl": ">=3.2.1"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

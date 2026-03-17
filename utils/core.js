@@ -3,6 +3,34 @@ export const isDev = process.env.NODE_ENV === 'development';
 export const isStaticBuild = process.env.BUILD_MODE === 'static';
 export const isVercel = process.env.VERCEL === 'true';
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Wrap a Storyblok API call with retry logic for rate limits (429) and transient errors.
+ * Uses exponential backoff with jitter. Retries up to `maxRetries` times.
+ */
+export async function storyblokFetch(apiCall, { maxRetries = 4, baseDelay = 300 } = {}) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      const status = error?.status || error?.response?.status;
+      const isRetryable = status === 429 || (status >= 500 && status < 600);
+
+      if (!isRetryable || attempt === maxRetries) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 200;
+      console.warn(
+        `Storyblok API ${status} on attempt ${attempt + 1}/${maxRetries + 1}, ` +
+        `retrying in ${Math.round(delay)}ms...`
+      );
+      await sleep(delay);
+    }
+  }
+}
+
 export const getStoryblokVersion = (isPreviewMode = false) => {
   return isDev || isPreviewMode ? "draft" : "published";
 };
@@ -76,20 +104,17 @@ export const fetchAllStories = async (storyblokApi, options = {}) => {
   let hasMore = true;
   
   const baseOptions = {
-    per_page: 100, // Maximum allowed per request
+    per_page: 100,
     ...options
   };
   
   while (hasMore) {
-    const { data } = await storyblokApi.get("cdn/stories", {
-      ...baseOptions,
-      page: page
-    });
+    const { data } = await storyblokFetch(() =>
+      storyblokApi.get("cdn/stories", { ...baseOptions, page })
+    );
     
     if (data?.stories?.length > 0) {
       allStories = allStories.concat(data.stories);
-      
-      // If we got less than 100 stories, we've reached the end
       hasMore = data.stories.length === 100;
       page++;
     } else {
