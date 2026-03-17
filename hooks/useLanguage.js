@@ -29,7 +29,7 @@ export function useLanguage() {
     if (newLanguage === DEFAULT_LANGUAGE) {
       // Switch to default language - remove language prefix
       if (currentLang !== DEFAULT_LANGUAGE) {
-        newPath = currentPath.replace(`/${currentLang}`, '');
+        newPath = currentPath.replace(`/${currentLang}`, '') || '/';
       } else {
         newPath = currentPath;
       }

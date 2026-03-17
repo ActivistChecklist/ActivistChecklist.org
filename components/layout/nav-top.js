@@ -146,7 +146,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                               {subItem.title}
                             </Link>
                           ))}
-                          {item.items.length > 0 && item.label === "Security Checklists" && (
+                          {item.items.length > 0 && item.footerLink && (
                             <Link
                               href="/checklists"
                               className={cn(

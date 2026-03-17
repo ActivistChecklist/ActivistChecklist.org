@@ -1,7 +1,6 @@
 // Translated navigation configuration using react-i18next
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from './useLanguage';
-import { useMemo } from 'react';
 import {
   IoShieldOutline,
   IoMegaphoneOutline,
@@ -265,7 +264,7 @@ export function useTranslatedNavigation() {
     ]
   };
 
-  return useMemo(() => ({
+  return {
     SITE_BRANDING,
     NAV_ITEMS,
     SECURITY_CHECKLISTS,
@@ -273,7 +272,7 @@ export function useTranslatedNavigation() {
     ABOUT_SECTION,
     navigationConfig,
     footerConfig
-  }), [currentLanguage, t]);
+  };
 }
 
 // Helper functions remain the same

@@ -18,13 +18,13 @@
 
 # misc
 .DS_Store
+.ssl-check.log
 *.pem
 
 # IDEs
 .idea
 .cursorrules
 .cursor/
-.idea
 
 # debug
 npm-debug.log*

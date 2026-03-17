@@ -9,7 +9,6 @@ export function LanguageDetectionBanner() {
   const { t } = useTranslation();
   const { currentLanguage, switchLanguage, supportedLanguages, defaultLanguage } = useLanguage();
   const [showBanner, setShowBanner] = useState(false);
-  const [hasShownBanner, setHasShownBanner] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   // Ensure this only runs on client side to prevent hydration issues
@@ -30,16 +29,14 @@ export function LanguageDetectionBanner() {
     const preferredLang = supportedLanguages.find(lang => 
       lang.code === browserLang && lang.code !== defaultLanguage
     );
-    
+
     // Show banner if:
     // 1. Browser language is supported and not default
     // 2. Current site language is default (URL doesn't have language prefix)
-    // 3. Banner hasn't been shown yet
-    if (preferredLang && currentLanguage === defaultLanguage && !hasShownBanner) {
+    if (preferredLang && currentLanguage === defaultLanguage) {
       setShowBanner(true);
-      setHasShownBanner(true);
     }
-  }, [currentLanguage, hasShownBanner, isClient, supportedLanguages, defaultLanguage]);
+  }, [currentLanguage, isClient, supportedLanguages, defaultLanguage]);
 
   const switchToPreferredLanguage = () => {
     // Find the preferred language from browser
