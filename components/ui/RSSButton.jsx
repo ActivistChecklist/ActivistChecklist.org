@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { IoLogoRss } from 'react-icons/io5';
-import Link from 'next/link';
+import Link from '@/components/Link';
 
 const RSSButton = ({ 
   href, 

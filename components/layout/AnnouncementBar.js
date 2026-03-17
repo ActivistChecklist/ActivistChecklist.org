@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Bell, AlertTriangle, InfoIcon } from 'lucide-react';
 import { IoMegaphone } from 'react-icons/io5';
-import Link from 'next/link';
+import Link from '@/components/Link';
 
 // Predefined color schemes
 export const colorSchemes = {

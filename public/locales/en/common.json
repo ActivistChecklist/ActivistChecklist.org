@@ -59,6 +59,10 @@
     "switchButton": "Switch to {{language}}",
     "dismiss": "Dismiss"
   },
+  "translationFallback": {
+    "message": "This page is not yet available in your language. You are viewing the English version.",
+    "tip": "You can use your browser's built-in translation to translate this page."
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

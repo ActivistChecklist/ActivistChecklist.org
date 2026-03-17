@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Layout from "../components/layout/Layout";
-import { getStoryblokVersion, getRevalidate, fetchAllStories, renderRichTextTreeAsPlainText } from "../utils/core";
+import { getStoryblokVersion, getRevalidate, fetchAllStories, fetchAllChangelogEntries, fetchNewsData, renderRichTextTreeAsPlainText } from "../utils/core";
 import {
   useStoryblokState,
   getStoryblokApi,
@@ -8,11 +8,22 @@ import {
 } from "@storyblok/react";
 import { cn, getBaseUrl } from "@/lib/utils";
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/i18n";
+import TranslationFallbackBanner from "@/components/TranslationFallbackBanner";
+import HomePage from "./index";
 
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
 
-export default function Page({ story, preview, language, ogImagePath }) {
+export default function Page({ story, preview, language, ogImagePath, isFallbackContent, isHomePage, homePageProps }) {
+  // For language-prefixed home routes (e.g. /es/), render the same HomePage component
+  if (isHomePage) {
+    return (
+      <>
+        <TranslationFallbackBanner />
+        <HomePage {...homePageProps} />
+      </>
+    );
+  }
   story = useStoryblokState(story, {
     resolveRelations: RESOLVE_RELATIONS
   });
@@ -109,6 +120,7 @@ export default function Page({ story, preview, language, ogImagePath }) {
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
       </Head>
       <Layout sidebarType={story.content.component === 'guide' ? 'toc' : 'navigation'}>
+          {isFallbackContent && <TranslationFallbackBanner />}
           <StoryblokComponent blok={story.content} story={story} />
       </Layout>
     </div>
@@ -129,6 +141,53 @@ export async function getStaticProps({ params, preview = false }) {
     : undefined;
   const actualSlug = pathSegments.join('/') || 'home';
 
+  // For language-prefixed home routes (e.g. /es/), fetch the same data as index.js
+  if (actualSlug === 'home' && language) {
+    try {
+      const [allEntries, { newsItems, imageManifest }] = await Promise.all([
+        fetchAllChangelogEntries(storyblokApi, { version: getStoryblokVersion() }),
+        fetchNewsData(storyblokApi, { version: getStoryblokVersion() })
+      ]);
+
+      const sortedEntries = (allEntries || []).sort((a, b) => {
+        const dateA = new Date(a.first_published_at || a.created_at);
+        const dateB = new Date(b.first_published_at || b.created_at);
+        return dateB - dateA;
+      });
+
+      const latestMajorUpdate = sortedEntries.find(entry => entry.content?.type === 'major');
+
+      return {
+        props: {
+          isHomePage: true,
+          isFallbackContent: true,
+          language,
+          homePageProps: {
+            changelogEntries: sortedEntries.slice(0, 5),
+            newsItems,
+            imageManifest,
+            latestMajorUpdate: latestMajorUpdate ? { body: latestMajorUpdate.content.body } : null,
+          },
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching homepage data for language route:', error);
+      return {
+        props: {
+          isHomePage: true,
+          isFallbackContent: true,
+          language,
+          homePageProps: {
+            changelogEntries: [],
+            newsItems: [],
+            imageManifest: {},
+            latestMajorUpdate: null,
+          },
+        },
+      };
+    }
+  }
+
   // First try to get the story in the requested language
   let { data } = await storyblokApi.get(`cdn/stories/${actualSlug}`, {
     version: getStoryblokVersion(preview),
@@ -137,16 +196,33 @@ export async function getStaticProps({ params, preview = false }) {
   });
 
   // If no story found in requested language and it's not the default language, try default language
+  let isFallbackContent = false;
   if (!data?.story && language && language !== DEFAULT_LANGUAGE) {
     const fallbackData = await storyblokApi.get(`cdn/stories/${actualSlug}`, {
       version: getStoryblokVersion(preview),
       language: DEFAULT_LANGUAGE,
-      resolve_relations: 'checklist-item-ref.reference_item,news-item.source'
+      resolve_relations: RESOLVE_RELATIONS.join(',')
     });
-    
+
     if (fallbackData?.story) {
       data = fallbackData;
-      // Keep the original language for URL purposes, but use English content
+      isFallbackContent = true;
+    }
+  }
+
+  // For Storyblok field-level translation: if language was requested but content
+  // is identical to the default language, it wasn't actually translated
+  if (data?.story && language && language !== DEFAULT_LANGUAGE && !isFallbackContent) {
+    const { data: defaultData } = await storyblokApi.get(`cdn/stories/${actualSlug}`, {
+      version: getStoryblokVersion(preview),
+      language: DEFAULT_LANGUAGE,
+    });
+    if (defaultData?.story) {
+      const requestedTitle = data.story.content?.title || data.story.name;
+      const defaultTitle = defaultData.story.content?.title || defaultData.story.name;
+      if (requestedTitle === defaultTitle) {
+        isFallbackContent = true;
+      }
     }
   }
 
@@ -279,6 +355,7 @@ export async function getStaticProps({ params, preview = false }) {
       language: language || DEFAULT_LANGUAGE,
       revalidate: 0,
       ogImagePath,
+      isFallbackContent,
       // ...getRevalidate(),
     },
   };
@@ -310,11 +387,6 @@ export async function getStaticPaths() {
       return;
     }
 
-    // Skip excluded slugs
-    if (excludedSlugs.includes(story.slug)) {
-      return;
-    }
-
     // For static builds, only include specific content types
     if (isStaticBuild && includedTypes) {
       if (!includedTypes.includes(story.content.component)) {
@@ -324,21 +396,26 @@ export async function getStaticPaths() {
 
     const slug = story.full_slug;
     let splittedSlug = slug.split("/");
+    const isExcluded = excludedSlugs.includes(story.slug);
 
-    // Add default language path (English)
-    paths.push({ params: { slug: splittedSlug } });
-    
-    // Add paths for other supported languages
-    // For now, we'll add Spanish paths for specific stories we know have translations
-    const translatedStories = ['police']; // Add more as we translate them
-    if (translatedStories.includes(story.slug)) {
-      // Add paths for all non-default languages
-      SUPPORTED_LANGUAGES
-        .filter(lang => lang.code !== DEFAULT_LANGUAGE)
-        .forEach(lang => {
-          paths.push({ params: { slug: [lang.code, ...splittedSlug] } });
-        });
+    // Add default language path (skip excluded slugs like 'home' which is handled by index.js)
+    if (!isExcluded) {
+      paths.push({ params: { slug: splittedSlug } });
     }
+
+    // Add paths for all supported languages so untranslated pages
+    // show English content with a fallback banner instead of 404.
+    SUPPORTED_LANGUAGES
+      .filter(lang => lang.code !== DEFAULT_LANGUAGE)
+      .forEach(lang => {
+        // For 'home', generate /es (slug ['es']) since the Link component
+        // turns '/' into '/es/', not '/es/home'
+        if (isExcluded) {
+          paths.push({ params: { slug: [lang.code] } });
+        } else {
+          paths.push({ params: { slug: [lang.code, ...splittedSlug] } });
+        }
+      });
   });
 
   return {
