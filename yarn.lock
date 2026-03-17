@@ -1336,29 +1336,53 @@
   resolved "https://registry.npmjs.org/@standard-schema/utils/-/utils-0.3.0.tgz"
   integrity sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
 
-"@storyblok/js@4.4.5":
-  version "4.4.5"
-  resolved "https://registry.yarnpkg.com/@storyblok/js/-/js-4.4.5.tgz#7a7fe270833529090bffbb50778d37476e202a3a"
-  integrity sha512-iOq3dPyABjcU97Ify09tO7kKoGlmaayO/Pn/AM9gRmApn2rLAw0CSKFzBIrFnowiaJwSV8+JTIQrgt88N7c3mg==
+"@storyblok/js@5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@storyblok/js/-/js-5.1.0.tgz#6c08570b44e3e2e74d0fa732043a2df464388f3d"
+  integrity sha512-NqhKAlEd0/jiBqy0zDuKkflJL0gKNmNiMG/qVmEAzdnhFhYcwg+tTYp/hKb9voXLYfcsN2h+KglkFJ1iiTxeDQ==
   dependencies:
-    "@storyblok/richtext" "3.8.2"
-    storyblok-js-client "7.2.3"
+    "@storyblok/richtext" "4.1.0"
+    storyblok-js-client "7.3.0"
 
-"@storyblok/react@^5.4.22":
-  version "5.4.22"
-  resolved "https://registry.yarnpkg.com/@storyblok/react/-/react-5.4.22.tgz#bcdbbe442849ca03368c2e195d9fcf756822e40e"
-  integrity sha512-8WvN48Ur04H2ueB9IJjAMC+vqCAbA4FXT9pfOf7HanBx09Rcsy14Ng/YfQV7rN+Gy2QZw7dSi7j7mXknwMmzuQ==
+"@storyblok/react@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@storyblok/react/-/react-6.1.0.tgz#652d39fa58c035cb0c36e6aa0d1fdf83943fad78"
+  integrity sha512-FyTh7ZzNwktSAQ4oZV7+LrCTnpm0rksE0fh0vNUJ/2hpL1f6npbEFp34tyxrVZR0zc/POLpH5xja1AUOkX8gCw==
   dependencies:
-    "@storyblok/js" "4.4.5"
+    "@storyblok/js" "5.1.0"
 
-"@storyblok/richtext@3.8.2":
-  version "3.8.2"
-  resolved "https://registry.npmjs.org/@storyblok/richtext/-/richtext-3.8.2.tgz"
-  integrity sha512-zI86BOE5hE8eqIwnOBi20Hl3/C9CpMha88Ni9gs2qf3ECTqYP40p0ZQ2oeYQOCsVCoxEOZcTDaeKg5+LSF6gxA==
+"@storyblok/richtext@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@storyblok/richtext/-/richtext-4.1.0.tgz#35ac414846060913d8d3c0091d395f60a78a092a"
+  integrity sha512-rqe+KEFbOnHyZgTLzJ643y7W3BJE8ZfXWqF8bEAtboBV1YFhTmL0CmaHnSkmxdo3h8czZcwSbWxa3izWzzD4HQ==
   dependencies:
+    "@tiptap/core" "^3.10.2"
+    "@tiptap/extension-blockquote" "^3.10.2"
+    "@tiptap/extension-bold" "^3.10.2"
+    "@tiptap/extension-code" "^3.10.2"
+    "@tiptap/extension-code-block" "^3.10.2"
+    "@tiptap/extension-details" "^3.10.2"
+    "@tiptap/extension-document" "^3.10.2"
+    "@tiptap/extension-emoji" "^3.10.2"
+    "@tiptap/extension-hard-break" "^3.10.2"
+    "@tiptap/extension-heading" "^3.10.2"
+    "@tiptap/extension-highlight" "^3.10.2"
+    "@tiptap/extension-horizontal-rule" "^3.10.2"
+    "@tiptap/extension-image" "^3.10.2"
+    "@tiptap/extension-italic" "^3.10.2"
+    "@tiptap/extension-link" "^3.10.2"
+    "@tiptap/extension-list" "^3.10.2"
+    "@tiptap/extension-paragraph" "^3.10.2"
+    "@tiptap/extension-strike" "^3.10.2"
+    "@tiptap/extension-subscript" "^3.10.2"
+    "@tiptap/extension-superscript" "^3.10.2"
+    "@tiptap/extension-table" "^3.10.2"
+    "@tiptap/extension-text" "^3.10.2"
+    "@tiptap/extension-text-style" "^3.10.2"
+    "@tiptap/extension-underline" "^3.10.2"
+    "@tiptap/html" "^3.10.2"
     markdown-it "^14.1.0"
-    markdown-it-github "^0.5.0"
-    node-html-parser "^7.0.1"
+    storyblok-js-client "7.3.0"
 
 "@swc/helpers@0.5.15":
   version "0.5.15"
@@ -1366,6 +1390,137 @@
   integrity sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==
   dependencies:
     tslib "^2.8.0"
+
+"@tiptap/core@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/core/-/core-3.20.3.tgz#7b6cbdc3bf705713a602c61b2bce39a71a305bc6"
+  integrity sha512-e8x74+d2ZbDbVdNqOb0IapcxDuFFOb56RRpYWpTcz9n0BtadTjt3km3J00Al/mmcvHpn9yV8CqARSAiDl+VkuQ==
+
+"@tiptap/extension-blockquote@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-blockquote/-/extension-blockquote-3.20.3.tgz#9907055935ddda19cc7bf89f21fb4c3181bdf456"
+  integrity sha512-CXFRsNvInPAfclHAg6CIV/rf+Pvtlj1gV/V1F74xLn7M0qn+BWVM9PpyUbhBFdJ6dFicvCBugzyu87UMz/4jbg==
+
+"@tiptap/extension-bold@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-bold/-/extension-bold-3.20.3.tgz#76a1190a6dbdbf855974208f94c167987207d431"
+  integrity sha512-LF91cLmup5KXOYoM59Jv4ek9ggIkTiByU1BUybmwAio84FddW/yDQij0XPf5JhPi9x1oCg/kaGO51Y1/4k/T2g==
+
+"@tiptap/extension-code-block@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-code-block/-/extension-code-block-3.20.3.tgz#ede7cccb3d5e104977342290c5600daa9acde8b3"
+  integrity sha512-jn/w0csZVVmM9KFIvhsKpKhXF66Q9MNTx97gFqTLZSvJUxofu6Zx3+Sf+R8f1fMjgaOfHV1YPeVOfcczNEGldg==
+
+"@tiptap/extension-code@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-code/-/extension-code-3.20.3.tgz#057e9c4013009303480f4bd899ce00843a96f153"
+  integrity sha512-5ik0UjaSsn9VrfmlM+gI8+bZmGIwfJvzb0SopgE7NkP4duB8mk0aANpzPCpr8NSuCxY+kqP+SbSUMJg25eK2bA==
+
+"@tiptap/extension-details@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-details/-/extension-details-3.20.3.tgz#3b776b39a77f33ba7b79a2c766cf07b1f1c8d00e"
+  integrity sha512-xbqP1jc8LlRxY3k9XiRjAY0NoK7K7WwV00jRvbhDfVYm7K8O8O5JMLKoKM6+vFUaudmnZGULdumTVZexEdTxSQ==
+
+"@tiptap/extension-document@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-document/-/extension-document-3.20.3.tgz#eaee920c4b46f4e0371c558cbc69bba9028bc9bd"
+  integrity sha512-nJZP1dixbWwzq2Q5kf3EBsorlkJ5lYKCBlkmwcAxjuekHAxmyQGFpj6V/OIsPmcbI5hHUbjYPsI2wH12LL7rLQ==
+
+"@tiptap/extension-emoji@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-emoji/-/extension-emoji-3.20.3.tgz#f3e2490104182dc5f058ac3874cdc854daa13836"
+  integrity sha512-r3Qqe6YBpkYS5Psv0poXxWIqaq4ibOdtLCTD7S6kDKn1ZrnHMx/McjRlyHcP75ISYaG+mjNiZo8zN/aFudfXog==
+  dependencies:
+    emoji-regex "^10.4.0"
+    emojibase-data "^15"
+    is-emoji-supported "^0.0.5"
+
+"@tiptap/extension-hard-break@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-hard-break/-/extension-hard-break-3.20.3.tgz#d5b68774d889cdcde613a1490471022a07d2c064"
+  integrity sha512-r2E5AcVePCsCYm+6OtXCzyn2/U8Kr4H2fT7allqnDB2XQwyhpBbPKmV87FmwUpcWzM872hvRST1xggNUxD5+iA==
+
+"@tiptap/extension-heading@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-heading/-/extension-heading-3.20.3.tgz#99d2ec052881bf225b8641163aa6a0c71dab2f30"
+  integrity sha512-OGsRJCn7jDmPILa4/NL7skiZg7YBg/Kh3YDI71NBf8WTuEvqC3gP3igQizVfJQZphHlAqy8DuxwAvaYTeqIy+Q==
+
+"@tiptap/extension-highlight@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-highlight/-/extension-highlight-3.20.3.tgz#1d266357993b8f430bce714f473a96adb206dabf"
+  integrity sha512-XKX0iUnzZ+y+LvQRd1nmsKAyHCG3wPBLDDXm8oHGNSiLzRqOV/NpnnlNyqLjmzi28ba6NxO/oKrm8mZqVFAFUQ==
+
+"@tiptap/extension-horizontal-rule@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-horizontal-rule/-/extension-horizontal-rule-3.20.3.tgz#86fb14a5c5dcc4dc47be493b82b278d20b57150b"
+  integrity sha512-iV8SPyo+S4SvJsTt3/1wjCpaYyh0AOOy6xZr9Cf4/dkC0mYzPDvpOIqnFoFpgsyOLDFzSiYju4T8Ho+IyFL8oQ==
+
+"@tiptap/extension-image@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-image/-/extension-image-3.20.3.tgz#47ab1e5a504227745405b31c0e3cba6d7e46ab54"
+  integrity sha512-U4c69jruzaYnOMLVcCgvNB/0aoyQFtdzUyvq+HZqEfvp/oF5GpnWJ/m1X69oJWDNvZ6t0SomrUQsTa1grorl8A==
+
+"@tiptap/extension-italic@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-italic/-/extension-italic-3.20.3.tgz#70f4d43d8270e6e5ad37cdeb75d0e8c51190a340"
+  integrity sha512-BTRicY4NnPw2fWjUZJJr6gUEjgoVRxu35K0gQTI7So3pHWWlBXle2MZea/biiIm5iugDYX3eSDXUkF4M8ga3bQ==
+
+"@tiptap/extension-link@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-link/-/extension-link-3.20.3.tgz#8b453cbb847ec7b9afaa27478424376dc0599def"
+  integrity sha512-t707kGcdXpwagCIqQ1kQ9fcf7v0TKN0DUwaesGCwxLk93uPBvR0P9PDtM/64Y1B/DoVM7JzyHQNc+s5ZFtKToQ==
+  dependencies:
+    linkifyjs "^4.3.2"
+
+"@tiptap/extension-list@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-list/-/extension-list-3.20.3.tgz#e181b146648ad69906e7205efcd9b552842e8f45"
+  integrity sha512-g8DrDr6XyW4BWpQvophHKeUlUPKm4Vi9CCielX06CrLC5W5J5v4E6h3hXPmKAjr7yhteLJ+bP28lWjrcuYxInQ==
+
+"@tiptap/extension-paragraph@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-paragraph/-/extension-paragraph-3.20.3.tgz#cbaf7715edfb3e493370547a389df2c5bf5f7a10"
+  integrity sha512-8+ICwCRCHaraJUeGl3sGG4n5LnNCA0F/fF7rDatP1EmYW4mpkD7FXTFKqNYpVksQVdnM7Pcz1PGaPOSPHUvTkg==
+
+"@tiptap/extension-strike@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-strike/-/extension-strike-3.20.3.tgz#f28c399ab237f07eba1843a421df28a3f5c36871"
+  integrity sha512-7uxLbM3I2vr+jWiJkS4xpTAoDxLpMriBKOzptOqbUfCAWb+T4+PKA6KrFVgCb1+4PWl9xGRGuSzxdyAVziHL5w==
+
+"@tiptap/extension-subscript@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-subscript/-/extension-subscript-3.20.3.tgz#d04c68f48c6d3d10025b176c7d6cf8d8c4fef0e3"
+  integrity sha512-Nk+8nT96HpSJ1g29aLfv4UwjRN9PTaOmjUVbeazFnPT9rljrltVxLmdd7o2CFXV7GUI8BJWYu7fU9iyd48ztLg==
+
+"@tiptap/extension-superscript@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-superscript/-/extension-superscript-3.20.3.tgz#878f34e97736faeb2d41aa6fc7c6c78e7be2c876"
+  integrity sha512-rWaqo5mqatjrSjRS49q7BcKiaHvdkDNfIuoqq+/gu4tVER589U00JgqcwQHxilVJW06qaFrsOhnZobcQu8MKDQ==
+
+"@tiptap/extension-table@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-table/-/extension-table-3.20.3.tgz#074d11b292a078662302314ce8fba69bac8dba91"
+  integrity sha512-AAYqGc1pjF2x2Ymr9hddDkTjUSoyI22BYSpBCEi0s0bMcD2z9eILj0wFTOesZLraJgDUesCmSoEQmsewNTvfbA==
+
+"@tiptap/extension-text-style@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-text-style/-/extension-text-style-3.20.3.tgz#bcc4ef9f6a3944c4cd6a460da695bdb39d584e70"
+  integrity sha512-SYjIfffOw12GICqs/eCcvRDxmFba/jNNeqhmmZvl17dfs0tj9PeawVUjdfZJ/JnTy87wvLtypiGDJJoN2HEmJA==
+
+"@tiptap/extension-text@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-text/-/extension-text-3.20.3.tgz#de235d2c9f1f953365bd25bae786e060b8a96aa2"
+  integrity sha512-7LZhGH6jWUH+wZJWzjCmyCvkTc4yf6iH1NHN2GPDWVQHOUU35EBxs1ptkE1EU4GJHplaLNXjKHUlxC7nlkdi9w==
+
+"@tiptap/extension-underline@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-underline/-/extension-underline-3.20.3.tgz#6349bafc2382e79b479735c5defbec90133ed231"
+  integrity sha512-0tBU1sm8ulfuJGXq1pOB3KzAYIFTZjCqmk6BplE9uNmpt76bpNOnNhe/1CIjhSU4sqgkwAglDVUJ1h/SuMjmQw==
+
+"@tiptap/html@^3.10.2":
+  version "3.20.3"
+  resolved "https://registry.yarnpkg.com/@tiptap/html/-/html-3.20.3.tgz#f553a93161d3ba92179c9a42daa7529b2ec43a27"
+  integrity sha512-oAzw9T2Mp75rAg/ifDJWu/zwAyIz/M0yvf/E9fUs+NDgmQrurrwinUqz1Q8TmQRa0cLRceGytfInWqNiV5C6tg==
 
 "@tootallnate/quickjs-emscripten@^0.23.0":
   version "0.23.0"
@@ -2180,10 +2335,20 @@ emoji-regex-xs@^2.0.1:
   resolved "https://registry.npmjs.org/emoji-regex-xs/-/emoji-regex-xs-2.0.1.tgz"
   integrity sha512-1QFuh8l7LqUcKe24LsPUNzjrzJQ7pgRwp1QMcZ5MX6mFplk2zQ08NVCM84++1cveaUUYtcCYHmeFEuNg16sU4g==
 
+emoji-regex@^10.4.0:
+  version "10.6.0"
+  resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-10.6.0.tgz#bf3d6e8f7f8fd22a65d9703475bc0147357a6b0d"
+  integrity sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==
+
 emoji-regex@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-8.0.0.tgz#e818fd69ce5ccfcb404594f842963bf53164cc37"
   integrity sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==
+
+emojibase-data@^15:
+  version "15.3.2"
+  resolved "https://registry.yarnpkg.com/emojibase-data/-/emojibase-data-15.3.2.tgz#2742246bfe14f16a7829b42ca156dec09934cf85"
+  integrity sha512-TpDyTDDTdqWIJixV5sTA6OQ0P0JfIIeK2tFRR3q56G9LK65ylAZ7z3KyBXokpvTTJ+mLUXQXbLNyVkjvnTLE+A==
 
 encoding-sniffer@^0.2.1:
   version "0.2.1"
@@ -2652,11 +2817,6 @@ git-sha1@^0.1.2:
   resolved "https://registry.npmjs.org/git-sha1/-/git-sha1-0.1.2.tgz"
   integrity sha512-2e/nZezdVlyCopOCYHeW0onkbZg7xP1Ad6pndPy1rCygeRykefUS6r7oA5cJRGEFvseiaz5a/qUHFVX1dd6Isg==
 
-github-slugger@^1.2.1:
-  version "1.5.0"
-  resolved "https://registry.npmjs.org/github-slugger/-/github-slugger-1.5.0.tgz"
-  integrity sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==
-
 glob-parent@^5.1.2, glob-parent@~5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"
@@ -2715,11 +2875,6 @@ hast-util-whitespace@^3.0.0:
   integrity sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==
   dependencies:
     "@types/hast" "^3.0.0"
-
-he@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.npmjs.org/he/-/he-1.2.0.tgz"
-  integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
 helmet@^8.0.0:
   version "8.0.0"
@@ -2848,6 +3003,11 @@ is-docker@^2.0.0:
   version "2.2.1"
   resolved "https://registry.npmjs.org/is-docker/-/is-docker-2.2.1.tgz"
   integrity sha512-F+i2BKsFrH66iaUFc0woD8sLy8getkwTwtOBjvs56Cx4CgJDeKQeqfz8wAYiSb8JOprWhHH5p77PbmYCvvUuXQ==
+
+is-emoji-supported@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/is-emoji-supported/-/is-emoji-supported-0.0.5.tgz#f22301b22c63d6322935e829f39dfa59d03a7fe2"
+  integrity sha512-WOlXUhDDHxYqcSmFZis+xWhhqXiK2SU0iYiqmth5Ip0FHLZQAt9rKL5ahnilE8/86WH8tZ3bmNNNC+bTzamqlw==
 
 is-extglob@^2.1.1:
   version "2.1.1"
@@ -2984,6 +3144,11 @@ linkify-it@^5.0.0:
   dependencies:
     uc.micro "^2.0.0"
 
+linkifyjs@^4.3.2:
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-4.3.2.tgz#d97eb45419aabf97ceb4b05a7adeb7b8c8ade2b1"
+  integrity sha512-NT1CJtq3hHIreOianA8aSXn6Cw0JzYOuDQbOrSPe7gqFnCpKP++MQe3ODgO3oh2GJFORkAAdqredOa60z63GbA==
+
 local-ssl-proxy@^2.0.5:
   version "2.0.5"
   resolved "https://registry.npmjs.org/local-ssl-proxy/-/local-ssl-proxy-2.0.5.tgz"
@@ -3058,19 +3223,6 @@ makeerror@1.0.12:
   integrity sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==
   dependencies:
     tmpl "1.0.5"
-
-markdown-it-github@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.npmjs.org/markdown-it-github/-/markdown-it-github-0.5.0.tgz"
-  integrity sha512-ycHCFnPLSP9dlkcX/3yFzLhO9ZwHHYPIeqhFN9P7vnqWSpL56lbYganMbBU8u5H7b91qk6affHyYb2pMPbnMAQ==
-  dependencies:
-    github-slugger "^1.2.1"
-    markdown-it-theme "^0.2.0"
-
-markdown-it-theme@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/markdown-it-theme/-/markdown-it-theme-0.2.0.tgz"
-  integrity sha512-3R9tXmfP/7ilkRsm6o82GRdEMm5jJ8/s5OgdFB2wZC8VK5fJJLL0hxHGhu38wg+nBX7COBrvRN/QmrT3xybj/g==
 
 markdown-it@>=14.1.1, markdown-it@^14.1.0:
   version "14.1.1"
@@ -3637,14 +3789,6 @@ node-fetch@^3.3.2:
     data-uri-to-buffer "^4.0.0"
     fetch-blob "^3.1.4"
     formdata-polyfill "^4.0.10"
-
-node-html-parser@^7.0.1:
-  version "7.0.2"
-  resolved "https://registry.npmjs.org/node-html-parser/-/node-html-parser-7.0.2.tgz"
-  integrity sha512-DxodLVh7a6JMkYzWyc8nBX9MaF4M0lLFYkJHlWOiu7+9/I6mwNK9u5TbAMC7qfqDJEPX9OIoWA2A9t4C2l1mUQ==
-  dependencies:
-    css-select "^5.1.0"
-    he "1.2.0"
 
 node-releases@^2.0.27:
   version "2.0.27"
@@ -4699,10 +4843,10 @@ storyblok-backup@^0.6.0:
     storyblok-js-client "^6.7.3"
     zip-lib "^1.0.4"
 
-storyblok-js-client@7.2.3:
-  version "7.2.3"
-  resolved "https://registry.yarnpkg.com/storyblok-js-client/-/storyblok-js-client-7.2.3.tgz#f09f704cb8909aeb54f2b6261adf20d394c49900"
-  integrity sha512-o/AjgNULoflv/7ei68d2Bh4Nb5ZCnpcqma19sCijvYrPtJinAuWW//JHT4q06y9op05HkWQpU2jrfata9iYONQ==
+storyblok-js-client@7.3.0:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/storyblok-js-client/-/storyblok-js-client-7.3.0.tgz#a4b1eb6f78a48814831523bccd232fbcd8f6f842"
+  integrity sha512-7mkPhpOQcQInP+fbxw0hUzfON5+h1YF6BB7rB7CI8a+1luH3k6t/URazmKvma87RtT0LBzPyid0+kj0KwBU6lg==
 
 storyblok-js-client@^6.11.0, storyblok-js-client@^6.7.3:
   version "6.11.0"
