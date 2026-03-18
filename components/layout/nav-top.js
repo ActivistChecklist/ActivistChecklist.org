@@ -7,6 +7,7 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Search from "@/components/Search"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { navigationConfig, isNavItemActive, isSubItemActive } from "@/config/navigation"
 import {
   NavigationMenu,
@@ -246,6 +247,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                     <social.icon className="h-5 w-5" aria-hidden="true" />
                   </a>
                 ))}
+                <LanguageSwitcher />
                 <Search variant="button" />
               </div>
             </div>
