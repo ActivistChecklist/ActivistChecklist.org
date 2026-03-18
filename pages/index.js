@@ -31,11 +31,11 @@ const TrustPoint = ({ icon: Icon, title, description }) => (
 </Card>
 );
 
-const ConcernCard = ({ title, descriptionHtml }) => (
+const ConcernCard = ({ title, description }) => (
   <Card className="bg-muted border-0">
     <CardHeader>
       <CardTitle className="text-lg font-semibold text-foreground">{title}</CardTitle>
-      <p className="text-base text-muted-foreground" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+      <p className="text-base text-muted-foreground">{description}</p>
     </CardHeader>
   </Card>
 );
@@ -138,9 +138,24 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
             <h2 className="text-2xl font-bold mb-6">{t('misconceptions.sectionTitle')}</h2>
             <p className="text-lg text-muted-foreground mb-8">{t('misconceptions.sectionDescription')}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <ConcernCard title={t('misconceptions.nothingToHideTitle')} descriptionHtml={t.raw('misconceptions.nothingToHideDescription')} />
-              <ConcernCard title={t('misconceptions.alreadyKnowTitle')} descriptionHtml={t.raw('misconceptions.alreadyKnowDescription')} />
-              <ConcernCard title={t('misconceptions.dontCareTitle')} descriptionHtml={t.raw('misconceptions.dontCareDescription')} />
+              <ConcernCard
+                title={t('misconceptions.nothingToHideTitle')}
+                description={t.rich('misconceptions.nothingToHideDescription', {
+                  b: (chunks) => <b>{chunks}</b>
+                })}
+              />
+              <ConcernCard
+                title={t('misconceptions.alreadyKnowTitle')}
+                description={t.rich('misconceptions.alreadyKnowDescription', {
+                  b: (chunks) => <b>{chunks}</b>
+                })}
+              />
+              <ConcernCard
+                title={t('misconceptions.dontCareTitle')}
+                description={t.rich('misconceptions.dontCareDescription', {
+                  b: (chunks) => <b>{chunks}</b>
+                })}
+              />
             </div>
           </section>
 

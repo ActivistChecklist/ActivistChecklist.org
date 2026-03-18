@@ -49,6 +49,9 @@
     "switchButton": "Cambiar a {language}",
     "dismiss": "Cerrar"
   },
+  "languageSwitcher": {
+    "ariaLabel": "Cambiar idioma"
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Algo salió mal"

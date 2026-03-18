@@ -4,11 +4,7 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from '@/components/Link';
-
-const LANGUAGE_NAMES = {
-  en: 'English',
-  es: 'Español',
-};
+import { LANGUAGE_NAMES } from '@/lib/i18n-config';
 
 const STORAGE_KEY = 'language-banner-dismissed';
 

@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+import { useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import {
   DropdownMenu,
@@ -7,15 +8,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-
-const LANGUAGE_NAMES = {
-  en: 'English',
-  es: 'Español',
-};
+import { LANGUAGE_NAMES } from '@/lib/i18n-config';
 
 export default function LanguageSwitcher() {
   const router = useRouter();
   const { locale, locales, asPath } = router;
+  const t = useTranslations();
 
   const switchLocale = (newLocale) => {
     router.push(asPath, asPath, { locale: newLocale });
@@ -24,7 +22,7 @@ export default function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Switch language">
+        <Button variant="ghost" size="icon" aria-label={t('languageSwitcher.ariaLabel')}>
           <Globe className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
