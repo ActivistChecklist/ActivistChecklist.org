@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useRouter } from 'next/router';
 import Layout from "../components/layout/Layout";
 import { getStoryblokVersion, getRevalidate, fetchAllStories, storyblokFetch, renderRichTextTreeAsPlainText } from "../utils/core";
 import {
@@ -11,7 +12,7 @@ import { cn, getBaseUrl } from "@/lib/utils";
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
 
-export default function Page({ story, preview, ogImagePath }) {
+export default function Page({ story, preview, ogImagePath, isFallbackContent }) {
   story = useStoryblokState(story, {
     resolveRelations: RESOLVE_RELATIONS
   });
@@ -73,7 +74,11 @@ export default function Page({ story, preview, ogImagePath }) {
 
   const baseUrl = getBaseUrl();
   const currentPath = story?.full_slug || '';
-  const canonicalUrl = `${baseUrl}/${currentPath}`;
+  const router = useRouter();
+  const locale = router.locale;
+  const defaultLocale = router.defaultLocale;
+  const localePrefix = locale !== defaultLocale ? `${locale}/` : '';
+  const canonicalUrl = `${baseUrl}/${localePrefix}${currentPath}`;
   
   // Shared metadata values
   const pageTitle = story 
@@ -102,6 +107,11 @@ export default function Page({ story, preview, ogImagePath }) {
         <meta name="twitter:title" content={pageTitle} key="twitter:title" />
         <meta name="twitter:description" content={pageDescription} key="twitter:description" />
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
+
+        {/* Hreflang alternate links */}
+        <link rel="alternate" hreflang="en" href={`${baseUrl}/${currentPath}`} key="hreflang-en" />
+        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/${currentPath}`} key="hreflang-es" />
+        <link rel="alternate" hreflang="x-default" href={`${baseUrl}/${currentPath}`} key="hreflang-default" />
       </Head>
       <Layout sidebarType={story.content.component === 'guide' ? 'toc' : 'navigation'}>
           <StoryblokComponent blok={story.content} story={story} />
@@ -110,20 +120,24 @@ export default function Page({ story, preview, ogImagePath }) {
   );
 }
 
-export async function getStaticProps({ params, preview = false }) {
+export async function getStaticProps({ params, preview = false, locale }) {
   let slug = params?.slug ? params.slug.join("/") : "home";
   const storyblokApi = getStoryblokApi();
 
   let { data } = await storyblokFetch(() =>
     storyblokApi.get(`cdn/stories/${slug}`, {
       version: getStoryblokVersion(preview),
-      resolve_relations: RESOLVE_RELATIONS.join(',')
+      resolve_relations: RESOLVE_RELATIONS.join(','),
+      language: locale,
     })
   );
 
   if (!data?.story) {
     return { notFound: true };
   }
+
+  const messages = (await import(`../messages/${locale}.json`)).default;
+  const isFallbackContent = locale !== 'en' && !data.story.content.translations_complete?.includes(locale);
 
   // Function to get all checklist items from a guide
   const getGuideChecklistItems = (blocks = []) => {
@@ -250,57 +264,45 @@ export async function getStaticProps({ params, preview = false }) {
       preview: preview || false,
       revalidate: 0,
       ogImagePath,
+      messages,
+      isFallbackContent,
       // ...getRevalidate(),
     },
   };
 }
 
-export async function getStaticPaths() {
+export async function getStaticPaths({ locales }) {
   const storyblokApi = getStoryblokApi();
-  
-  // Fetch all stories with pagination support
+
   const allStories = await fetchAllStories(storyblokApi, {
     version: getStoryblokVersion(),
     excluding_fields: 'body,blocks,content'
   });
 
-  // Define specific slugs to exclude
-  const excludedSlugs = [
-    'home'
-  ];
-
-  // Define content types that should be included in static builds
+  const excludedSlugs = ['home'];
   const isStaticBuild = process.env.BUILD_MODE === 'static';
   const includedTypes = isStaticBuild ? ['page', 'guide'] : null;
 
+  // When i18n is disabled (static builds), locales is undefined — fall back to default
+  const activeLocales = locales || ['en'];
+
   let paths = [];
-  
+
   allStories.forEach((story) => {
-    // Skip folders
-    if (story.is_folder) {
-      return;
+    if (story.is_folder) return;
+    if (excludedSlugs.includes(story.slug)) return;
+    if (isStaticBuild && includedTypes && !includedTypes.includes(story.content.component)) return;
+
+    const splittedSlug = story.full_slug.split("/");
+
+    // Generate a path for every locale
+    for (const locale of activeLocales) {
+      paths.push({ params: { slug: splittedSlug }, locale });
     }
-
-    // Skip excluded slugs
-    if (excludedSlugs.includes(story.slug)) {
-      return;
-    }
-
-    // For static builds, only include specific content types
-    if (isStaticBuild && includedTypes) {
-      if (!includedTypes.includes(story.content.component)) {
-        return;
-      }
-    }
-
-    const slug = story.full_slug;
-    let splittedSlug = slug.split("/");
-
-    paths.push({ params: { slug: splittedSlug } });
   });
 
   return {
-    paths: paths,
+    paths,
     fallback: false,
   };
 }
