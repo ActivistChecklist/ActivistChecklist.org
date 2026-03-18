@@ -1,0 +1,56 @@
+{
+  "site": {
+    "title": "Listas de seguridad digital para activistas",
+    "description": "Pasos en lenguaje sencillo para la seguridad digital. Porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura."
+  },
+  "nav": {
+    "home": "Inicio",
+    "checklists": "Listas de seguridad",
+    "news": "Noticias",
+    "resources": "Recursos",
+    "about": "Acerca de"
+  },
+  "hero": {
+    "title": "Listas de seguridad digital para activistas",
+    "description": "Pasos en lenguaje sencillo para la seguridad digital. Porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura.",
+    "primaryCta": "Fundamentos de seguridad digital",
+    "secondaryCta": "Ver todas las listas"
+  },
+  "trustPoints": {
+    "experienceTitle": "Construido desde la experiencia",
+    "experienceDescription": "Nuestras guías se basan en trabajo real de organización y comentarios directos de activistas. Aunque cada situación es única, buscamos compartir ideas prácticas que puedan ayudar a informar tus decisiones.",
+    "updatedTitle": "Actualizado regularmente",
+    "updatedDescription": "Nuestro contenido es revisado regularmente por organizadores que entienden las preocupaciones de seguridad. Trabajamos para mantener la información actualizada a medida que los riesgos y las tecnologías evolucionan."
+  },
+  "misconceptions": {
+    "sectionTitle": "Conceptos erróneos comunes",
+    "sectionDescription": "Cuando empezamos a hablar de seguridad digital, a menudo escuchamos estas preocupaciones. Creemos que hay más en la historia.",
+    "nothingToHideTitle": "\"No tengo nada que ocultar\"",
+    "nothingToHideDescription": "Cuanto más involucrado estés en cualquier trabajo de movimiento social, más se pueden usar tus datos para mapear redes de activistas. El mejor momento para empezar a protegerte es <b>antes</b> de estar tan profundamente involucrado.",
+    "alreadyKnowTitle": "\"Ya lo saben todo\"",
+    "alreadyKnowDescription": "Aunque la recopilación de datos es generalizada, puedes reducir significativamente tu huella digital y proteger tus actividades futuras.",
+    "dontCareTitle": "\"No les importa lo que estoy haciendo\"",
+    "dontCareDescription": "La vigilancia masiva afecta a todos. Tus datos pueden usarse para perfilar comunidades, predecir protestas o atacar a quienes te importan. Proteger tus comunicaciones ayuda a protegernos a todos."
+  },
+  "homepage": {
+    "checklistsHeading": "Listas de seguridad digital y seguridad física",
+    "browseAll": "Ver todas las listas",
+    "trustHeading": "Guías sencillas para mantenernos más seguros",
+    "trustDescription": "Creamos esto porque la seguridad digital no debería ser abrumadora. Adoptamos un enfoque de reducción de daños: comienza donde estés y haz lo que puedas.",
+    "recentUpdatesHeading": "Actualizaciones recientes del sitio",
+    "viewAllUpdates": "Ver todas las actualizaciones"
+  },
+  "translationFallback": {
+    "message": "Esta página aún no está disponible en tu idioma. Estás viendo la versión en inglés.",
+    "suggest": "Puedes usar la función de traducción integrada de tu navegador para traducir esta página."
+  },
+  "languageDetection": {
+    "message": "Este sitio está disponible en {language}.",
+    "switchButton": "Cambiar a {language}",
+    "dismiss": "Cerrar"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo salió mal"
+  }
+}
