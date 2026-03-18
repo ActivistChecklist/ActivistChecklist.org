@@ -31,6 +31,14 @@ if (process.env.BUILD_MODE === 'static') {
   baseConfig.images.loaderFile = './utils/imageLoader.js';
 }
 
+// i18n is incompatible with static export — only enable for SSR builds
+if (process.env.BUILD_MODE !== 'static') {
+  baseConfig.i18n = {
+    locales: ['en', 'es'],
+    defaultLocale: 'en',
+  };
+}
+
 const nextConfig = process.env.NODE_ENV === 'development'
   ? {
     ...baseConfig,
