@@ -8,6 +8,7 @@ import {
   StoryblokComponent,
 } from "@storyblok/react";
 import { cn, getBaseUrl } from "@/lib/utils";
+import TranslationFallbackBanner from '@/components/TranslationFallbackBanner';
 
 // Relations that need to be resolved - must match getStaticProps AND bridge
 const RESOLVE_RELATIONS = ['checklist-item-ref.reference_item', 'news-item.source'];
@@ -114,6 +115,7 @@ export default function Page({ story, preview, ogImagePath, isFallbackContent })
         <link rel="alternate" hreflang="x-default" href={`${baseUrl}/${currentPath}`} key="hreflang-default" />
       </Head>
       <Layout sidebarType={story.content.component === 'guide' ? 'toc' : 'navigation'}>
+          {isFallbackContent && <TranslationFallbackBanner />}
           <StoryblokComponent blok={story.content} story={story} />
       </Layout>
     </div>
