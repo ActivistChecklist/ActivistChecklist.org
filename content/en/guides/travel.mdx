@@ -1,10 +1,10 @@
 ---
 title: Travel & Flight Security
 slug: travel
-lastUpdated: "2026-03-23"
+lastUpdated: 2026-03-23
 estimatedTime: 30-60 minutes
 summary: Checklist for both domestic and international flights. Also applies to land/sea border crossings.
-firstPublished: "2025-05-11"
+firstPublished: 2025-05-11
 ---
 
 **Who this checklist is for: **
@@ -30,16 +30,18 @@ We recommend completing the [Security Essentials](/essentials) checklist as well
 
 Either bring a secondary phone, backup and factory reset your device, or wipe everything sensitive off your device before you travel. Keep your phone off, disable biometrics, use a randomly generated passcode. Learn your rights. If you're not a US citizen and trying to enter the US, consider hiding your social media profiles before you apply for a visa. If higher risk, get a legal team and have a check-in plan with trusted contacts.
 
-
 <Section title="Baseline protections" slug="baseline">
 
 <RiskLevel level="everyone" />
 
 Most of the device searches we've heard of involved border police manually browsing a phone looking for things they don't like (criticism of the administration, support for Palestine, etc.) They usually tell you to unlock your phone and rely on your compliance. If you are a US Citizen, you do not have to comply. If you are not a citizen, you risk being sent back to your country of origin if you do not comply.
-
+<ChecklistItem slug="kyr" />
 <ChecklistItem slug="updates" />
+<ChecklistItem slug="phone-off-travel" />
 <ChecklistItem slug="passcode" />
 <ChecklistItem slug="laptop-encryption" />
+<ChecklistItem slug="ticket" />
+<ChecklistItem slug="optout" />
 
 </Section>
 
@@ -55,7 +57,11 @@ This section might be for you if you are outspoken about immigration, Palestine,
 **Note - Deleting data doesn't mean it's gone: **This section suggests deleting apps and data. However, governments can use [forensic tools](https://sls.eff.org/technologies/forensic-extraction-tools) to access data after it has been deleted. So guidance below offer reliable protection only against an adversary manually searching through your device, which is the most common situation at the US border.
 
 If you're at higher risk and think the cops might invest more resources to access the data on your phone/laptop, make sure to follow steps in the [High-profile protection](#high) section below in addition to what's here.
-
+<ChecklistItem slug="uninstall" />
+<ChecklistItem slug="signal-travel" />
+<ChecklistItem slug="uninstall-password-manager" />
+<ChecklistItem slug="socials" />
+<ChecklistItem slug="logout" />
 <ChecklistItem slug="signal-leave-extra-groups" />
 <ChecklistItem slug="vpn" />
 
@@ -74,8 +80,13 @@ If you're at higher risk and think the cops might invest more resources to acces
 </RiskLevel>
 
 This section assumes that border agents might go further and attempt to hack your device using  [forensic extraction tools](https://sls.eff.org/technologies/forensic-extraction-tools). The best approach in this case is to bring a secondary device (sometimes called a "burner phone" or "travel laptop"). Because you can be denied entry or have devices seized indefinitely, your goal should be to travel with devices that you would be able to unlock and display to a border agent. Avoid if at all possible the device being taken from your hands or out of your sight.
-
+<ChecklistItem slug="secondary-travel" />
+<ChecklistItem slug="secondary-laptop" />
+<ChecklistItem slug="passphrase" />
+<ChecklistItem slug="safety-plan" />
+<ChecklistItem slug="contacts" />
 <ChecklistItem slug="biometrics" />
+<ChecklistItem slug="other-sections" />
 
 </Section>
 
@@ -107,10 +118,4 @@ Citizens:
 
 </Section>
 
-<RelatedGuides>
-
-<RelatedGuide slug="secondary" />
-<RelatedGuide slug="essentials" />
-<RelatedGuide slug="signal" />
-
-</RelatedGuides>
+<RelatedGuides guides={["secondary","essentials","signal"]} />

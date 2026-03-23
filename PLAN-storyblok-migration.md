@@ -8,15 +8,17 @@ ActivistChecklist.org stores all content in Storyblok CMS (231 stories across 17
 
 ## Content Inventory (from Storyblok API query)
 
-| Type | Count | Target format |
-|------|-------|--------------|
-| news-item | 132 | MDX |
-| checklist-item | 42 | MDX |
-| news-source | 19 | MDX |
-| changelog-entry | 14 | MDX |
-| guide | 13 | MDX |
-| page | 11 | MDX |
-| **Total** | **231** | |
+
+| Type            | Count   | Target format |
+| --------------- | ------- | ------------- |
+| news-item       | 132     | MDX           |
+| checklist-item  | 42      | MDX           |
+| news-source     | 19      | MDX           |
+| changelog-entry | 14      | MDX           |
+| guide           | 13      | MDX           |
+| page            | 11      | MDX           |
+| **Total**       | **231** |               |
+
 
 17 component types total. Embedded-in-richtext: alert, button, how_to, image_embed, video_embed, risk_level, table. Max blok nesting depth: 2 (verified by API scan — see Edge Cases section).
 
@@ -187,7 +189,7 @@ MDX compiles to JavaScript, making it inherently unsafe for untrusted input. CVE
 
 A build-time script (`scripts/validate-content.mjs`) that scans all MDX files:
 
-- **Regex scan** for suspicious patterns: `import`, `export`, `require()`, `eval()`, `Function()`, `process.`, `dangerouslySetInnerHTML`, `javascript:` URLs, `on*` event handlers, `<script>`, `<iframe>`, `<object>`, `<embed>`, `<form>`, `data:text/html`
+- **Regex scan** for suspicious patterns: `import`, `export`, `require()`, `eval()`, `Function()`, `process.`, `dangerouslySetInnerHTML`, `javascript:` URLs, `on`* event handlers, `<script>`, `<iframe>`, `<object>`, `<embed>`, `<form>`, `data:text/html`
 - **AST validation** via MDX compilation with custom remark plugins that reject:
   - `mdxjsEsm` nodes (import/export statements)
   - `mdxFlowExpression` / `mdxTextExpression` nodes (JS expressions in `{}`)
@@ -220,15 +222,18 @@ A build-time script (`scripts/validate-content.mjs`) that scans all MDX files:
 
 Research findings on git-based CMS options:
 
-| Feature | TinaCMS | Keystatic | Decap CMS |
-|---------|---------|-----------|-----------|
-| Pages Router | **Yes** | No (App only) | Yes |
-| MDX Support | **Yes** | **Yes** | No |
-| Nested Components | Partial (fragile at depth >1) | **Yes** (wrapper/repeating) | No |
-| Cross-refs in rich-text | **No** (closed wontfix) | Not documented | N/A |
-| Self-hostable | **Yes** (free) | **Yes** (free) | **Yes** |
+
+| Feature                 | TinaCMS                       | Keystatic                   | Decap CMS |
+| ----------------------- | ----------------------------- | --------------------------- | --------- |
+| Pages Router            | **Yes**                       | No (App only)               | Yes       |
+| MDX Support             | **Yes**                       | **Yes**                     | No        |
+| Nested Components       | Partial (fragile at depth >1) | **Yes** (wrapper/repeating) | No        |
+| Cross-refs in rich-text | **No** (closed wontfix)       | Not documented              | N/A       |
+| Self-hostable           | **Yes** (free)                | **Yes** (free)              | **Yes**   |
+
 
 **Key risks with TinaCMS:**
+
 - Known data-loss bugs with deeply nested rich-text (issue #2581, closed wontfix)
 - Reference fields inside rich-text templates not supported (issue #3050, wontfix)
 - Our `ChecklistItemRef` pattern (guide referencing items from another collection) would need string-slug workaround
@@ -236,13 +241,9 @@ Research findings on git-based CMS options:
 **Design decisions to stay CMS-compatible:**
 
 1. **Keep nesting shallow (max 1 level deep)** in MDX components. A `<Section>` wraps flat content and `<ChecklistItemRef>` blocks. A `<HowTo>` contains markdown but not other block components. An `<Alert>` contains markdown but not other block components. This is how the content actually works today — the apparent 4-level depth is richtext-within-a-component, not component-within-component-within-component.
-
 2. **Use string refs for cross-collection content.** `<ChecklistItemRef ref="use-signal" />` uses a slug string, resolved at build time. Every CMS can edit a string field.
-
 3. **Frontmatter for all metadata.** All CMS tools parse YAML frontmatter easily.
-
 4. **Use `.mdx` extension.** TinaCMS, Keystatic, CloudCannon all treat `.mdx` differently from `.md`.
-
 5. **The guide `<Section>` / `<ChecklistItemRef>` structure** is the hardest part for any CMS. If TinaCMS can't handle it visually, guides can remain code-edited (they change less frequently) while simpler content types (checklist items, pages, news) get visual editing.
 
 **If we move to App Router in the future**, Keystatic becomes viable and its content component model (wrapper/block/repeating types) is the best fit for our architecture.
@@ -271,28 +272,32 @@ No GraphQL needed. When TinaCMS is added later, it provides its own GraphQL laye
 
 ### New files to create
 
-| File | Purpose |
-|------|---------|
-| `lib/content.js` | Build-time content loading — reads MDX files, parses frontmatter, replaces all Storyblok API calls |
-| `lib/mdx-components.js` | Central MDX component map + dangerous element overrides |
-| `lib/mdx-options.js` | Shared MDX compilation options (remark/rehype plugins, security config) |
-| `contexts/ChecklistItemsContext.js` | React context for resolved checklist items within a guide |
-| `scripts/migrate-from-storyblok.mjs` | One-time migration script |
-| `scripts/validate-content.mjs` | MDX security validation (CI + pre-commit) |
+
+| File                                 | Purpose                                                                                            |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `lib/content.js`                     | Build-time content loading — reads MDX files, parses frontmatter, replaces all Storyblok API calls |
+| `lib/mdx-components.js`              | Central MDX component map + dangerous element overrides                                            |
+| `lib/mdx-options.js`                 | Shared MDX compilation options (remark/rehype plugins, security config)                            |
+| `contexts/ChecklistItemsContext.js`  | React context for resolved checklist items within a guide                                          |
+| `scripts/migrate-from-storyblok.mjs` | One-time migration script                                                                          |
+| `scripts/validate-content.mjs`       | MDX security validation (CI + pre-commit)                                                          |
+
 
 ### Key files to modify
 
-| File | Change |
-|------|--------|
-| `pages/[...slug].js` | Rewrite getStaticProps/getStaticPaths to read from files |
-| `pages/_app.js` | Remove storyblokInit, bridge code, component registry |
-| `pages/index.js`, `news.js`, `changelog.js`, `checklists.js` | Rewrite getStaticProps |
-| `components/guides/Guide.js` | Accept resolved guide data; sections now explicit in MDX |
-| `components/guides/ChecklistItem.js` | Accept frontmatter + bodyMdx instead of `blok`; slug-based localStorage keys |
-| `components/pages/Page.js` | Accept file-based props |
-| Embedded components (HowTo, ButtonEmbed, ImageEmbed, VideoEmbed, RiskLevel, etc.) | Remove `storyblokEditable`, accept plain props |
-| `utils/core.js` | Remove Storyblok-specific utilities |
-| `scripts/generate-rss.mjs`, `generate-og-images.mjs` | Read from files |
+
+| File                                                                              | Change                                                                       |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `pages/[...slug].js`                                                              | Rewrite getStaticProps/getStaticPaths to read from files                     |
+| `pages/_app.js`                                                                   | Remove storyblokInit, bridge code, component registry                        |
+| `pages/index.js`, `news.js`, `changelog.js`, `checklists.js`                      | Rewrite getStaticProps                                                       |
+| `components/guides/Guide.js`                                                      | Accept resolved guide data; sections now explicit in MDX                     |
+| `components/guides/ChecklistItem.js`                                              | Accept frontmatter + bodyMdx instead of `blok`; slug-based localStorage keys |
+| `components/pages/Page.js`                                                        | Accept file-based props                                                      |
+| Embedded components (HowTo, ButtonEmbed, ImageEmbed, VideoEmbed, RiskLevel, etc.) | Remove `storyblokEditable`, accept plain props                               |
+| `utils/core.js`                                                                   | Remove Storyblok-specific utilities                                          |
+| `scripts/generate-rss.mjs`, `generate-og-images.mjs`                              | Read from files                                                              |
+
 
 ### Files to delete
 
@@ -319,12 +324,14 @@ No GraphQL needed. When TinaCMS is added later, it provides its own GraphQL laye
 ### Asset Inventory (from Storyblok API scan — 22 unique CDN URLs)
 
 **PDFs (4 files):**
+
 - `activistchecklist-flyer-4up.pdf` — flyer page
 - `activistchecklist-flyer-single.pdf` — flyer page
 - `police-at-the-door-poster-activistchecklist-org-v4.pdf` — police page (English)
 - `police-at-the-door-spanish-activistchecklist.pdf` — police page (Spanish)
 
 **Images (17 files):**
+
 - 2 inline content images (signal phishing: `real-fake-signal.jpg`, `signal-phishing.png`)
 - 2 page content images (flyer: `activistchecklist-flyer-both-sides.png`, police: `police-at-the-door-poster...v4.png`)
 - 1 image embed (links page: `link-sharing-dont-make-me-tap-the-sign.jpg`)
@@ -333,24 +340,27 @@ No GraphQL needed. When TinaCMS is added later, it provides its own GraphQL laye
 - 10 news `image_override` images (`ice-threatening-observers.jpg`, `doxxing-canary.jpeg`, `tech-ice-02-superjumbo-large.jpeg`, `forbes.webp`, `ice-enter-without-warrant.webp`, `flock.jpg`, `elon-musk-doxxing...jpg`, `exxon-lobbyist...jpg`, `privacy-advocates-ice...jpg`, `ice-mn.webp`)
 
 **Video (1 file):**
+
 - `dont-say-anything-song-bread-and-puppet-theater-tiktok-planetslushy.mp4` — police page
 
 **Already local (keep as-is):**
+
 - `public/files/news/` — 135 resized news article images + `image-manifest.json` (managed by existing `fetch-news` pipeline)
 - `public/files/downloads/` — 1 .docx (emergency planning worksheet)
 - `public/files/zines/` — 6 PDF zines (essentials, signal, secondary phone — print & read versions)
 - `public/images/` — logos, OG images
 
 **External links (no migration needed):**
+
 - 1 button links to Proton Drive (emergency planning worksheet alternate)
 
 ### Migration approach for assets
 
 1. **Download 22 Storyblok CDN files** to appropriate local directories:
-   - PDFs → `public/files/downloads/`
-   - Content images (inline, embeds, hero) → `public/images/content/`
-   - News override images → `public/files/news/`
-   - Video → `public/files/videos/`
+  - PDFs → `public/files/downloads/`
+  - Content images (inline, embeds, hero) → `public/images/content/`
+  - News override images → `public/files/news/`
+  - Video → `public/files/videos/`
 2. **Strip metadata** from all downloaded files using existing `metadata-cli.cjs` logic
 3. **Rewrite all `a-us.storyblok.com` URLs** in MDX content to local paths
 4. **Leave existing local references unchanged** (`/files/downloads/`, `/files/zines/`, `/files/news/`)
@@ -364,7 +374,7 @@ No GraphQL needed. When TinaCMS is added later, it provides its own GraphQL laye
 
 ### Multiple richtext fields per block
 
-Only one component type has >1 richtext field: **`guide`** (has both `body` and `summary`). All 13 guides have this pattern.
+Only one component type has >1 richtext field: `**guide`** (has both `body` and `summary`). All 13 guides have this pattern.
 
 **Handling**: `summary` is always a single paragraph with no embedded bloks (max ~238 chars). Safe to convert to a plain string in frontmatter during migration. The migration script extracts plain text from the richtext `summary` field. If a summary contains marks (bold, links), fall back to storing it as a short MDX string in frontmatter.
 
@@ -372,8 +382,8 @@ Only one component type has >1 richtext field: **`guide`** (has both `body` and 
 
 This is the most important edge case. In Storyblok, `section-header.description` is a richtext field that frequently contains embedded blok components:
 
-- **`risk_level`** bloks appear in 20 section-headers across 10 guides. These have their own `body` richtext (up to ~156 chars of text, no further nested bloks).
-- **`alert`** bloks appear in 5 section-headers across 3 guides (doxxing, spyware, research). These have `body` richtext (up to ~549 chars, no further nested bloks).
+- `**risk_level`** bloks appear in 20 section-headers across 10 guides. These have their own `body` richtext (up to ~156 chars of text, no further nested bloks).
+- `**alert**` bloks appear in 5 section-headers across 3 guides (doxxing, spyware, research). These have `body` richtext (up to ~549 chars, no further nested bloks).
 
 **Handling in MDX**: The `<Section>` component wraps its description content directly. Risk levels and alerts are child components of the section:
 
@@ -404,10 +414,12 @@ This keeps nesting at 1 level (`Section` → `RiskLevel`/`Alert`/`ChecklistItemR
 
 Previous estimate of 4 levels was based on theoretical component schema. Actual API scan of all content shows **max depth is 2**:
 
-| Nesting chain | Occurrences | Example stories |
-|--------------|-------------|-----------------|
-| `body > how_to.body > alert` | 7 | learn-how-to-disable-biometrics, proton-docs, opt-out-of-face-search-sites, ice, doxxing, travel (x2) |
-| `body > how_to.body > button` | 5 | scrub-your-private-data, create-your-emergency-plan, organizing, protest, essentials |
+
+| Nesting chain                 | Occurrences | Example stories                                                                                       |
+| ----------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `body > how_to.body > alert`  | 7           | learn-how-to-disable-biometrics, proton-docs, opt-out-of-face-search-sites, ice, doxxing, travel (x2) |
+| `body > how_to.body > button` | 5           | scrub-your-private-data, create-your-emergency-plan, organizing, protest, essentials                  |
+
 
 No depth-3 chains exist anywhere in the content. All `alert` and `button` bloks inside `how_to.body` contain only text — no further embedded bloks.
 
@@ -454,16 +466,19 @@ All edge cases are well-covered by the planned MDX format. The key insight is th
 
 ### Scripts to REMOVE (Storyblok export/media gathering)
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/export-stroyblok.mjs` | CLI wrapper for Storyblok export pipeline |
-| `scripts/export-library.js` | Main export orchestrator (fetch stories, convert, download media) |
-| `scripts/export-yaml.js` | Converts Storyblok stories to YAML format |
-| `scripts/export-image-handler.js` | Downloads media from Storyblok CDN + strips metadata |
-| `scripts/export-management-api.js` | Exports stories via Storyblok Management API |
-| `scripts/fetch-news-images.js` | Fetches news from Storyblok, scrapes OG images, resizes + strips metadata |
+
+| Script                             | Purpose                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| `scripts/export-stroyblok.mjs`     | CLI wrapper for Storyblok export pipeline                                 |
+| `scripts/export-library.js`        | Main export orchestrator (fetch stories, convert, download media)         |
+| `scripts/export-yaml.js`           | Converts Storyblok stories to YAML format                                 |
+| `scripts/export-image-handler.js`  | Downloads media from Storyblok CDN + strips metadata                      |
+| `scripts/export-management-api.js` | Exports stories via Storyblok Management API                              |
+| `scripts/fetch-news-images.js`     | Fetches news from Storyblok, scrapes OG images, resizes + strips metadata |
+
 
 **npm scripts to remove** from `package.json`:
+
 - `prestoryblockexport`, `storyblockexportimages`, `storyblockexportcontent`
 - `fetch-news` (depends on Storyblok API for news item list)
 
@@ -471,28 +486,32 @@ All edge cases are well-covered by the planned MDX format. The key insight is th
 
 ### Scripts to PRESERVE (metadata scrubbing + other)
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/metadata-cli.cjs` | Standalone CLI for scanning/stripping metadata from images, PDFs, videos |
-| `scripts/pre-commit-metadata.cjs` | Git pre-commit hook that auto-strips metadata from staged media files |
-| `scripts/utils.js` | Shared utilities (logger, hash, progress) — used by preserved scripts |
-| `scripts/build-backup.js` | Build directory backup rotation |
-| `scripts/generate-rss.mjs` | RSS feed generation (will be modified to read from files) |
-| `scripts/generate-og-images.mjs` | OG image generation (will be modified to read from files) |
-| `scripts/check-build.mjs` | Build verification |
-| `scripts/check-links.mjs` | Link checker |
-| `scripts/build-search-index.sh` | Search index generation |
-| All other non-export scripts | Unrelated to Storyblok |
+
+| Script                            | Purpose                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| `scripts/metadata-cli.cjs`        | Standalone CLI for scanning/stripping metadata from images, PDFs, videos |
+| `scripts/pre-commit-metadata.cjs` | Git pre-commit hook that auto-strips metadata from staged media files    |
+| `scripts/utils.js`                | Shared utilities (logger, hash, progress) — used by preserved scripts    |
+| `scripts/build-backup.js`         | Build directory backup rotation                                          |
+| `scripts/generate-rss.mjs`        | RSS feed generation (will be modified to read from files)                |
+| `scripts/generate-og-images.mjs`  | OG image generation (will be modified to read from files)                |
+| `scripts/check-build.mjs`         | Build verification                                                       |
+| `scripts/check-links.mjs`         | Link checker                                                             |
+| `scripts/build-search-index.sh`   | Search index generation                                                  |
+| All other non-export scripts      | Unrelated to Storyblok                                                   |
+
 
 ### Post-migration: `fetch-news` pipeline replacement
 
 The `fetch-news-images.js` script currently:
+
 1. Fetches news items from Storyblok API
 2. Scrapes OG images from article URLs
 3. Resizes and strips metadata
 4. Generates `image-manifest.json`
 
 After migration, a replacement script (`scripts/fetch-news-images-local.mjs`) will:
+
 1. Read news items from `content/news/**/*.mdx` files instead of Storyblok
 2. Steps 2-4 remain identical
 
@@ -502,14 +521,14 @@ After migration, a replacement script (`scripts/fetch-news-images-local.mjs`) wi
 
 1. **Fetch** all 231 stories from Storyblok API (reuse existing `scripts/export-library.js` logic)
 2. **Convert richtext JSON → MDX**:
-   - Text marks (bold, italic, links, code) → Markdown
-   - Block nodes (paragraphs, headings, lists) → Markdown
-   - `blok` nodes → MDX component tags (`<Alert>`, `<HowTo>`, `<Button>`, etc.)
-   - Recursive conversion for nested richtext in blok children
-   - `{className}text{/}` custom syntax → `<span className="...">text</span>`
-   - `<InlineChecklist>` text markers → proper JSX wrappers
-   - Storyblok link objects → plain URLs
-   - Storyblok image objects → local paths
+  - Text marks (bold, italic, links, code) → Markdown
+  - Block nodes (paragraphs, headings, lists) → Markdown
+  - `blok` nodes → MDX component tags (`<Alert>`, `<HowTo>`, `<Button>`, etc.)
+  - Recursive conversion for nested richtext in blok children
+  - `{className}text{/}` custom syntax → `<span className="...">text</span>`
+  - `<InlineChecklist>` text markers → proper JSX wrappers
+  - Storyblok link objects → plain URLs
+  - Storyblok image objects → local paths
 3. **Extract inline checklist items** from guide blocks into their own MDX files
 4. **Convert guides** to MDX with `<Section>` / `<ChecklistItemRef>` components
 5. **Download images** from Storyblok CDN → `public/images/content/`
@@ -523,11 +542,13 @@ After migration, a replacement script (`scripts/fetch-news-images-local.mjs`) wi
 This testing code is temporary — it exists only to verify the migration, then gets deleted.
 
 ### Before migration (Phase 1):
+
 1. Build the current Storyblok-backed site
 2. Script crawls every route, captures normalized text content (strip HTML, normalize whitespace)
 3. Store snapshots in a temp directory
 
 ### After migration (Phase 3):
+
 1. Build the file-based site
 2. Same script captures text content from new build
 3. **Automated diff loop**: Compare normalized text for every route. Flag mismatches.
@@ -535,6 +556,7 @@ This testing code is temporary — it exists only to verify the migration, then 
 5. Once verified, delete all comparison testing code.
 
 ### What gets compared:
+
 - Checklist item titles, descriptions, body content
 - Guide section structure and ordering
 - All embedded component output (Alert, HowTo, Button text/URLs)
@@ -626,27 +648,31 @@ Translation infrastructure is in place (PR #189, merged 2026-03-23):
 
 ## Decisions Made
 
-| Decision | Rationale |
-|----------|-----------|
-| **MDX for everything** (including news, sources) | Consistency across the whole system |
-| **Guides use MDX** (not YAML) | YAML gets messy with nested rich text |
-| **File-based first**, Keystatic later | Working system faster; CMS adds complexity. Keystatic confirmed as visual editor (see `PLAN-cms-visual-editor.md`) |
-| **`{class}text{/}` → `<span>`** during migration | No custom parser needed |
-| **Accept localStorage progress reset** | Slug-based keys, no legacy migration |
-| **Keep nesting shallow** | CMS compatibility; matches actual content patterns |
-| **String refs for cross-content** | CMS-agnostic; every tool can edit strings |
-| **4-layer MDX security** | Defense in depth for activist security site |
-| **Simple file reads, no GraphQL** | 231 items at build time; Keystatic Reader API replaces these later |
-| **Comparison testing is temporary** | Exists only for migration verification, then deleted |
-| **Translation designed first** | Done — `next-intl` integrated, locale-first directory structure chosen |
-| **Keystatic confirmed as visual editor** | Handles nested MDX (wrapper type), React 19, no database needed. See `PLAN-cms-visual-editor.md` |
-| **Locale-aware content loading from day one** | `lib/content.js` accepts `locale` param even though only English migrated initially |
+
+| Decision                                         | Rationale                                                                                                          |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **MDX for everything** (including news, sources) | Consistency across the whole system                                                                                |
+| **Guides use MDX** (not YAML)                    | YAML gets messy with nested rich text                                                                              |
+| **File-based first**, Keystatic later            | Working system faster; CMS adds complexity. Keystatic confirmed as visual editor (see `PLAN-cms-visual-editor.md`) |
+| `**{class}text{/}` → `<span>`** during migration | No custom parser needed                                                                                            |
+| **Accept localStorage progress reset**           | Slug-based keys, no legacy migration                                                                               |
+| **Keep nesting shallow**                         | CMS compatibility; matches actual content patterns                                                                 |
+| **String refs for cross-content**                | CMS-agnostic; every tool can edit strings                                                                          |
+| **4-layer MDX security**                         | Defense in depth for activist security site                                                                        |
+| **Simple file reads, no GraphQL**                | 231 items at build time; Keystatic Reader API replaces these later                                                 |
+| **Comparison testing is temporary**              | Exists only for migration verification, then deleted                                                               |
+| **Translation designed first**                   | Done — `next-intl` integrated, locale-first directory structure chosen                                             |
+| **Keystatic confirmed as visual editor**         | Handles nested MDX (wrapper type), React 19, no database needed. See `PLAN-cms-visual-editor.md`                   |
+| **Locale-aware content loading from day one**    | `lib/content.js` accepts `locale` param even though only English migrated initially                                |
+
 
 ## Verification
 
 After each phase:
+
 1. `yarn build` completes without errors
 2. `yarn test` passes
 3. `node scripts/validate-content.mjs` passes (Phases 1+)
 4. Visual spot-check of key pages (essentials guide, signal guide, about page, news page)
 5. After Phase 3: automated comparison test suite passes for all routes
+

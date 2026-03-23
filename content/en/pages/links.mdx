@@ -1,9 +1,9 @@
 ---
 title: "Why we need to remove everything after the '?' in links"
 slug: links
+firstPublished: 2025-10-21
+lastUpdated: 2026-03-11
 image: "/images/content/dont-make-me-tap-the-sign-share.jpg"
-firstPublished: "2025-10-21"
-lastUpdated: "2026-03-11"
 ---
 
 <Alert type="success">
@@ -38,8 +38,12 @@ lastUpdated: "2026-03-11"
 
 Here's a sample message you can use if someone forgets.
 
-> <CopyButton />
-> *Quick reminder: Please edit your message to remove the tracking code (everything after the "?"). This helps keep us all safer. **[https://activistchecklist.org/links](https://activistchecklist.org/links)** *
+<blockquote>
+
+<CopyButton />
+*Quick reminder: Please edit your message to remove the tracking code (everything after the "?"). This helps keep us all safer. **[https://activistchecklist.org/links](https://activistchecklist.org/links)** *
+
+</blockquote>
 
 ## What you can do
 
@@ -135,9 +139,4 @@ These don't matter as much. They don't track you uniquely or associate us togeth
 
 On some sites, the stuff after the ? is required for the link to work, which can make this process confusing. If you're not sure how to share the link safely, maybe find a different site to share
 
-<RelatedGuides>
-
-<RelatedGuide slug="essentials" />
-<RelatedGuide slug="signal" />
-
-</RelatedGuides>
+<RelatedGuides guides={["essentials","signal"]} />

@@ -30,15 +30,15 @@ git clone https://github.com/ActivistChecklist/ActivistChecklist.org.git
 cd ActivistChecklist.org
 ```
 
-2. Install dependencies:
+1. Install dependencies:
 
 ```bash
 yarn install
 ```
 
-3. Copy the `.env.template` file to `.env` and set the Storyblok access token and other environment variables.
+1. Copy the `.env.template` file to `.env` and set the Storyblok access token and other environment variables.
 
-4. Start the development server:
+2. Start the development server:
 
 ```bash
 yarn dev
@@ -47,6 +47,8 @@ yarn dev
 The application will be available at `https://localhost:3001`
 
 ## VS Code extensions
+
+These VS Code / Cursor plugins will help you work with specific configuration of this project.
 
 - [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)

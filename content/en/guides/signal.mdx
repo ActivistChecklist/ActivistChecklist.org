@@ -1,10 +1,10 @@
 ---
 title: Signal Security Checklist
 slug: signal
-lastUpdated: "2026-02-08"
+lastUpdated: 2026-02-08
 estimatedTime: 15 minutes
 summary: Configure signal to protect your messages and calls
-firstPublished: "2025-01-27"
+firstPublished: 2025-01-27
 ---
 
 This guide helps you take control of your private conversations on [Signal](https://signal.org/). While Signal already encrypts everything you send, these extra steps ensure your chats stay private, even if your phone is lost, taken, or compromised. You'll learn simple ways to protect your messages, notifications, and identity.
@@ -13,12 +13,12 @@ This guide helps you take control of your private conversations on [Signal](http
 
 *See also:* Here's a great guide on [how to use Signal groups for activism](https://micahflee.com/using-signal-groups-for-activism/).
 
-
 <Section title="Hide your identity on Signal">
 
 <RiskLevel level="everyone" />
-
 <ChecklistItem slug="signal-display-name" />
+<ChecklistItem slug="signal-username" />
+<ChecklistItem slug="signal-link-previews" />
 
 </Section>
 
@@ -26,12 +26,14 @@ This guide helps you take control of your private conversations on [Signal](http
 <Section title="Protect your messages & calls">
 
 <RiskLevel level="everyone" />
-
 <ChecklistItem slug="signal-disappearing" />
 <ChecklistItem slug="signal-disable-notifications" />
+<ChecklistItem slug="screen-lock" />
+<ChecklistItem slug="signal-hide-calls-in-recent" />
 <ChecklistItem slug="signal-leave-extra-groups" />
 <ChecklistItem slug="signal-pin" />
 <ChecklistItem slug="signal-private-keyboard" />
+<ChecklistItem slug="signal-disable-ai" />
 <ChecklistItem slug="fake-signal-support" />
 
 </Section>
@@ -49,10 +51,4 @@ It's also possible that the cops can confiscate your phone and break into it if 
 
 </Section>
 
-<RelatedGuides>
-
-<RelatedGuide slug="protest" />
-<RelatedGuide slug="travel" />
-<RelatedGuide slug="doxxing" />
-
-</RelatedGuides>
+<RelatedGuides guides={["protest","travel","doxxing"]} />

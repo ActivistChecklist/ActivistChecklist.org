@@ -79,6 +79,9 @@ async function fetchAllStories(params = {}) {
   return stories;
 }
 
+// Module-level checklist slug map (set before conversion in main)
+let _checklistSlugMap = null;
+
 // ─── Rich Text → Markdown conversion ─────────────────────────────
 
 function resolveStoryblokLink(linkObj) {
@@ -186,9 +189,9 @@ function convertClassSyntax(text) {
  * These are custom text patterns in Storyblok text nodes.
  */
 function convertInlineComponents(text) {
-  // These are text-level components used in Storyblok text resolver
-  // They'll remain as JSX in the MDX output
-  return text;
+  // Normalize inline JSX component tags that appear as raw text in Storyblok.
+  // Ensure self-closing components are properly self-closed.
+  return text.replace(/<(CopyButton|Badge|ProtectionBadge)>/g, '<$1 />');
 }
 
 /**
@@ -263,6 +266,11 @@ function richTextToMdx(node, indent = '') {
   // Blockquote
   if (node.type === 'blockquote') {
     const inner = (node.content || []).map(n => richTextToMdx(n, indent)).join('');
+    // If the blockquote contains JSX components (e.g. <CopyButton>), use HTML
+    // blockquote element instead of markdown `> ` syntax, which can't contain JSX.
+    if (/<[A-Z]/.test(inner)) {
+      return `<blockquote>\n\n${inner.trim()}\n\n</blockquote>\n`;
+    }
     return inner.split('\n').filter(l => l).map(l => `> ${l}`).join('\n') + '\n';
   }
 
@@ -310,7 +318,7 @@ function richTextToMdx(node, indent = '') {
 
 // ─── Blok → MDX component conversion ─────────────────────────────
 
-function convertBlokToMdx(blok) {
+function convertBlokToMdx(blok, checklistSlugMap) {
   if (!blok || !blok.component) return '';
 
   switch (blok.component) {
@@ -334,10 +342,11 @@ function convertBlokToMdx(blok) {
     case 'section-header':
       return convertSectionHeader(blok);
     case 'checklist-item':
-      // Inline checklist items in guides are handled separately
-      return '';
+      // Inline checklist items in guides — emit a reference tag.
+      // The actual file extraction is handled in convertGuideStory.
+      return `<ChecklistItem slug="${blok._resolvedSlug || blok.slug || ''}" />\n`;
     case 'checklist-item-ref':
-      return convertChecklistItemRef(blok);
+      return convertChecklistItemRef(blok, checklistSlugMap);
     case 'checklist-item-reference':
       return convertChecklistItemReference(blok);
     default:
@@ -503,9 +512,10 @@ function convertChecklistItemRef(blok, checklistSlugMap) {
     return '';
   }
 
-  // Resolve UUID to content.slug via the map
+  // Resolve UUID to content.slug via the map (parameter or module-level)
+  const map = checklistSlugMap || _checklistSlugMap;
   const uuid = typeof ref === 'string' ? ref : (ref.uuid || '');
-  const slug = checklistSlugMap?.get(uuid) || uuid;
+  const slug = map?.get(uuid) || uuid;
   if (slug === uuid) {
     console.warn(`  Unresolved checklist-item UUID: ${uuid}`);
   }
@@ -560,15 +570,58 @@ function convertChecklistItemStory(story) {
 
   frontmatter.title = c.title || story.name;
   frontmatter.slug = slug;
-  frontmatter.type = c.type || 'checkbox';
+  if (c.type && c.type !== 'checkbox') frontmatter.type = c.type;
   if (c.why) frontmatter.preview = c.why;
   if (c.tools) frontmatter.do = c.tools;
   if (c.stop) frontmatter.dont = c.stop;
   if (c.title_badges?.length) frontmatter.titleBadges = c.title_badges;
 
+  // Add dates from story metadata (not available for inline items)
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
+  if (story.published_at) {
+    frontmatter.lastUpdated = story.published_at.split('T')[0];
+  }
+
   const body = c.body ? richTextToMdx(c.body).trim() : '';
 
   return { frontmatter, body, slug };
+}
+
+// Slug remapping for inline checklist items that conflict across guides.
+// Format: { guideSlug: { originalSlug: newSlug } }
+const INLINE_SLUG_REMAP = {
+  'travel': {
+    'phone-off': 'phone-off-travel',
+    'signal': 'signal-travel',
+    'secondary': 'secondary-travel',
+  },
+  'ice': {
+    'secondary': 'secondary-ice',
+  },
+  'doxxing': {
+    'essentials': 'essentials-doxxing',
+  },
+  'spyware': {
+    'essentials': 'essentials-doxxing', // same item as doxxing version
+  },
+  'federal': {
+    'essentials': 'essentials-federal',
+  },
+  'secondary': {
+    // Second "sim" in the advanced section (data-only SIM)
+    // Handled by positional detection below
+  },
+};
+
+function resolveInlineSlug(guideSlug, block) {
+  const originalSlug = block.slug || '';
+  const remap = INLINE_SLUG_REMAP[guideSlug];
+  if (remap && remap[originalSlug]) {
+    return remap[originalSlug];
+  }
+  return originalSlug;
 }
 
 function convertGuideStory(story) {
@@ -579,21 +632,33 @@ function convertGuideStory(story) {
   frontmatter.slug = story.slug;
   const guideImage = resolveStoryblokImage(c.image);
   if (guideImage) frontmatter.image = guideImage;
-  if (c.last_updated) frontmatter.lastUpdated = c.last_updated;
+  if (c.last_updated) {
+    // Strip time portion (e.g. "2026-01-22 00:00" → "2026-01-22")
+    frontmatter.lastUpdated = c.last_updated.replace(/\s+\d{2}:\d{2}$/, '');
+  }
   if (c.estimated_time) frontmatter.estimatedTime = c.estimated_time;
   if (c.summary) {
     frontmatter.summary = typeof c.summary === 'string'
       ? c.summary
       : richTextToPlainText(c.summary);
   }
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
 
   // Body is the intro text before sections
   let body = c.body ? richTextToMdx(c.body).trim() : '';
+
+  // Track inline checklist items extracted from this guide
+  const extractedItems = [];
 
   // Convert blocks into sections with children
   const blocks = c.blocks || [];
   let sectionMdx = '';
   let inSection = false;
+
+  // Track how many times we've seen each slug (for secondary guide's duplicate "sim")
+  const slugCounts = {};
 
   for (const block of blocks) {
     if (block.component === 'section-header') {
@@ -603,6 +668,34 @@ function convertGuideStory(story) {
       }
       sectionMdx += convertSectionHeader(block);
       inSection = true;
+    } else if (block.component === 'checklist-item') {
+      // Inline checklist item — extract as standalone file
+      let resolvedSlug = resolveInlineSlug(story.slug, block);
+
+      // Handle duplicate "sim" in secondary guide
+      const origSlug = block.slug || '';
+      slugCounts[origSlug] = (slugCounts[origSlug] || 0) + 1;
+      if (story.slug === 'secondary' && origSlug === 'sim' && slugCounts[origSlug] === 2) {
+        resolvedSlug = 'sim-data-only';
+      }
+
+      // Set the resolved slug on the block so convertBlokToMdx can use it
+      block._resolvedSlug = resolvedSlug;
+
+      // Convert using the same logic as standalone checklist items
+      const fakeStory = { content: block, name: block.title, slug: block.slug };
+      const { frontmatter: itemFm, body: itemBody } = convertChecklistItemStory(fakeStory);
+      // Override the slug with the resolved one
+      itemFm.slug = resolvedSlug;
+
+      extractedItems.push({
+        slug: resolvedSlug,
+        uid: block._uid,
+        frontmatter: itemFm,
+        body: itemBody,
+      });
+
+      sectionMdx += convertBlokToMdx(block);
     } else if (block.component === 'checklist-item-ref') {
       sectionMdx += convertChecklistItemRef(block);
     } else if (block.component === 'checklist-item-reference') {
@@ -628,7 +721,7 @@ function convertGuideStory(story) {
     body = body ? body + '\n\n' + sectionMdx.trim() : sectionMdx.trim();
   }
 
-  return { frontmatter, body, slug: story.slug };
+  return { frontmatter, body, slug: story.slug, extractedItems };
 }
 
 function convertPageStory(story) {
@@ -637,6 +730,12 @@ function convertPageStory(story) {
 
   frontmatter.title = c.title || story.name;
   frontmatter.slug = story.slug;
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
+  if (story.published_at) {
+    frontmatter.lastUpdated = story.published_at.split('T')[0];
+  }
   const pageImage = resolveStoryblokImage(c.image);
   if (pageImage) frontmatter.image = pageImage;
 
@@ -657,7 +756,9 @@ function convertNewsItemStory(story, sourceMap) {
   const frontmatter = {};
 
   frontmatter.title = c.title || story.name;
-  frontmatter.date = c.date || story.first_published_at?.split('T')[0] || '';
+  // Strip time portion from date (e.g. "2026-03-18 00:00" → "2026-03-18")
+  const rawDate = c.date || story.first_published_at?.split('T')[0] || '';
+  frontmatter.date = rawDate.replace(/\s+\d{2}:\d{2}$/, '');
 
   // URL is a Storyblok multilink object
   if (c.url) {
@@ -693,6 +794,20 @@ function convertNewsItemStory(story, sourceMap) {
     if (imgUrl) frontmatter.imageOverride = imgUrl;
   }
 
+  // Dates
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
+  if (story.published_at) {
+    frontmatter.lastUpdated = story.published_at.split('T')[0];
+  }
+
+  // Tags
+  const tags = story.tag_list || [];
+  if (tags.length > 0) {
+    frontmatter.tags = tags.map(t => t.toLowerCase()).join(', ');
+  }
+
   const body = c.comment ? richTextToMdx(c.comment).trim() : '';
 
   return { frontmatter, body, slug: story.slug };
@@ -708,6 +823,12 @@ function convertNewsSourceStory(story) {
     const resolvedUrl = resolveStoryblokLink(c.url);
     if (resolvedUrl) frontmatter.url = resolvedUrl;
   }
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
+  if (story.published_at) {
+    frontmatter.lastUpdated = story.published_at.split('T')[0];
+  }
 
   return { frontmatter, body: '', slug: story.slug };
 }
@@ -717,8 +838,15 @@ function convertChangelogEntryStory(story) {
   const frontmatter = {};
 
   frontmatter.type = c.type || 'minor';
-  frontmatter.date = c.date || story.first_published_at?.split('T')[0] || '';
+  const rawDate = c.date || story.first_published_at?.split('T')[0] || '';
+  frontmatter.date = rawDate.replace(/\s+\d{2}:\d{2}$/, '');
   frontmatter.slug = story.slug;
+  if (story.first_published_at) {
+    frontmatter.firstPublished = story.first_published_at.split('T')[0];
+  }
+  if (story.published_at) {
+    frontmatter.lastUpdated = story.published_at.split('T')[0];
+  }
 
   const body = c.body ? richTextToMdx(c.body).trim() : '';
 
@@ -819,6 +947,15 @@ async function main() {
 
   const stats = { written: 0, skipped: 0, errors: 0 };
 
+  // ─── Build checklist UUID→slug map for resolving refs ───
+  _checklistSlugMap = new Map();
+  for (const story of (grouped['checklist-item'] || [])) {
+    const slug = story.content.slug || story.slug;
+    if (story.uuid) _checklistSlugMap.set(story.uuid, slug);
+    if (story.content._uid) _checklistSlugMap.set(story.content._uid, slug);
+  }
+  console.log(`Built checklist slug map (${_checklistSlugMap.size} UUID→slug entries)\n`);
+
   // ─── Checklist Items ───
   if (!TYPE_FILTER || TYPE_FILTER === 'checklist-item') {
     console.log('Converting checklist items...');
@@ -839,12 +976,13 @@ async function main() {
     }
   }
 
-  // ─── Guides ───
+  // ─── Guides (+ inline checklist item extraction) ───
+  const allExtractedItems = new Map(); // slug -> { frontmatter, body, uids: [] }
   if (!TYPE_FILTER || TYPE_FILTER === 'guide') {
     console.log('Converting guides...');
     for (const story of (grouped['guide'] || [])) {
       try {
-        const { frontmatter, body, slug } = convertGuideStory(story);
+        const { frontmatter, body, slug, extractedItems } = convertGuideStory(story);
         writeMdxFile(
           path.join(CONTENT_DIR, 'guides'),
           `${slug}.mdx`,
@@ -852,8 +990,39 @@ async function main() {
           body
         );
         stats.written++;
+
+        // Collect extracted inline checklist items (deduplicating by slug)
+        for (const item of (extractedItems || [])) {
+          if (!allExtractedItems.has(item.slug)) {
+            allExtractedItems.set(item.slug, {
+              frontmatter: item.frontmatter,
+              body: item.body,
+              uids: [],
+            });
+          }
+          if (item.uid) {
+            allExtractedItems.get(item.slug).uids.push(item.uid);
+          }
+        }
       } catch (e) {
         console.error(`  Error converting guide "${story.slug}": ${e.message}`);
+        stats.errors++;
+      }
+    }
+
+    // Write extracted inline checklist items as standalone files
+    console.log(`Extracting ${allExtractedItems.size} inline checklist items from guides...`);
+    for (const [slug, item] of allExtractedItems) {
+      try {
+        writeMdxFile(
+          path.join(CONTENT_DIR, 'checklist-items'),
+          `${slug}.mdx`,
+          item.frontmatter,
+          item.body
+        );
+        stats.written++;
+      } catch (e) {
+        console.error(`  Error writing inline checklist item "${slug}": ${e.message}`);
         stats.errors++;
       }
     }
@@ -953,6 +1122,100 @@ async function main() {
         stats.errors++;
       }
     }
+  }
+
+  // ─── Post-processing: replace Storyblok CDN URLs with local paths ───
+  if (!DRY_RUN) {
+    console.log('Post-processing: replacing Storyblok CDN URLs...');
+    const cdnReplacements = {
+      'https://a-us.storyblok.com/f/1022624/1080x2340/5656581fc1/signal-phishing.png': '/images/content/signal-phishing.png',
+      'https://a-us.storyblok.com/f/1022624/1074x574/84e70fdf95/real-fake-signal.jpg': '/images/content/real-fake-signal.jpg',
+      'https://a-us.storyblok.com/f/1022624/640x960/c11769f34a/link-sharing-dont-make-me-tap-the-sign.jpg': '/images/content/link-sharing-dont-make-me-tap-the-sign.jpg',
+      'https://a-us.storyblok.com/f/1022624/640x489/2f408050c9/dont-make-me-tap-the-sign-share.jpg': '/images/content/dont-make-me-tap-the-sign-share.jpg',
+      'https://a-us.storyblok.com/f/1022624/2000x1294/effd5f5d7b/activistchecklist-flyer-both-sides.png': '/images/content/activistchecklist-flyer-both-sides.png',
+      'https://a-us.storyblok.com/f/1022624/1545x2000/59d986b921/police-at-the-door-poster-activistchecklist-org-v4.png': '/images/content/police-at-the-door-poster-activistchecklist-org-v4.png',
+      'https://a-us.storyblok.com/f/1022624/955x537/e19fc95c5a/welcome.jpg': '/images/content/welcome.jpg',
+      'https://a-us.storyblok.com/f/1022624/x/23cad49af5/activistchecklist-flyer-4up.pdf': '/files/downloads/activistchecklist-flyer-4up.pdf',
+      'https://a-us.storyblok.com/f/1022624/x/6f34ee1d19/activistchecklist-flyer-single.pdf': '/files/downloads/activistchecklist-flyer-single.pdf',
+      'https://a-us.storyblok.com/f/1022624/x/088dd96848/police-at-the-door-poster-activistchecklist-org-v4.pdf': '/files/downloads/police-at-the-door-poster-activistchecklist-org-v4.pdf',
+      'https://a-us.storyblok.com/f/1022624/x/7ebbf3e75f/police-at-the-door-spanish-activistchecklist.pdf': '/files/downloads/police-at-the-door-spanish-activistchecklist.pdf',
+      'https://a-us.storyblok.com/f/1022624/x/d576f0dda2/dont-say-anything-song-bread-and-puppet-theater-tiktok-planetslushy.mp4': '/files/videos/dont-say-anything-song-bread-and-puppet-theater-tiktok-planetslushy.mp4',
+    };
+
+    // Also map news override images by scanning what's in the directory
+    const newsImageDir = path.join(ROOT, 'public', 'images', 'content', 'news');
+    if (fs.existsSync(newsImageDir)) {
+      for (const file of fs.readdirSync(newsImageDir)) {
+        // These map from any Storyblok URL ending with this filename
+        cdnReplacements[`__news_image__${file}`] = `/images/content/news/${file}`;
+      }
+    }
+
+    let urlsReplaced = 0;
+    const walkDir = (dir) => {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walkDir(fullPath);
+        } else if (entry.name.endsWith('.mdx')) {
+          let content = fs.readFileSync(fullPath, 'utf-8');
+          let changed = false;
+          for (const [oldUrl, newUrl] of Object.entries(cdnReplacements)) {
+            if (oldUrl.startsWith('__news_image__')) continue;
+            if (content.includes(oldUrl)) {
+              content = content.split(oldUrl).join(newUrl);
+              changed = true;
+            }
+          }
+          // Replace remaining Storyblok URLs for news images by filename match
+          const storyblokUrlPattern = /https:\/\/a-us\.storyblok\.com\/f\/\d+\/[^"')\s]*\/([^"')\s/]+)/g;
+          content = content.replace(storyblokUrlPattern, (match, filename) => {
+            const newsKey = `__news_image__${filename}`;
+            if (cdnReplacements[newsKey]) {
+              changed = true;
+              return cdnReplacements[newsKey];
+            }
+            return match;
+          });
+          if (changed) {
+            fs.writeFileSync(fullPath, content, 'utf-8');
+            urlsReplaced++;
+          }
+        }
+      }
+    };
+    walkDir(CONTENT_DIR);
+    console.log(`  Replaced CDN URLs in ${urlsReplaced} files`);
+  }
+
+  // ─── Storyblok ID Map (for localStorage progress migration) ───
+  const idMap = {};
+
+  // Standalone checklist items: map both story UUID and content._uid to slug
+  for (const story of (grouped['checklist-item'] || [])) {
+    const slug = story.content.slug || story.slug;
+    if (story.uuid) idMap[story.uuid] = slug;
+    if (story.content._uid) idMap[story.content._uid] = slug;
+  }
+
+  // Inline checklist items: map _uid to resolved slug
+  for (const [slug, item] of allExtractedItems) {
+    for (const uid of item.uids) {
+      idMap[uid] = slug;
+    }
+  }
+
+  if (!DRY_RUN && Object.keys(idMap).length > 0) {
+    const idMapPath = path.join(ROOT, 'content', 'storyblok-id-map.json');
+    // Merge with existing map if present
+    let existingMap = {};
+    try {
+      existingMap = JSON.parse(fs.readFileSync(idMapPath, 'utf-8'));
+    } catch { /* no existing map */ }
+    const mergedMap = { ...existingMap, ...idMap };
+    fs.writeFileSync(idMapPath, JSON.stringify(mergedMap, null, 2) + '\n', 'utf-8');
+    console.log(`\n  Updated storyblok-id-map.json (${Object.keys(mergedMap).length} entries)`);
   }
 
   // ─── Report ───
