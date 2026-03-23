@@ -50,7 +50,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
   return (
     <div>
       <Head>
-        <title>Activist Checklist - Digital Security for Activists</title>
+        <title>{t('site.title')}</title>
         <link rel="canonical" href={locale === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${locale}/`} key="canonical" />
         <link rel="alternate" hreflang="en" href={`${baseUrl}/`} key="hreflang-en" />
         <link rel="alternate" hreflang="es" href={`${baseUrl}/es/`} key="hreflang-es" />

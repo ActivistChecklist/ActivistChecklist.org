@@ -4,8 +4,10 @@ import Link from '@/components/Link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 const NewsBlock = ({ newsItems = [], imageManifest = {}, limit = 3 }) => {
+  const t = useTranslations();
   // Take only the first N items (already sorted by date in getStaticProps)
   const recentNews = newsItems.slice(0, limit);
 
@@ -16,10 +18,10 @@ const NewsBlock = ({ newsItems = [], imageManifest = {}, limit = 3 }) => {
   return (
     <section className="mb-16">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Latest Surveillance News</h2>
+        <h2 className="text-2xl font-bold">{t('homepage.latestNewsHeading')}</h2>
         <Button asChild variant="outline" size="sm">
           <Link href="/news" className="group">
-            View all news <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+            {t('homepage.viewAllNews')} <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
           </Link>
         </Button>
       </div>

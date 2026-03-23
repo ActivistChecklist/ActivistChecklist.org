@@ -3,11 +3,13 @@ import Link from '@/components/Link';
 import { ArrowRight } from 'lucide-react';
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 const GuideCard = ({ 
   guideItem, 
   size = "medium" 
 }) => {
+  const t = useTranslations();
   const { href, icon: Icon, title, description } = guideItem;
 
   if (size === "large") {
@@ -25,7 +27,7 @@ const GuideCard = ({
           </CardContent>
           <CardFooter className="relative mt-auto pt-0">
             <span className="text-primary font-medium inline-flex items-center text-base">
-              View checklist <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+              {t('common.viewChecklist')} <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
             </span>
           </CardFooter>
         </Card>
@@ -49,7 +51,7 @@ const GuideCard = ({
         </CardContent>
         <CardFooter className="py-3 px-4 pt-0 mt-auto">
           <span className="text-primary font-medium inline-flex items-center text-sm">
-            View checklist <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+            {t('common.viewChecklist')} <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
           </span>
         </CardFooter>
       </Card>

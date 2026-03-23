@@ -1,13 +1,15 @@
 import React from 'react';
 import ChangeLogEntry from './ChangeLogEntry';
 import { cn } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 const ChangeLogRecentEntries = ({ entries = [] }) => {
+  const t = useTranslations();
   if (!entries.length) {
     return (
       <div className="changelog-recent-entries">
         <div className="text-sm text-muted-foreground italic">
-          No recent changes available
+          {t('homepage.noRecentChanges')}
         </div>
       </div>
     );

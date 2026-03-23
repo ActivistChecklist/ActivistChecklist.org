@@ -108,8 +108,11 @@
     "browseAll": "See all checklists",
     "trustHeading": "Simple guides to keep us more safe",
     "trustDescription": "We built this because digital security shouldn't be overwhelming. We take a harm reduction approach: start where you are and do what you can.",
+    "latestNewsHeading": "Latest Surveillance News",
+    "viewAllNews": "View all news",
     "recentUpdatesHeading": "Recent Site Updates",
-    "viewAllUpdates": "View all updates"
+    "viewAllUpdates": "View all updates",
+    "noRecentChanges": "No recent changes available"
   },
   "translationFallback": {
     "message": "This page is not yet available in your language. You are viewing the English version.",
@@ -125,6 +128,7 @@
   },
   "common": {
     "loading": "Loading...",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "viewChecklist": "View checklist"
   }
 }

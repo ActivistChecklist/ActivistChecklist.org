@@ -108,8 +108,11 @@
     "browseAll": "Ver todas las listas",
     "trustHeading": "Guías sencillas para mantenernos más seguros",
     "trustDescription": "Creamos esto porque la seguridad digital no debería ser abrumadora. Adoptamos un enfoque de reducción de daños: comienza donde estés y haz lo que puedas.",
+    "latestNewsHeading": "Noticias recientes sobre vigilancia",
+    "viewAllNews": "Ver todas las noticias",
     "recentUpdatesHeading": "Actualizaciones recientes del sitio",
-    "viewAllUpdates": "Ver todas las actualizaciones"
+    "viewAllUpdates": "Ver todas las actualizaciones",
+    "noRecentChanges": "No hay cambios recientes disponibles"
   },
   "translationFallback": {
     "message": "Esta página aún no está disponible en tu idioma. Estás viendo la versión en inglés.",
@@ -125,6 +128,7 @@
   },
   "common": {
     "loading": "Cargando...",
-    "error": "Algo salió mal"
+    "error": "Algo salió mal",
+    "viewChecklist": "Ver lista"
   }
 }
