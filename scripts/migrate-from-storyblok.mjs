@@ -42,10 +42,15 @@ const TYPE_FILTER = process.argv.find(a => a.startsWith('--type='))?.split('=')[
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// Use current time as cv to force Storyblok CDN cache bypass
+const _cv = String(Math.floor(Date.now() / 1000));
+
 async function apiFetch(endpoint, params = {}) {
+  const cv = _cv;
   const url = new URL(`${API_BASE}${endpoint}`);
   url.searchParams.set('token', TOKEN);
   url.searchParams.set('version', 'published');
+  url.searchParams.set('cv', cv);
   for (const [k, v] of Object.entries(params)) {
     url.searchParams.set(k, v);
   }
@@ -589,6 +594,14 @@ function convertChecklistItemStory(story) {
   return { frontmatter, body, slug };
 }
 
+// For inline checklist items that appear in multiple guides with different content,
+// specify which guide's version should be authoritative. Default is "first guide wins".
+// Format: { resolvedSlug: preferredGuideSlug }
+const INLINE_PRIORITY = {
+  'biometrics-disable': 'protest', // protest guide has the correct Alert tip wording
+  'personal-secure': 'federal',    // federal guide has the VPN line
+};
+
 // Slug remapping for inline checklist items that conflict across guides.
 // Format: { guideSlug: { originalSlug: newSlug } }
 const INLINE_SLUG_REMAP = {
@@ -629,7 +642,6 @@ function convertGuideStory(story) {
   const frontmatter = {};
 
   frontmatter.title = c.title || story.name;
-  frontmatter.slug = story.slug;
   const guideImage = resolveStoryblokImage(c.image);
   if (guideImage) frontmatter.image = guideImage;
   if (c.last_updated) {
@@ -957,6 +969,8 @@ async function main() {
   console.log(`Built checklist slug map (${_checklistSlugMap.size} UUID→slug entries)\n`);
 
   // ─── Checklist Items ───
+  // Track standalone slugs so inline extractions don't overwrite them
+  const standaloneChecklistSlugs = new Set();
   if (!TYPE_FILTER || TYPE_FILTER === 'checklist-item') {
     console.log('Converting checklist items...');
     for (const story of (grouped['checklist-item'] || [])) {
@@ -968,6 +982,7 @@ async function main() {
           frontmatter,
           body
         );
+        standaloneChecklistSlugs.add(slug);
         stats.written++;
       } catch (e) {
         console.error(`  Error converting checklist item "${story.slug}": ${e.message}`);
@@ -993,11 +1008,14 @@ async function main() {
 
         // Collect extracted inline checklist items (deduplicating by slug)
         for (const item of (extractedItems || [])) {
-          if (!allExtractedItems.has(item.slug)) {
+          const priorityGuide = INLINE_PRIORITY[item.slug];
+          const isPreferred = priorityGuide && story.slug === priorityGuide;
+          // Use this version if: no existing version, OR this guide is the priority guide
+          if (!allExtractedItems.has(item.slug) || isPreferred) {
             allExtractedItems.set(item.slug, {
               frontmatter: item.frontmatter,
               body: item.body,
-              uids: [],
+              uids: allExtractedItems.get(item.slug)?.uids || [],
             });
           }
           if (item.uid) {
@@ -1011,8 +1029,13 @@ async function main() {
     }
 
     // Write extracted inline checklist items as standalone files
+    // Skip any slug that was already written from a standalone story (prefer standalone)
     console.log(`Extracting ${allExtractedItems.size} inline checklist items from guides...`);
     for (const [slug, item] of allExtractedItems) {
+      if (standaloneChecklistSlugs.has(slug)) {
+        stats.skipped++;
+        continue;
+      }
       try {
         writeMdxFile(
           path.join(CONTENT_DIR, 'checklist-items'),
