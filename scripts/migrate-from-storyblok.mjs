@@ -134,8 +134,11 @@ function applyMarks(text, marks) {
         result = `\`${result}\``;
         break;
       case 'underline':
-        // Skip underline — it's redundant on links and on bold/italic emphasis.
-        // In markdown/MDX, underline is purely decorative noise from the CMS.
+        // Skip underline when the same text also has a link mark (redundant).
+        // Keep underline for non-link text where the author intended emphasis.
+        if (!hasLink) {
+          result = `<u>${result}</u>`;
+        }
         break;
       case 'link': {
         const href = mark.attrs?.href || resolveStoryblokLink(mark.attrs);

@@ -39,7 +39,8 @@ After migrating off Storyblok to file-based MDX content (see `PLAN-storyblok-mig
 | **ImageEmbed** | src, alt, size, className | caption text | Pages |
 | **VideoEmbed** | src, className | caption text | Pages |
 | **Table** | className | table data | Checklist items |
-| **RelatedGuides** | guides (array of slugs) | none | End of guides |
+| **RelatedGuides** | none | RelatedGuide children | End of guides |
+| **RelatedGuide** | slug (string) | none (self-closing) | Inside RelatedGuides |
 
 ### Nesting patterns we must support
 
@@ -65,7 +66,7 @@ Section → markdown text
 ### Cross-collection references
 
 - `ChecklistItemRef ref="use-signal"` — guide references a checklist item by slug
-- `RelatedGuides guides={["essentials", "protest"]}` — guide references other guides by slug
+- `<RelatedGuides>` wraps `<RelatedGuide slug="essentials" />` children — guide references other guides by slug (wrapper pattern avoids array props that break Crowdin)
 - News item `source: the-intercept` — references a news-source by slug
 
 These are **string slug references resolved at build time**, not live database joins.
@@ -184,7 +185,8 @@ Button           → block (self-closing, props only)
 ChecklistItemRef → block (self-closing, ref via relationship field)
 ImageEmbed       → wrapper (wraps caption text)
 VideoEmbed       → wrapper (wraps caption text)
-RelatedGuides    → block (array of relationship fields)
+RelatedGuides    → wrapper (wraps RelatedGuide children)
+RelatedGuide     → block (self-closing, slug via relationship field)
 Table            → block (structured data)
 ```
 
@@ -198,10 +200,9 @@ This is what Keystatic would write — it's identical to what our migration scri
 ---
 title: "Use Signal for encrypted texts and calls"
 slug: signal
-type: checkbox
-why: "Normal calls and texts are not private"
-tools: "Use Signal"
-stop: "Use Facebook Messenger, Telegram, regular texts"
+preview: "Normal calls and texts are not private"
+do: "Use Signal"
+dont: "Use Facebook Messenger, Telegram, regular texts"
 ---
 
 Body content in markdown with embedded components...
@@ -501,10 +502,10 @@ const checklistItems = collection({
   format: { contentField: 'body' },
   schema: {
     title: fields.slug({ name: { label: 'Title' } }),
-    type: fields.select({ label: 'Type', options: [...] }),
-    why: fields.text({ label: 'Why' }),
-    tools: fields.text({ label: 'Tools' }),
-    stop: fields.text({ label: 'Stop' }),
+    type: fields.select({ label: 'Type', options: [...], defaultValue: 'checkbox' }),
+    preview: fields.text({ label: 'Preview text' }),
+    do: fields.text({ label: 'Do (recommendation)' }),
+    dont: fields.text({ label: "Don't (avoid)" }),
     body: fields.mdx({
       label: 'Body',
       components: {

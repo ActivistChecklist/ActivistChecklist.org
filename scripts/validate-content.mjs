@@ -49,7 +49,7 @@ const SUSPICIOUS_PATTERNS = [
 
 const ALLOWED_COMPONENTS = new Set([
   'Alert', 'HowTo', 'Button', 'ImageEmbed', 'VideoEmbed',
-  'RiskLevel', 'Table', 'RelatedGuides', 'Section', 'ChecklistItemRef',
+  'RiskLevel', 'Table', 'RelatedGuides', 'RelatedGuide', 'Section', 'ChecklistItemRef',
   'CopyButton', 'Badge', 'ProtectionBadge', 'InlineChecklist',
 ]);
 
