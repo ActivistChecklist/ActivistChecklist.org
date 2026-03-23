@@ -5,8 +5,11 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from '@/components/Link';
 import { LANGUAGE_NAMES } from '@/lib/i18n-config';
-
-const STORAGE_KEY = 'language-banner-dismissed';
+import {
+  LANGUAGE_BANNER_STORAGE_KEY,
+  getDetectedLocaleFromNavigatorLanguage,
+  shouldShowLanguageBanner,
+} from '@/lib/language-detection';
 
 export default function LanguageDetectionBanner() {
   const router = useRouter();
@@ -20,22 +23,31 @@ export default function LanguageDetectionBanner() {
     if (locale !== router.defaultLocale) return;
 
     // Check if previously dismissed
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    if (localStorage.getItem(LANGUAGE_BANNER_STORAGE_KEY)) return;
 
     // Detect browser language
-    const browserLang = navigator.language?.split('-')[0];
-    if (browserLang && browserLang !== router.defaultLocale && locales.includes(browserLang)) {
-      setDetectedLocale(browserLang);
+    const detected = getDetectedLocaleFromNavigatorLanguage(
+      navigator.language,
+      router.defaultLocale,
+      locales
+    );
+    if (detected) {
+      setDetectedLocale(detected);
       setDismissed(false);
     }
   }, [locale, locales, router.defaultLocale]);
 
   const handleDismiss = () => {
-    localStorage.setItem(STORAGE_KEY, 'true');
+    localStorage.setItem(LANGUAGE_BANNER_STORAGE_KEY, 'true');
     setDismissed(true);
   };
 
-  if (dismissed || !detectedLocale) return null;
+  if (!shouldShowLanguageBanner({
+    currentLocale: locale,
+    defaultLocale: router.defaultLocale,
+    dismissed,
+    detectedLocale,
+  })) return null;
 
   const languageName = LANGUAGE_NAMES[detectedLocale] || detectedLocale;
 

@@ -101,4 +101,13 @@ const Contact = () => {
   );
 };
 
+export async function getStaticProps({ locale }) {
+  const messages = (await import(`../messages/${locale}.json`)).default;
+  return {
+    props: {
+      messages
+    }
+  };
+}
+
 export default Contact;

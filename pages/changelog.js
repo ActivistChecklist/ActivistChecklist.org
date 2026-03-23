@@ -90,7 +90,7 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
           <header className="mb-8">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-4xl font-bold mb-4">Recent Site Updates</h1>
+                <h1 className="page-title">Recent site updates</h1>
                 <p className="text-lg text-muted-foreground">
                   A history of changes to checklists, pages, and resources on the site.
                 </p>
@@ -135,10 +135,11 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
   );
 };
 
-export async function getStaticProps() {
+export async function getStaticProps({ locale }) {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion, fetchAllChangelogEntries } = await import('../utils/core');
+    const messages = (await import(`../messages/${locale}.json`)).default;
     
     const storyblokApi = getStoryblokApi();
     
@@ -156,14 +157,17 @@ export async function getStaticProps() {
 
     return {
       props: {
-        changelogEntries: sortedEntries
+        changelogEntries: sortedEntries,
+        messages
       }
     };
   } catch (error) {
     console.error('Error fetching changelog entries:', error);
+    const messages = (await import(`../messages/${locale}.json`)).default;
     return {
       props: {
-        changelogEntries: []
+        changelogEntries: [],
+        messages
       }
     };
   }
