@@ -11,7 +11,7 @@ import { ROUTES } from '../config/routes'
 import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
-import NewsBlock from '@/components/NewsBlock';
+import NewsBlock, { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
 import { RichText } from '@/components/RichText';
 import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
@@ -204,7 +204,7 @@ export async function getStaticProps({ locale = 'en' }) {
   return {
     props: {
       changelogEntries: changelogEntries.slice(0, 5),
-      newsItems,
+      newsItems: newsItems.slice(0, NEWS_BLOCK_DEFAULT_LIMIT),
       latestMajorUpdate,
       messages,
     },

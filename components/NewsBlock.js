@@ -6,7 +6,9 @@ import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
-const NewsBlock = ({ newsItems = [], limit = 3 }) => {
+export const NEWS_BLOCK_DEFAULT_LIMIT = 3;
+
+const NewsBlock = ({ newsItems = [], limit = NEWS_BLOCK_DEFAULT_LIMIT }) => {
   const t = useTranslations();
   // Take only the first N items (already sorted by date in getStaticProps)
   const recentNews = newsItems.slice(0, limit);
