@@ -111,8 +111,9 @@ export default function Page({ story, preview, ogImagePath, isFallbackContent })
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
 
         {/* Hreflang alternate links */}
-        <link rel="alternate" hreflang="en" href={`${baseUrl}/${currentPath}`} key="hreflang-en" />
-        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/${currentPath}`} key="hreflang-es" />
+        {router.locales.map((loc) => (
+          <link rel="alternate" hreflang={loc} href={loc === defaultLocale ? `${baseUrl}/${currentPath}` : `${baseUrl}/${loc}/${currentPath}`} key={`hreflang-${loc}`} />
+        ))}
         <link rel="alternate" hreflang="x-default" href={`${baseUrl}/${currentPath}`} key="hreflang-default" />
       </Head>
       <Layout sidebarType={story.content.component === 'guide' ? 'toc' : 'navigation'}>
