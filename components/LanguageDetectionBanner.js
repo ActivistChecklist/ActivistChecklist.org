@@ -18,24 +18,24 @@ export default function LanguageDetectionBanner() {
   const [detectedLocale, setDetectedLocale] = useState(null);
   const [dismissed, setDismissed] = useState(true); // default true to prevent flash
 
+  const availableLocales = locales || [];
+
   useEffect(() => {
-    // Only show on default locale
+    if (availableLocales.length <= 1) return;
     if (locale !== router.defaultLocale) return;
 
-    // Check if previously dismissed
     if (localStorage.getItem(LANGUAGE_BANNER_STORAGE_KEY)) return;
 
-    // Detect browser language
     const detected = getDetectedLocaleFromNavigatorLanguage(
       navigator.language,
       router.defaultLocale,
-      locales
+      availableLocales
     );
     if (detected) {
       setDetectedLocale(detected);
       setDismissed(false);
     }
-  }, [locale, locales, router.defaultLocale]);
+  }, [locale, availableLocales, router.defaultLocale]);
 
   const handleDismiss = () => {
     localStorage.setItem(LANGUAGE_BANNER_STORAGE_KEY, 'true');

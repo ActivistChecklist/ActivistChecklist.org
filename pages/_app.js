@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import { storyblokInit, apiPlugin } from "@storyblok/react";
-import { NextIntlClientProvider } from 'next-intl';
+import { NextIntlClientProvider, IntlErrorCode } from 'next-intl';
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import ErrorBoundary from '../components/development/ErrorBoundary';
 import { useEffect } from "react";
@@ -69,8 +69,15 @@ function MyApp({ Component, pageProps }) {
   const baseUrl = getBaseUrl();
   const defaultOgImage = `${baseUrl}/images/og-image.png`;
 
+  const intlLocale = router.locale || 'en';
+
+  const handleIntlError = (error) => {
+    if (error.code === IntlErrorCode.ENVIRONMENT_FALLBACK) return;
+    console.error(error);
+  };
+
   return (
-    <NextIntlClientProvider locale={router.locale} messages={pageProps.messages}>
+    <NextIntlClientProvider locale={intlLocale} messages={pageProps.messages || {}} onError={handleIntlError}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <Head>
             {/* Favicons and basic meta tags */}

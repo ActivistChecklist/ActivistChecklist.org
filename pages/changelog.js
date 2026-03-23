@@ -135,7 +135,7 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
   );
 };
 
-export async function getStaticProps({ locale }) {
+export async function getStaticProps({ locale = 'en' }) {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion, fetchAllChangelogEntries } = await import('../utils/core');

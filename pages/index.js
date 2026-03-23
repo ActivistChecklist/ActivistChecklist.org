@@ -182,7 +182,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
   );
 };
 
-export async function getStaticProps({ locale }) {
+export async function getStaticProps({ locale = 'en' }) {
   try {
     const messages = (await import(`../messages/${locale}.json`)).default;
     const { getStoryblokApi } = await import('@storyblok/react');

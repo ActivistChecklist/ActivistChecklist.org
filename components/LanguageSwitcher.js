@@ -14,13 +14,14 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const { locale, locales, asPath } = router;
   const t = useTranslations();
+
   const availableLocales = locales || [];
+
+  if (availableLocales.length <= 1) return null;
 
   const switchLocale = (newLocale) => {
     router.push(asPath, asPath, { locale: newLocale });
   };
-
-  if (availableLocales.length <= 1) return null;
 
   return (
     <DropdownMenu>

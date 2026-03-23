@@ -110,7 +110,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
   );
 };
 
-export async function getStaticProps({ locale }) {
+export async function getStaticProps({ locale = 'en' }) {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');

@@ -1,30 +1,7 @@
 const path = require('path');
 
-const DEFAULT_LOCALE = 'en';
-const KNOWN_LOCALES = ['en', 'es'];
-
-function getActiveLocales() {
-  const fromEnv = process.env.ENABLED_LOCALES;
-  if (fromEnv) {
-    const parsed = fromEnv
-      .split(',')
-      .map((locale) => locale.trim())
-      .filter(Boolean)
-      .filter((locale) => KNOWN_LOCALES.includes(locale));
-    if (parsed.length > 0) return parsed;
-  }
-
-  // Default workflow: all locales in dev, only English in preview/production.
-  return process.env.NODE_ENV === 'development' ? KNOWN_LOCALES : [DEFAULT_LOCALE];
-}
-
-const activeLocales = getActiveLocales();
-
 const baseConfig = {
   trailingSlash: true,
-  env: {
-    NEXT_PUBLIC_ACTIVE_LOCALES: activeLocales.join(','),
-  },
   images: {
     unoptimized: true,
     domains: ['a.storyblok.com'],
@@ -57,8 +34,8 @@ if (process.env.BUILD_MODE === 'static') {
 // i18n is incompatible with static export — only enable for SSR builds
 if (process.env.BUILD_MODE !== 'static') {
   baseConfig.i18n = {
-    locales: activeLocales,
-    defaultLocale: DEFAULT_LOCALE,
+    locales: ['en', 'es'],
+    defaultLocale: 'en',
   };
 }
 

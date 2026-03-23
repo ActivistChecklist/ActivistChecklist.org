@@ -152,12 +152,11 @@ export default function Custom404() {
   );
 }
 
-// Add getStaticProps to ensure this page is included in the static export
-export async function getStaticProps({ locale }) {
+export async function getStaticProps({ locale = 'en' }) {
   const messages = (await import(`../messages/${locale}.json`)).default;
   return {
     props: {
       messages
-    }, // will be passed to the page component as props
+    },
   }
 } 

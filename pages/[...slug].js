@@ -123,7 +123,7 @@ export default function Page({ story, preview, ogImagePath, isFallbackContent })
   );
 }
 
-export async function getStaticProps({ params, preview = false, locale }) {
+export async function getStaticProps({ params, preview = false, locale = 'en' }) {
   let slug = params?.slug ? params.slug.join("/") : "home";
   const storyblokApi = getStoryblokApi();
 
@@ -286,8 +286,8 @@ export async function getStaticPaths({ locales }) {
   const isStaticBuild = process.env.BUILD_MODE === 'static';
   const includedTypes = isStaticBuild ? ['page', 'guide'] : null;
 
-  // When i18n is disabled (static builds), locales is undefined — fall back to default
-  const activeLocales = locales || ['en'];
+  const hasI18n = Array.isArray(locales) && locales.length > 0;
+  const activeLocales = hasI18n ? locales : ['en'];
 
   let paths = [];
 
@@ -298,9 +298,10 @@ export async function getStaticPaths({ locales }) {
 
     const splittedSlug = story.full_slug.split("/");
 
-    // Generate a path for every locale
     for (const locale of activeLocales) {
-      paths.push({ params: { slug: splittedSlug }, locale });
+      const pathObj = { params: { slug: splittedSlug } };
+      if (hasI18n) pathObj.locale = locale;
+      paths.push(pathObj);
     }
   });
 

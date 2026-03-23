@@ -83,7 +83,7 @@ const GuideList = ({ guides }) => {
   );
 };
 
-export async function getStaticProps({ locale }) {
+export async function getStaticProps({ locale = 'en' }) {
   const storyblokApi = getStoryblokApi();
   const messages = (await import(`../messages/${locale}.json`)).default;
   
