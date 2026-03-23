@@ -5,8 +5,13 @@ import { useDebug } from '../../contexts/DebugContext'
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect } from "react";
 import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/router";
 
 function Page({ blok, story }) {
+  const t = useTranslations();
+  const router = useRouter();
+  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
   const { setDebugData } = useDebug() || {}
   const { setSidebarType } = useLayout();
 
@@ -19,7 +24,7 @@ function Page({ blok, story }) {
   }
 
   const metaBarItems = [
-    getDateMetaItem(story.updated_at)
+    getDateMetaItem(story.updated_at, t('meta.lastUpdatedOn'), dateLocale)
   ];
 
   return (

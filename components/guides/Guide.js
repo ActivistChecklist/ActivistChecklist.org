@@ -8,6 +8,8 @@ import { FeedbackCTA } from "@/components/guides/FeedbackCTA";
 import { useLayout } from "@/contexts/LayoutContext";
 import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
 import { getGuideIcon } from "@/config/icons";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/router";
 
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
@@ -50,6 +52,9 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
 };
 
 const Guide = ({ blok, story }) => {
+  const t = useTranslations();
+  const router = useRouter();
+  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
   const { setSidebarType } = useLayout();
   const [sectionExpandStates, setSectionExpandStates] = useState({});
   const [expandTriggers, setExpandTriggers] = useState({});
@@ -113,8 +118,8 @@ const Guide = ({ blok, story }) => {
   if (blok.last_updated) {
     metaBarItems.push({
       icon: <Calendar className="h-4 w-4 mr-1" />,
-      label: "Last reviewed on",
-      value: new Date(blok.last_updated).toLocaleDateString('en-US', {
+      label: t('meta.lastReviewedOn'),
+      value: new Date(blok.last_updated).toLocaleDateString(dateLocale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -125,7 +130,7 @@ const Guide = ({ blok, story }) => {
   if (blok.estimated_time) {
     metaBarItems.push({
       icon: <Clock className="h-4 w-4 mr-0.5" />,
-      label: "Takes about",
+      label: t('meta.takesAbout'),
       value: blok.estimated_time
     });
   }

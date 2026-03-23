@@ -126,6 +126,39 @@
   "languageSwitcher": {
     "ariaLabel": "Switch language"
   },
+  "meta": {
+    "lastUpdatedOn": "Last updated on",
+    "lastReviewedOn": "Last reviewed on",
+    "takesAbout": "Takes about",
+    "viewLatestGuideAt": "View the latest guide at"
+  },
+  "footer": {
+    "branding": {
+      "title": "Activist Checklist",
+      "description": "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
+    },
+    "stayUpdated": "Stay Updated",
+    "sections": {
+      "navigation": "Navigation",
+      "topChecklists": "Top Checklists"
+    },
+    "disclaimer": "Heads up: We provide info and resources, not legal advice. Consult an attorney for your specific situation.",
+    "licenseNotice": "Content available under <cc>Creative Commons BY-SA</cc>. See our <sources>sources</sources>. Source code available on <github>GitHub</github>.",
+    "social": {
+      "blueskyAriaLabel": "Follow us on Bluesky",
+      "githubAriaLabel": "View our GitHub repository",
+      "mastodonAriaLabel": "Follow us on Mastodon"
+    }
+  },
+  "newsletter": {
+    "subscribe": "Subscribe",
+    "successLong": "You're subscribed! Want to message a friend on Signal to let them know about this project?",
+    "successShort": "Thanks for subscribing!",
+    "placeholders": {
+      "emailLong": "Enter your email",
+      "emailShort": "Email"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",

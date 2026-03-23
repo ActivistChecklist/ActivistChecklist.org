@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
+import { useTranslations } from 'next-intl';
 
 function useNewsletterSubscribe() {
   const [status, setStatus] = useState('idle');
@@ -48,6 +49,7 @@ function useNewsletterSubscribe() {
 }
 
 export function NewsletterSubscribeForm({ onSuccess }) {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [showForm, setShowForm] = useState(true);
   const { status, error, subscribe } = useNewsletterSubscribe();
@@ -78,7 +80,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
           variant="success" 
           className="mb-4 newsletter-alert"
         >
-          You're subscribed! Want to message a friend on Signal to let them know about this project?
+          {t('newsletter.successLong')}
         </Alert>
       )}
 
@@ -87,7 +89,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
           <div className="flex gap-2">
             <Input
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('newsletter.placeholders.emailLong')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -101,7 +103,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
               {status === 'loading' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Subscribe'
+                t('newsletter.subscribe')
               )}
             </Button>
           </div>
@@ -112,6 +114,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
 }
 
 export function CompactNewsletterSubscribe() {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [showForm, setShowForm] = useState(true);
   const { status, error, subscribe } = useNewsletterSubscribe();
@@ -141,7 +144,7 @@ export function CompactNewsletterSubscribe() {
           variant="success" 
           className="text-sm newsletter-alert"
         >
-          Thanks for subscribing!
+          {t('newsletter.successShort')}
         </Alert>
       )}
 
@@ -149,7 +152,7 @@ export function CompactNewsletterSubscribe() {
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             type="email"
-            placeholder="Email"
+            placeholder={t('newsletter.placeholders.emailShort')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

@@ -126,6 +126,39 @@
   "languageSwitcher": {
     "ariaLabel": "Cambiar idioma"
   },
+  "meta": {
+    "lastUpdatedOn": "Última actualización:",
+    "lastReviewedOn": "Última revisión:",
+    "takesAbout": "Toma aproximadamente",
+    "viewLatestGuideAt": "Consulta la versión más reciente de esta guía en"
+  },
+  "footer": {
+    "branding": {
+      "title": "Activist Checklist",
+      "description": "Pasos en lenguaje sencillo para la seguridad digital, porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura."
+    },
+    "stayUpdated": "Mantente al día",
+    "sections": {
+      "navigation": "Navegación",
+      "topChecklists": "Listas principales"
+    },
+    "disclaimer": "Aviso: Compartimos información y recursos, no asesoría legal. Consulta con una abogada o abogado para tu situación específica.",
+    "licenseNotice": "Contenido disponible bajo <cc>Creative Commons BY-SA</cc>. Consulta nuestras <sources>fuentes</sources>. El código fuente está disponible en <github>GitHub</github>.",
+    "social": {
+      "blueskyAriaLabel": "Síguenos en Bluesky",
+      "githubAriaLabel": "Ver nuestro repositorio en GitHub",
+      "mastodonAriaLabel": "Síguenos en Mastodon"
+    }
+  },
+  "newsletter": {
+    "subscribe": "Suscribirse",
+    "successLong": "Ya estás suscrito. ¿Quieres avisarle por Signal a una amistad sobre este proyecto?",
+    "successShort": "Gracias por suscribirte.",
+    "placeholders": {
+      "emailLong": "Ingresa tu correo",
+      "emailShort": "Correo"
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Algo salió mal",
