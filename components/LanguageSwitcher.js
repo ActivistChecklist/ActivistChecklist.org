@@ -14,10 +14,13 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const { locale, locales, asPath } = router;
   const t = useTranslations();
+  const availableLocales = locales || [];
 
   const switchLocale = (newLocale) => {
     router.push(asPath, asPath, { locale: newLocale });
   };
+
+  if (availableLocales.length <= 1) return null;
 
   return (
     <DropdownMenu>
@@ -27,7 +30,7 @@ export default function LanguageSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {locales.map((l) => (
+        {availableLocales.map((l) => (
           <DropdownMenuItem
             key={l}
             onClick={() => switchLocale(l)}
