@@ -147,6 +147,20 @@ function applyMarks(text, marks) {
         result = `[${result}](${href})`;
         break;
       }
+      case 'textStyle': {
+        const color = mark.attrs?.color?.toLowerCase();
+        // Map Storyblok colors to CSS classes
+        // Near-black (#0b081b) is just default text — skip it
+        if (color === '#ff0000') {
+          result = `<span className="text-error">${result}</span>`;
+        } else if (color === '#bca900') {
+          result = `<span className="text-warning">${result}</span>`;
+        } else if (color === '#009e04') {
+          result = `<span className="text-success">${result}</span>`;
+        }
+        // else: skip (near-black or unknown colors are default text)
+        break;
+      }
       case 'superscript':
         result = `<sup>${result}</sup>`;
         break;
@@ -191,6 +205,12 @@ function richTextToMdx(node, indent = '') {
   // Document root
   if (node.type === 'doc') {
     return (node.content || []).map(n => richTextToMdx(n, indent)).join('\n');
+  }
+
+  // Emoji node
+  if (node.type === 'emoji') {
+    const emoji = node.attrs?.emoji || '';
+    return applyMarks(emoji, node.marks);
   }
 
   // Text node
@@ -475,18 +495,21 @@ function convertSectionHeader(blok) {
   return `<Section ${attrs.join(' ')}>\n\n${description}\n`;
 }
 
-function convertChecklistItemRef(blok) {
-  // checklist-item-ref has a reference_item field that's resolved by the API
-  // The resolved item has a slug we can use
+function convertChecklistItemRef(blok, checklistSlugMap) {
+  // checklist-item-ref has a reference_item UUID
   const ref = blok.reference_item;
   if (!ref) {
     console.warn('  checklist-item-ref with no reference_item');
     return '';
   }
 
-  // If resolved, ref is the full story object
-  const slug = typeof ref === 'string' ? ref : (ref.slug || ref.full_slug || '');
-  return `<ChecklistItem ref="${slug}" />\n`;
+  // Resolve UUID to content.slug via the map
+  const uuid = typeof ref === 'string' ? ref : (ref.uuid || '');
+  const slug = checklistSlugMap?.get(uuid) || uuid;
+  if (slug === uuid) {
+    console.warn(`  Unresolved checklist-item UUID: ${uuid}`);
+  }
+  return `<ChecklistItem slug="${slug}" />\n`;
 }
 
 function convertChecklistItemReference(blok) {
@@ -495,7 +518,7 @@ function convertChecklistItemReference(blok) {
   const items = blok.expanded_items || [];
   return items.map(item => {
     const slug = typeof item === 'string' ? item : (item.slug || '');
-    return `<ChecklistItem ref="${slug}" />\n`;
+    return `<ChecklistItem slug="${slug}" />\n`;
   }).join('');
 }
 
@@ -532,18 +555,20 @@ function yamlString(val) {
 function convertChecklistItemStory(story) {
   const c = story.content;
   const frontmatter = {};
+  // Use content.slug (the intentional short slug) over story.slug (auto-generated)
+  const slug = c.slug || story.slug;
 
   frontmatter.title = c.title || story.name;
-  frontmatter.slug = story.slug;
+  frontmatter.slug = slug;
   frontmatter.type = c.type || 'checkbox';
-  if (c.why) frontmatter.why = c.why;
-  if (c.tools) frontmatter.tools = c.tools;
-  if (c.stop) frontmatter.stop = c.stop;
+  if (c.why) frontmatter.preview = c.why;
+  if (c.tools) frontmatter.do = c.tools;
+  if (c.stop) frontmatter.dont = c.stop;
   if (c.title_badges?.length) frontmatter.titleBadges = c.title_badges;
 
   const body = c.body ? richTextToMdx(c.body).trim() : '';
 
-  return { frontmatter, body, slug: story.slug };
+  return { frontmatter, body, slug };
 }
 
 function convertGuideStory(story) {

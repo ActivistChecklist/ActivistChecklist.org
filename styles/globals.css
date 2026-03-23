@@ -170,6 +170,7 @@ a {
     /* Text variants - darker for better readability */
     --text-error: 0 84.2% 45%;
     --text-warning: 38 92% 40%;
+    --text-success: 142 76% 28%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 98%;
@@ -230,6 +231,7 @@ a {
     /* Text variants - lighter for dark mode readability */
     --text-error: 0 84.2% 70%;
     --text-warning: 38 92% 65%;
+    --text-success: 142 76% 45%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 15%;
@@ -280,6 +282,10 @@ a {
 
   .text-warning {
     color: hsl(var(--text-warning));
+  }
+
+  .text-success {
+    color: hsl(var(--text-success));
   }
 }
 
