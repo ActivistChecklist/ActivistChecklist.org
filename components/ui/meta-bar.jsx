@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
-export function getDateMetaItem(date, label = "Last updated on") {
+export function getDateMetaItem(date, label = "Last updated on", dateLocale = 'en-US') {
   return {
     icon: <Calendar className="h-4 w-4 mr-1" />,
     label,
-    value: new Date(date).toLocaleDateString('en-US', {
+    value: new Date(date).toLocaleDateString(dateLocale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -19,6 +20,7 @@ export const MetaBar = ({
   className,
   ...props 
 }) => {
+  const t = useTranslations();
   if (items.length === 0) return null;
   
   const valueStyle = "text-foreground font-semibold"; 
@@ -55,7 +57,7 @@ export const MetaBar = ({
       ))}
       <div className="hidden print:flex whitespace-normal">
         <span>
-          View the latest guide at{' '}
+          {t('meta.viewLatestGuideAt')}{' '}
           <span className={valueStyle}>
             {currentUrl}
           </span>

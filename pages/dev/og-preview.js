@@ -68,13 +68,13 @@ export default function OgPreview({ stories = [], isDev }) {
   );
 }
 
-export async function getStaticProps() {
-  // In production/static builds, return empty page
+export async function getStaticProps({ locale = 'en' }) {
+  // Exclude this route from non-development builds entirely.
   if (process.env.NODE_ENV !== 'development') {
-    return {
-      props: { stories: [], isDev: false },
-    };
+    return { notFound: true };
   }
+
+  const messages = (await import(`../../messages/${locale}.json`)).default;
 
   try {
     const storyblokApi = getStoryblokApi();
@@ -101,11 +101,11 @@ export async function getStaticProps() {
       }));
 
     return {
-      props: { stories, isDev: true },
+      props: { stories, isDev: true, messages },
     };
   } catch (error) {
     return {
-      props: { stories: [], isDev: false },
+      props: { stories: [], isDev: false, messages },
     };
   }
 }

@@ -24,5 +24,5 @@ elif [ "$NODE_ENV" = "development" ]; then
 else
   # Assume production, or at least use whatever .next currently has (it exists in development too)
   rm -rf public/pagefind
-  pagefind --site .next/server/pages --output-path public/pagefind
+  pagefind --site .next/server/pages/en --output-path public/pagefind
 fi

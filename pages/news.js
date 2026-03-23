@@ -62,7 +62,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
           <header className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold mb-4">Surveillance News</h1>
+                <h1 className="page-title">Surveillance News</h1>
                 <p className="text-lg text-muted-foreground">
                   Latest news about state surveillance and threats facing social movements.
                 </p>
@@ -110,10 +110,11 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
   );
 };
 
-export async function getStaticProps() {
+export async function getStaticProps({ locale = 'en' }) {
   try {
     const { getStoryblokApi } = await import('@storyblok/react');
     const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');
+    const messages = (await import(`../messages/${locale}.json`)).default;
     
     const storyblokApi = getStoryblokApi();
     
@@ -125,15 +126,18 @@ export async function getStaticProps() {
     return {
       props: {
         newsItems,
-        imageManifest
+        imageManifest,
+        messages
       }
     };
   } catch (error) {
     console.error('Error fetching news items:', error);
+    const messages = (await import(`../messages/${locale}.json`)).default;
     return {
       props: {
         newsItems: [],
-        imageManifest: {}
+        imageManifest: {},
+        messages
       }
     };
   }

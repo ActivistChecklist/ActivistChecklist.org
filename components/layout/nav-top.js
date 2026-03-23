@@ -3,10 +3,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Search from "@/components/Search"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { navigationConfig, isNavItemActive, isSubItemActive } from "@/config/navigation"
 import {
   NavigationMenu,
@@ -18,11 +20,23 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
+import { translateMainNavigation } from "@/lib/navigation-i18n"
 
 const TopNav = ({ hideOnScroll = false, maxWidth }) => {
   const pathname = usePathname()
+  const t = useTranslations()
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+
+  const translateText = (key, fallback) => {
+    try {
+      return t(key);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const translatedMainNav = translateMainNavigation(navigationConfig.mainNav, translateText);
 
   useEffect(() => {
     if (!hideOnScroll) {
@@ -81,7 +95,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                 </SheetTrigger>
                 <SheetContent side="left">
                   <nav className="flex flex-col mt-6">
-                    {navigationConfig.mainNav.map((item) => (
+                    {translatedMainNav.map((item) => (
                       item.type === "link" ? (
                         <Link 
                           key={item.key} 
@@ -117,7 +131,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                               {subItem.title}
                             </Link>
                           ))}
-                          {item.items.length > 0 && item.label === "Security Checklists" && (
+                          {item.items.length > 0 && item.key === "security-checklists" && (
                             <Link
                               href="/checklists"
                               className={cn(
@@ -152,7 +166,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
               <div className="hidden md:flex items-center space-x-4">
                 <NavigationMenu>
                   <NavigationMenuList>
-                    {navigationConfig.mainNav.map((item, mainIndex) => (
+                    {translatedMainNav.map((item, mainIndex) => (
                       <NavigationMenuItem key={`desktop-${item.label}-${mainIndex}`}>
                         {item.type === "dropdown" ? (
                           <>
@@ -246,6 +260,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                     <social.icon className="h-5 w-5" aria-hidden="true" />
                   </a>
                 ))}
+                <LanguageSwitcher />
                 <Search variant="button" />
               </div>
             </div>
