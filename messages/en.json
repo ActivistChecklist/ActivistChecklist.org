@@ -8,7 +8,78 @@
     "checklists": "Security Checklists",
     "news": "News",
     "resources": "Resources",
-    "about": "About"
+    "about": "About",
+    "browseAllChecklists": "Browse all checklists"
+  },
+  "navItems": {
+    "essentials": {
+      "title": "Security essentials",
+      "description": "Core security practices every activist should follow."
+    },
+    "signal": {
+      "title": "Signal security",
+      "description": "Secure your Signal messaging app for safer communications."
+    },
+    "protest": {
+      "title": "Prepare for a protest",
+      "description": "Digital security for anyone attending a protest."
+    },
+    "ice": {
+      "title": "ICE watch digital security",
+      "description": "Digital security for ICE watch and rapid response networks."
+    },
+    "doxxing": {
+      "title": "Doxxing defense",
+      "description": "Protect yourself from doxxing and online harassment."
+    },
+    "travel": {
+      "title": "Travel & flight security",
+      "description": "Digital security practices for activists traveling."
+    },
+    "emergency": {
+      "title": "Emergency planning",
+      "description": "Establish an emergency support network in case you're detained or threatened."
+    },
+    "secondary": {
+      "title": "Secondary phone",
+      "description": "Set up an extra phone for activism and protests."
+    },
+    "links": {
+      "title": "Remove link tracking",
+      "label": "Remove link tracking"
+    },
+    "policeDoorPoster": {
+      "title": "Police at the door poster",
+      "label": "\"Police at the door\" poster"
+    },
+    "flyer": {
+      "title": "Printable flyer",
+      "label": "Printable flyer"
+    },
+    "movies": {
+      "title": "Movies, books, & podcasts",
+      "label": "Movies, books, & podcasts"
+    },
+    "resources": {
+      "title": "Resources",
+      "label": "Resources"
+    },
+    "about": {
+      "title": "About this site",
+      "label": "About"
+    },
+    "changelog": {
+      "title": "Recent site updates",
+      "label": "Recent site updates"
+    },
+    "contact": {
+      "title": "Contact",
+      "label": "Contact"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "label": "Privacy"
+    }
   },
   "hero": {
     "title": "Digital Security Checklists for Activists",

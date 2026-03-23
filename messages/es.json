@@ -8,7 +8,78 @@
     "checklists": "Listas de seguridad",
     "news": "Noticias",
     "resources": "Recursos",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "browseAllChecklists": "Ver todas las listas"
+  },
+  "navItems": {
+    "essentials": {
+      "title": "Fundamentos de seguridad",
+      "description": "Prácticas básicas de seguridad que toda persona activista debería seguir."
+    },
+    "signal": {
+      "title": "Seguridad en Signal",
+      "description": "Asegura la app de mensajería Signal para comunicaciones más seguras."
+    },
+    "protest": {
+      "title": "Prepárate para una protesta",
+      "description": "Seguridad digital para cualquier persona que asista a una protesta."
+    },
+    "ice": {
+      "title": "Seguridad digital para monitoreo de ICE",
+      "description": "Seguridad digital para redes de monitoreo de ICE y respuesta rápida."
+    },
+    "doxxing": {
+      "title": "Defensa contra doxxing",
+      "description": "Protégete del doxxing y el acoso en línea."
+    },
+    "travel": {
+      "title": "Seguridad en viajes y vuelos",
+      "description": "Prácticas de seguridad digital para activistas que viajan."
+    },
+    "emergency": {
+      "title": "Planificación de emergencia",
+      "description": "Establece una red de apoyo de emergencia en caso de detención o amenazas."
+    },
+    "secondary": {
+      "title": "Teléfono secundario",
+      "description": "Configura un teléfono extra para activismo y protestas."
+    },
+    "links": {
+      "title": "Eliminar rastreo de enlaces",
+      "label": "Eliminar rastreo de enlaces"
+    },
+    "policeDoorPoster": {
+      "title": "Póster \"Policía en la puerta\"",
+      "label": "Póster \"Policía en la puerta\""
+    },
+    "flyer": {
+      "title": "Volante imprimible",
+      "label": "Volante imprimible"
+    },
+    "movies": {
+      "title": "Películas, libros y pódcasts",
+      "label": "Películas, libros y pódcasts"
+    },
+    "resources": {
+      "title": "Recursos",
+      "label": "Recursos"
+    },
+    "about": {
+      "title": "Acerca de este sitio",
+      "label": "Acerca de"
+    },
+    "changelog": {
+      "title": "Actualizaciones recientes del sitio",
+      "label": "Actualizaciones recientes del sitio"
+    },
+    "contact": {
+      "title": "Contacto",
+      "label": "Contacto"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "label": "Privacidad"
+    }
   },
   "hero": {
     "title": "Listas de seguridad digital para activistas",

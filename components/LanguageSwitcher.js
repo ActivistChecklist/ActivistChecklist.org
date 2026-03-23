@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { LANGUAGE_NAMES } from '@/lib/i18n-config';
+import { LANGUAGE_NAMES, LANGUAGE_FLAGS } from '@/lib/i18n-config';
 
 export default function LanguageSwitcher() {
   const router = useRouter();
@@ -33,6 +33,9 @@ export default function LanguageSwitcher() {
             onClick={() => switchLocale(l)}
             className={l === locale ? 'font-bold' : ''}
           >
+            <span className="mr-2" aria-hidden="true">
+              {LANGUAGE_FLAGS[l] || '🌐'}
+            </span>
             {LANGUAGE_NAMES[l] || l}
           </DropdownMenuItem>
         ))}

@@ -271,9 +271,7 @@ export const navigationConfig = {
     RESOURCES_SECTION,
     ABOUT_SECTION
   ],
-  socialLinks: [
-    SOCIAL_LINKS.BLUESKY
-  ]
+  socialLinks: []
 }
 
 export const footerConfig = {

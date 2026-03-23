@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
@@ -22,8 +23,129 @@ import { cn } from "@/lib/utils"
 
 const TopNav = ({ hideOnScroll = false, maxWidth }) => {
   const pathname = usePathname()
+  const t = useTranslations()
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+
+  const translateText = (key, fallback) => {
+    try {
+      return t(key);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const mainNavTranslationKeys = {
+    home: "nav.home",
+    "security-checklists": "nav.checklists",
+    news: "nav.news",
+    "resources-section": "nav.resources",
+    "about-section": "nav.about",
+  };
+
+  const itemTranslationKeys = {
+    essentials: {
+      title: "navItems.essentials.title",
+      description: "navItems.essentials.description",
+    },
+    signal: {
+      title: "navItems.signal.title",
+      description: "navItems.signal.description",
+    },
+    protest: {
+      title: "navItems.protest.title",
+      description: "navItems.protest.description",
+    },
+    ice: {
+      title: "navItems.ice.title",
+      description: "navItems.ice.description",
+    },
+    doxxing: {
+      title: "navItems.doxxing.title",
+      description: "navItems.doxxing.description",
+    },
+    travel: {
+      title: "navItems.travel.title",
+      description: "navItems.travel.description",
+    },
+    emergency: {
+      title: "navItems.emergency.title",
+      description: "navItems.emergency.description",
+    },
+    secondary: {
+      title: "navItems.secondary.title",
+      description: "navItems.secondary.description",
+    },
+    links: {
+      title: "navItems.links.title",
+      label: "navItems.links.label",
+    },
+    "police-door-poster": {
+      title: "navItems.policeDoorPoster.title",
+      label: "navItems.policeDoorPoster.label",
+    },
+    flyer: {
+      title: "navItems.flyer.title",
+      label: "navItems.flyer.label",
+    },
+    movies: {
+      title: "navItems.movies.title",
+      label: "navItems.movies.label",
+    },
+    resources: {
+      title: "navItems.resources.title",
+      label: "navItems.resources.label",
+    },
+    about: {
+      title: "navItems.about.title",
+      label: "navItems.about.label",
+    },
+    changelog: {
+      title: "navItems.changelog.title",
+      label: "navItems.changelog.label",
+    },
+    contact: {
+      title: "navItems.contact.title",
+      label: "navItems.contact.label",
+    },
+    privacy: {
+      title: "navItems.privacy.title",
+      label: "navItems.privacy.label",
+    },
+  };
+
+  const getTranslatedNav = (item) => {
+    const topLevelKey = mainNavTranslationKeys[item.key];
+    const itemKey = itemTranslationKeys[item.key] || {};
+
+    const translatedItem = {
+      ...item,
+      label: topLevelKey
+        ? translateText(topLevelKey, item.label)
+        : itemKey.label
+          ? translateText(itemKey.label, item.label)
+          : item.label,
+      title: itemKey.title ? translateText(itemKey.title, item.title) : item.title,
+      description: itemKey.description
+        ? translateText(itemKey.description, item.description)
+        : item.description,
+    };
+
+    if (item.items?.length) {
+      translatedItem.items = item.items.map((subItem) => getTranslatedNav(subItem));
+    }
+
+    if (item.footerLink) {
+      translatedItem.footerLink = {
+        ...item.footerLink,
+        title: translateText("nav.browseAllChecklists", item.footerLink.title),
+      };
+    }
+
+    return translatedItem;
+  };
+
+  const translatedMainNav = navigationConfig.mainNav.map((item) => getTranslatedNav(item));
 
   useEffect(() => {
     if (!hideOnScroll) {
@@ -82,7 +204,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                 </SheetTrigger>
                 <SheetContent side="left">
                   <nav className="flex flex-col mt-6">
-                    {navigationConfig.mainNav.map((item) => (
+                    {translatedMainNav.map((item) => (
                       item.type === "link" ? (
                         <Link 
                           key={item.key} 
@@ -118,7 +240,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                               {subItem.title}
                             </Link>
                           ))}
-                          {item.items.length > 0 && item.label === "Security Checklists" && (
+                          {item.items.length > 0 && item.key === "security-checklists" && (
                             <Link
                               href="/checklists"
                               className={cn(
@@ -153,7 +275,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
               <div className="hidden md:flex items-center space-x-4">
                 <NavigationMenu>
                   <NavigationMenuList>
-                    {navigationConfig.mainNav.map((item, mainIndex) => (
+                    {translatedMainNav.map((item, mainIndex) => (
                       <NavigationMenuItem key={`desktop-${item.label}-${mainIndex}`}>
                         {item.type === "dropdown" ? (
                           <>
