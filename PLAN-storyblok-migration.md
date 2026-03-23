@@ -26,7 +26,7 @@ ActivistChecklist.org stores all content in Storyblok CMS (231 stories across 17
 
 ## File Formats
 
-### Checklist Items (`content/checklist-items/{slug}.mdx`)
+### Checklist Items (`content/{locale}/checklist-items/{slug}.mdx`)
 
 42 files. Only `body` is richtext → MDX body. All other fields are plain strings → frontmatter.
 
@@ -57,7 +57,7 @@ Alert body goes here. Supports full markdown.
 </HowTo>
 ```
 
-### Guides (`content/guides/{slug}.mdx`)
+### Guides (`content/{locale}/guides/{slug}.mdx`)
 
 13 files. The full guide structure lives in the MDX body. Section components explicitly group their checklist items. Checklist items are always referenced by slug — resolved at build time.
 
@@ -96,7 +96,7 @@ This guide walks you through the most important Signal settings.
 
 **Ref resolution**: `getStaticProps` extracts all `ChecklistItemRef ref="..."` from MDX source, loads each item's MDX, serializes them, and passes a `resolvedItems` map via React context.
 
-### Pages (`content/pages/{slug}.mdx`)
+### Pages (`content/{locale}/pages/{slug}.mdx`)
 
 11 files (excluding home, which is a custom Next.js page).
 
@@ -112,7 +112,7 @@ Page body with optional embedded components...
 <Button title="Contact us" url="/contact" variant="default" />
 ```
 
-### News Items (`content/news/{year}/{slug}.mdx`)
+### News Items (`content/{locale}/news/{year}/{slug}.mdx`)
 
 132 files, grouped by year. Comment richtext → MDX body.
 
@@ -128,7 +128,7 @@ hasPaywall: false
 Concerning development. See our [protest guide](/protest).
 ```
 
-### News Sources (`content/news-sources/{slug}.mdx`)
+### News Sources (`content/{locale}/news-sources/{slug}.mdx`)
 
 19 files. Frontmatter only, no body.
 
@@ -140,7 +140,7 @@ url: "https://theintercept.com"
 ---
 ```
 
-### Changelog Entries (`content/changelog/{date}-{slug}.mdx`)
+### Changelog Entries (`content/{locale}/changelog/{date}-{slug}.mdx`)
 
 14 files. Body is richtext → MDX body.
 
@@ -160,15 +160,21 @@ Added new [protest safety guide](/protest) with updated recommendations.
 
 ```
 content/
-  checklist-items/     # 42 MDX files
-  guides/              # 13 MDX files
-  pages/               # 11 MDX files
-  news/
-    2024/              # MDX files grouped by year
-    2025/
-    2026/
-  news-sources/        # 19 MDX files
-  changelog/           # 14 MDX files
+  en/                    # English (primary, migrated first)
+    checklist-items/     # 42 MDX files
+    guides/              # 13 MDX files
+    pages/               # 11 MDX files
+    news/
+      2024/              # MDX files grouped by year
+      2025/
+      2026/
+    news-sources/        # 19 MDX files
+    changelog/           # 14 MDX files
+  es/                    # Spanish (future — translated content)
+    checklist-items/     # Only files that have been translated
+    guides/
+    pages/
+    ...
 ```
 
 ---
@@ -588,33 +594,33 @@ Site continues running on Storyblok throughout.
 11. Preserve metadata scrubbing: `metadata-cli.cjs`, `pre-commit-metadata.cjs` (unchanged)
 12. Final build verification
 
-### Pre-requisite: Translation / i18n
+### Pre-requisite: Translation / i18n — RESOLVED
 
-Translation support must be designed and integrated into the content system BEFORE executing this migration plan. The directory structure and content loading layer depend on the translation strategy.
+Translation infrastructure is in place (PR #189, merged 2026-03-23):
 
-**Decisions needed:**
+- **i18n framework**: `next-intl` integrated with Pages Router
+- **Locales**: `en` (default), `es` — configured in `lib/i18n-config.js` and `next.config.js`
+- **UI strings**: `messages/en.json`, `messages/es.json` — covers nav, site chrome, common UI
+- **Content locale**: Storyblok `language` param currently; will become `content/{locale}/...` directory structure
+- **Fallback**: `lib/i18n-fallback.js` shows banner when content falls back to English
+- **Static export gap**: `next.config.js` disables i18n for `BUILD_MODE=static` (Next.js `output: 'export'` doesn't support i18n routing). This gets resolved during App Router migration.
 
-- **File structure**: `content/{locale}/checklist-items/{slug}.mdx` (locale-first) vs `content/checklist-items/{slug}.{locale}.mdx` (locale-suffix) vs `content/checklist-items/{locale}/{slug}.mdx` (locale-as-subfolder). Locale-first (`content/{locale}/...`) is most common for translation tools.
-- **i18n framework**: `next-intl` (recommended for Pages Router) or `next-i18next` for routing + UI strings. Content files handled separately by the content loading layer.
-- **Ref resolution across locales**: Do `<ChecklistItemRef ref="use-signal" />` refs point to the same slug in the current locale? (Yes — the content loader resolves `ref` to the locale-appropriate file with English fallback.)
-- **Translation management tool**: Weblate, Crowdin, or Pontoon for managing translations with "out of date" tracking.
+**Decisions resolved:**
 
-**Translation tool research notes** (brief — full decision deferred):
+- **File structure**: `content/{locale}/checklist-items/{slug}.mdx` (locale-first) — compatible with Weblate, Keystatic, and the existing `next-intl` setup
+- **Ref resolution**: `<ChecklistItemRef ref="use-signal" />` resolves to the same slug in the current locale, with English fallback
+- **Content loading**: `lib/content.js` will accept `locale` param from day one, defaulting to `en`. Only English content migrated initially.
+- **Translation tool**: Deferred (Weblate or Crowdin). Both work with locale-first directory structure and git-based workflows.
 
-- **Weblate**: Open-source, self-hostable. Supports git-based workflows (watches repo, creates PRs with translations). Can handle Markdown files. Tracks "source string age" — when English source file changes, all translations of that file are marked "fuzzy" (needs update). This is exactly the "out of date notification" feature desired. MDX would likely need to be treated as Markdown format or use a custom Weblate component. Weblate's "file discovery" addon can auto-discover translated files using path patterns like `content/*/checklist-items/*.mdx`.
-- **Crowdin**: SaaS (free for open source). Similar git-based workflow. Good Markdown support. Has "outdated strings" tracking. More polished UI than Weblate. Less self-host flexibility.
-- **Neither tool natively understands MDX components** — they'd see `<Alert>`, `<HowTo>` etc. as untranslatable markup (which is correct — translators translate the text content, not the component tags). This actually works well with MDX since component names/props are code and the text between them is the translatable content.
-- **Key compatibility note for CMS**: TinaCMS has i18n support (locale-based collections). Keystatic has a locales config. Either works with locale-first directory structure. This reinforces choosing `content/{locale}/...` as the file layout.
+### Phase 5 (future): Visual editing with Keystatic
 
-This must be resolved before Phase 1 begins.
-
-### Phase 5 (future): Visual editing
-
-- Add TinaCMS (or Keystatic if App Router migration happens)
-- Define schemas matching frontmatter fields
-- Register MDX component templates
-- Simpler content types (checklist items, pages, news) get visual editing first
-- Guide structure may remain code-edited if CMS can't handle it
+- Requires App Router migration (Phase 5a — see `PLAN-cms-visual-editor.md`)
+- Install `@keystatic/core` and `@keystatic/next`
+- Define collection schemas matching frontmatter fields + MDX content components (wrapper/block types)
+- Configure GitHub Mode for remote editing (GitHub OAuth, no database needed)
+- Dual deployment: production static export + editing site on Vercel SSR
+- All content types get visual editing (Keystatic's wrapper type handles our nesting patterns)
+- See `PLAN-cms-visual-editor.md` for full architecture
 
 ---
 
@@ -624,15 +630,17 @@ This must be resolved before Phase 1 begins.
 |----------|-----------|
 | **MDX for everything** (including news, sources) | Consistency across the whole system |
 | **Guides use MDX** (not YAML) | YAML gets messy with nested rich text |
-| **File-based first**, TinaCMS later | Working system faster; CMS adds complexity |
+| **File-based first**, Keystatic later | Working system faster; CMS adds complexity. Keystatic confirmed as visual editor (see `PLAN-cms-visual-editor.md`) |
 | **`{class}text{/}` → `<span>`** during migration | No custom parser needed |
 | **Accept localStorage progress reset** | Slug-based keys, no legacy migration |
 | **Keep nesting shallow** | CMS compatibility; matches actual content patterns |
 | **String refs for cross-content** | CMS-agnostic; every tool can edit strings |
 | **4-layer MDX security** | Defense in depth for activist security site |
-| **Simple file reads, no GraphQL** | 231 items at build time; TinaCMS adds GraphQL later if needed |
+| **Simple file reads, no GraphQL** | 231 items at build time; Keystatic Reader API replaces these later |
 | **Comparison testing is temporary** | Exists only for migration verification, then deleted |
-| **Translation must be designed first** | Directory structure and content loading depend on i18n strategy |
+| **Translation designed first** | Done — `next-intl` integrated, locale-first directory structure chosen |
+| **Keystatic confirmed as visual editor** | Handles nested MDX (wrapper type), React 19, no database needed. See `PLAN-cms-visual-editor.md` |
+| **Locale-aware content loading from day one** | `lib/content.js` accepts `locale` param even though only English migrated initially |
 
 ## Verification
 
