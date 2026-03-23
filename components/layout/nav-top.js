@@ -20,6 +20,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
+import { translateMainNavigation } from "@/lib/navigation-i18n"
 
 const TopNav = ({ hideOnScroll = false, maxWidth }) => {
   const pathname = usePathname()
@@ -35,117 +36,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
     }
   };
 
-  const mainNavTranslationKeys = {
-    home: "nav.home",
-    "security-checklists": "nav.checklists",
-    news: "nav.news",
-    "resources-section": "nav.resources",
-    "about-section": "nav.about",
-  };
-
-  const itemTranslationKeys = {
-    essentials: {
-      title: "navItems.essentials.title",
-      description: "navItems.essentials.description",
-    },
-    signal: {
-      title: "navItems.signal.title",
-      description: "navItems.signal.description",
-    },
-    protest: {
-      title: "navItems.protest.title",
-      description: "navItems.protest.description",
-    },
-    ice: {
-      title: "navItems.ice.title",
-      description: "navItems.ice.description",
-    },
-    doxxing: {
-      title: "navItems.doxxing.title",
-      description: "navItems.doxxing.description",
-    },
-    travel: {
-      title: "navItems.travel.title",
-      description: "navItems.travel.description",
-    },
-    emergency: {
-      title: "navItems.emergency.title",
-      description: "navItems.emergency.description",
-    },
-    secondary: {
-      title: "navItems.secondary.title",
-      description: "navItems.secondary.description",
-    },
-    links: {
-      title: "navItems.links.title",
-      label: "navItems.links.label",
-    },
-    "police-door-poster": {
-      title: "navItems.policeDoorPoster.title",
-      label: "navItems.policeDoorPoster.label",
-    },
-    flyer: {
-      title: "navItems.flyer.title",
-      label: "navItems.flyer.label",
-    },
-    movies: {
-      title: "navItems.movies.title",
-      label: "navItems.movies.label",
-    },
-    resources: {
-      title: "navItems.resources.title",
-      label: "navItems.resources.label",
-    },
-    about: {
-      title: "navItems.about.title",
-      label: "navItems.about.label",
-    },
-    changelog: {
-      title: "navItems.changelog.title",
-      label: "navItems.changelog.label",
-    },
-    contact: {
-      title: "navItems.contact.title",
-      label: "navItems.contact.label",
-    },
-    privacy: {
-      title: "navItems.privacy.title",
-      label: "navItems.privacy.label",
-    },
-  };
-
-  const getTranslatedNav = (item) => {
-    const topLevelKey = mainNavTranslationKeys[item.key];
-    const itemKey = itemTranslationKeys[item.key] || {};
-
-    const translatedItem = {
-      ...item,
-      label: topLevelKey
-        ? translateText(topLevelKey, item.label)
-        : itemKey.label
-          ? translateText(itemKey.label, item.label)
-          : item.label,
-      title: itemKey.title ? translateText(itemKey.title, item.title) : item.title,
-      description: itemKey.description
-        ? translateText(itemKey.description, item.description)
-        : item.description,
-    };
-
-    if (item.items?.length) {
-      translatedItem.items = item.items.map((subItem) => getTranslatedNav(subItem));
-    }
-
-    if (item.footerLink) {
-      translatedItem.footerLink = {
-        ...item.footerLink,
-        title: translateText("nav.browseAllChecklists", item.footerLink.title),
-      };
-    }
-
-    return translatedItem;
-  };
-
-  const translatedMainNav = navigationConfig.mainNav.map((item) => getTranslatedNav(item));
+  const translatedMainNav = translateMainNavigation(navigationConfig.mainNav, translateText);
 
   useEffect(() => {
     if (!hideOnScroll) {

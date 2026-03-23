@@ -8,6 +8,7 @@ import {
   StoryblokComponent,
 } from "@storyblok/react";
 import { cn, getBaseUrl } from "@/lib/utils";
+import { isFallbackStoryContent } from "@/lib/i18n-fallback";
 import TranslationFallbackBanner from '@/components/TranslationFallbackBanner';
 
 // Relations that need to be resolved - must match getStaticProps AND bridge
@@ -139,7 +140,7 @@ export async function getStaticProps({ params, preview = false, locale }) {
   }
 
   const messages = (await import(`../messages/${locale}.json`)).default;
-  const isFallbackContent = locale !== 'en' && !data.story.content.translations_complete?.includes(locale);
+  const isFallbackContent = isFallbackStoryContent(locale, data.story.lang);
 
   // Function to get all checklist items from a guide
   const getGuideChecklistItems = (blocks = []) => {
