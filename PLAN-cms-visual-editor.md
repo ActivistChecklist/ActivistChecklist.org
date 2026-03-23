@@ -8,7 +8,7 @@ After migrating off Storyblok to file-based MDX content (see `PLAN-storyblok-mig
 
 - **Free** — no paid SaaS, no paid tiers
 - **Full control over translation** — no vendor lock-in on i18n (Storyblok locked us into paying for their translation system)
-- **Nested content blocks** — must handle `HowTo → Alert`, `HowTo → Button`, `Section → RiskLevel/Alert/ChecklistItemRef`
+- **Nested content blocks** — must handle `HowTo → Alert`, `HowTo → Button`, `Section → RiskLevel/Alert/ChecklistItem`
 - **Fully static production build** — `output: 'export'` or equivalent, no reliance on Next.js API routes at runtime
 - **App Router migration is acceptable** if needed
 
@@ -30,8 +30,8 @@ After migrating off Storyblok to file-based MDX content (see `PLAN-storyblok-mig
 
 | Component | Props | Children | Where Used |
 |-----------|-------|----------|------------|
-| **Section** | title, slug | RiskLevel, Alert, ChecklistItemRef, markdown | Guide bodies |
-| **ChecklistItemRef** | ref (slug string) | none (self-closing) | Inside Section |
+| **Section** | title, slug | RiskLevel, Alert, ChecklistItem, markdown | Guide bodies |
+| **ChecklistItem** | ref (slug string) | none (self-closing) | Inside Section |
 | **RiskLevel** | level (enum) | markdown text (up to ~156 chars) | Inside Section |
 | **Alert** | type (enum), title | markdown text (up to ~549 chars) | Inside Section, HowTo, checklist item bodies |
 | **HowTo** | title | markdown text + Alert + Button | Checklist item bodies, guide bodies |
@@ -59,13 +59,13 @@ body → HowTo → Button       (5 instances)
 ```
 Section → RiskLevel (with body text)
 Section → Alert (with body text)
-Section → ChecklistItemRef (slug reference)
+Section → ChecklistItem (slug reference)
 Section → markdown text
 ```
 
 ### Cross-collection references
 
-- `ChecklistItemRef ref="use-signal"` — guide references a checklist item by slug
+- `ChecklistItem ref="use-signal"` — guide references a checklist item by slug
 - `<RelatedGuides>` wraps `<RelatedGuide slug="essentials" />` children — guide references other guides by slug (wrapper pattern avoids array props that break Crowdin)
 - News item `source: the-intercept` — references a news-source by slug
 
@@ -150,8 +150,8 @@ Editors visit the Vercel deployment, authenticate via GitHub, edit content. Chan
 - **Free and open source** (core is fully free, optional Keystatic Cloud free tier for up to 3 users)
 - **`fields.mdx()` writes standard JSX tags to `.mdx` files** — the exact same `<Component>` format our migration plan already uses. No format conversion needed. (Keystatic also has `fields.markdoc()` which writes `{% %}` Markdoc syntax to `.mdoc` files — we don't use that.)
 - **Best-in-class MDX content component model**: 5 component types:
-  - **Wrapper** — contains freeform rich text AND other components. Exactly right for `HowTo` wrapping `Alert` + `Button`, `Section` wrapping `RiskLevel` + `ChecklistItemRef`
-  - **Block** — self-closing components like `Button`, `ChecklistItemRef`
+  - **Wrapper** — contains freeform rich text AND other components. Exactly right for `HowTo` wrapping `Alert` + `Button`, `Section` wrapping `RiskLevel` + `ChecklistItem`
+  - **Block** — self-closing components like `Button`, `ChecklistItem`
   - **Inline** — inline components within text
   - **Mark** — text formatting marks
   - **Repeating** — parent/child composition patterns
@@ -182,7 +182,7 @@ HowTo            → wrapper (wraps markdown + Alert + Button)
 Alert            → wrapper (wraps markdown text)
 RiskLevel        → wrapper (wraps markdown text)
 Button           → block (self-closing, props only)
-ChecklistItemRef → block (self-closing, ref via relationship field)
+ChecklistItem → block (self-closing, ref via relationship field)
 ImageEmbed       → wrapper (wraps caption text)
 VideoEmbed       → wrapper (wraps caption text)
 RelatedGuides    → wrapper (wraps RelatedGuide children)

@@ -142,12 +142,9 @@ function applyMarks(text, marks) {
         break;
       case 'link': {
         const href = mark.attrs?.href || resolveStoryblokLink(mark.attrs);
-        const target = mark.attrs?.target;
-        if (target === '_blank') {
-          result = `[${result}](${href})`;
-        } else {
-          result = `[${result}](${href})`;
-        }
+        // target="_blank" is handled at build time for external URLs,
+        // so we just output standard markdown links
+        result = `[${result}](${href})`;
         break;
       }
       case 'superscript':
@@ -483,13 +480,13 @@ function convertChecklistItemRef(blok) {
   // The resolved item has a slug we can use
   const ref = blok.reference_item;
   if (!ref) {
-    console.warn('  ChecklistItemRef with no reference_item');
+    console.warn('  checklist-item-ref with no reference_item');
     return '';
   }
 
   // If resolved, ref is the full story object
   const slug = typeof ref === 'string' ? ref : (ref.slug || ref.full_slug || '');
-  return `<ChecklistItemRef ref="${slug}" />\n`;
+  return `<ChecklistItem ref="${slug}" />\n`;
 }
 
 function convertChecklistItemReference(blok) {
@@ -498,7 +495,7 @@ function convertChecklistItemReference(blok) {
   const items = blok.expanded_items || [];
   return items.map(item => {
     const slug = typeof item === 'string' ? item : (item.slug || '');
-    return `<ChecklistItemRef ref="${slug}" />\n`;
+    return `<ChecklistItem ref="${slug}" />\n`;
   }).join('');
 }
 
