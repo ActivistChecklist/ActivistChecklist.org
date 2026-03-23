@@ -574,7 +574,7 @@ function convertGuideStory(story) {
     if (block.component === 'section-header') {
       // Close previous section if open
       if (inSection) {
-        sectionMdx += '\n</Section>\n\n';
+        sectionMdx += '\n</Section>\n\n\n';
       }
       sectionMdx += convertSectionHeader(block);
       inSection = true;
