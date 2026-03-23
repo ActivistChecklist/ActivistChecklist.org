@@ -114,6 +114,11 @@ function resolveStoryblokImage(imageObj) {
 function applyMarks(text, marks) {
   if (!marks || marks.length === 0) return text;
   let result = text;
+
+  // Check if this text node has a link mark — if so, skip underline
+  // (links are already visually distinct; underline is redundant)
+  const hasLink = marks.some(m => m.type === 'link');
+
   for (const mark of marks) {
     switch (mark.type) {
       case 'bold':
@@ -129,7 +134,8 @@ function applyMarks(text, marks) {
         result = `\`${result}\``;
         break;
       case 'underline':
-        result = `<u>${result}</u>`;
+        // Skip underline — it's redundant on links and on bold/italic emphasis.
+        // In markdown/MDX, underline is purely decorative noise from the CMS.
         break;
       case 'link': {
         const href = mark.attrs?.href || resolveStoryblokLink(mark.attrs);
