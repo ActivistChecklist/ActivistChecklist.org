@@ -7,11 +7,12 @@ import { useEffect } from "react";
 import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/router";
+import { LOCALES } from "@/lib/i18n-config";
 
 function Page({ blok, story }) {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
+  const dateLocale = LOCALES[router.locale]?.dateLocale || 'en-US';
   const { setDebugData } = useDebug() || {}
   const { setSidebarType } = useLayout();
 

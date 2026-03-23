@@ -19,9 +19,12 @@
 # misc
 .DS_Store
 *.pem
+.agents
+.claude
+package-lock.json
 
+# IDE related
 .idea
-
 .cursorrules
 .cursor/
 

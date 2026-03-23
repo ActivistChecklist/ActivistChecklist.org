@@ -1,8 +1,9 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 
-export default function Document() {
+export default function Document(props) {
+  const locale = props.__NEXT_DATA__?.locale || 'en';
   return (
-    <Html lang="en-US" suppressHydrationWarning>
+    <Html lang={locale} suppressHydrationWarning>
       <Head />
       <body className="min-h-screen bg-background font-body antialiased">
         <Main />

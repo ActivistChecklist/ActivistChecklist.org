@@ -73,6 +73,12 @@ function MyApp({ Component, pageProps }) {
 
   const handleIntlError = (error) => {
     if (error.code === IntlErrorCode.ENVIRONMENT_FALLBACK) return;
+    if (error.code === IntlErrorCode.MISSING_MESSAGE) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[i18n] Missing translation: ${error.message}`);
+      }
+      return;
+    }
     console.error(error);
   };
 

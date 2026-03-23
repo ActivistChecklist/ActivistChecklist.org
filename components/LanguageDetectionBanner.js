@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from '@/components/Link';
-import { LANGUAGE_NAMES } from '@/lib/i18n-config';
+import { LOCALES } from '@/lib/i18n-config';
 import {
   LANGUAGE_BANNER_STORAGE_KEY,
   getDetectedLocaleFromNavigatorLanguage,
@@ -49,7 +49,7 @@ export default function LanguageDetectionBanner() {
     detectedLocale,
   })) return null;
 
-  const languageName = LANGUAGE_NAMES[detectedLocale] || detectedLocale;
+  const languageName = LOCALES[detectedLocale]?.name || detectedLocale;
 
   return (
     <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800 px-4 py-3">

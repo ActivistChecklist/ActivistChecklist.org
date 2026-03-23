@@ -10,6 +10,7 @@ import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
 import { getGuideIcon } from "@/config/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/router";
+import { LOCALES } from "@/lib/i18n-config";
 
 export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleExpand }) => {
   return (
@@ -54,7 +55,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
 const Guide = ({ blok, story }) => {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
+  const dateLocale = LOCALES[router.locale]?.dateLocale || 'en-US';
   const { setSidebarType } = useLayout();
   const [sectionExpandStates, setSectionExpandStates] = useState({});
   const [expandTriggers, setExpandTriggers] = useState({});
