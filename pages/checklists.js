@@ -83,8 +83,9 @@ const GuideList = ({ guides }) => {
   );
 };
 
-export async function getStaticProps() {
+export async function getStaticProps({ locale }) {
   const storyblokApi = getStoryblokApi();
+  const messages = (await import(`../messages/${locale}.json`)).default;
   
   // Fetch all guides with pagination support
   const allStories = await fetchAllStories(storyblokApi, {
@@ -105,7 +106,8 @@ export async function getStaticProps() {
 
   return {
     props: {
-      guides
+      guides,
+      messages
     },
     // revalidate: 3600 // Revalidate every hour
   };
