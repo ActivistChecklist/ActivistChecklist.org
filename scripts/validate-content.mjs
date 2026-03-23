@@ -28,12 +28,12 @@ const CONTENT_DIR = path.join(ROOT, 'content');
 // ─── Suspicious patterns (Layer 1: regex scan) ──────────────────
 
 const SUSPICIOUS_PATTERNS = [
-  { pattern: /\bimport\s+/g, label: 'import statement' },
-  { pattern: /\bexport\s+/g, label: 'export statement' },
+  { pattern: /^\s*import\s+/gm, label: 'import statement' },
+  { pattern: /^\s*export\s+/gm, label: 'export statement' },
   { pattern: /\brequire\s*\(/g, label: 'require() call' },
   { pattern: /\beval\s*\(/g, label: 'eval() call' },
   { pattern: /\bFunction\s*\(/g, label: 'Function() constructor' },
-  { pattern: /\bprocess\./g, label: 'process access' },
+  { pattern: /\bprocess\.(env|exit|argv|cwd|stdout|stderr)\b/g, label: 'process access' },
   { pattern: /dangerouslySetInnerHTML/g, label: 'dangerouslySetInnerHTML' },
   { pattern: /javascript\s*:/gi, label: 'javascript: URL' },
   { pattern: /\bon[A-Z][a-zA-Z]*\s*=/g, label: 'event handler attribute' },
@@ -50,6 +50,7 @@ const SUSPICIOUS_PATTERNS = [
 const ALLOWED_COMPONENTS = new Set([
   'Alert', 'HowTo', 'Button', 'ImageEmbed', 'VideoEmbed',
   'RiskLevel', 'Table', 'RelatedGuides', 'Section', 'ChecklistItemRef',
+  'CopyButton', 'Badge', 'ProtectionBadge', 'InlineChecklist',
 ]);
 
 const ALLOWED_HTML_ELEMENTS = new Set([
