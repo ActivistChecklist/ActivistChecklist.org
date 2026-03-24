@@ -508,8 +508,8 @@ a {
       @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
     }
 
-    /* Make links in tools/stop sections inherit font weight */
-    .prose a:not(.button) {
+    /* Make links in do/dont sections inherit font weight */
+    a:not(.button) {
       font-weight: inherit;
     }
 

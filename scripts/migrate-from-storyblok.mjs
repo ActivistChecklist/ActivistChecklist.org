@@ -211,6 +211,66 @@ function convertInlineComponents(text) {
 }
 
 /**
+ * Process a list of inline nodes, grouping consecutive italic text nodes so
+ * they share a single *...* wrapper instead of emitting *a**b* (adjacent
+ * italic delimiters that confuse CommonMark parsers).
+ *
+ * Non-text nodes (hard_break, embedded bloks, etc.) and non-italic text
+ * nodes are passed through individually and break any italic run.
+ */
+function processInlineContent(nodes, indent) {
+  if (!nodes || nodes.length === 0) return '';
+  const parts = [];
+  let i = 0;
+
+  while (i < nodes.length) {
+    const node = nodes[i];
+    const isItalicText =
+      (node.type === 'text' || node.type === 'emoji') &&
+      node.marks?.some(m => m.type === 'italic');
+
+    if (!isItalicText) {
+      parts.push(richTextToMdx(node, indent));
+      i++;
+      continue;
+    }
+
+    // Collect consecutive italic-marked text/emoji nodes
+    let j = i;
+    while (j < nodes.length) {
+      const n = nodes[j];
+      if (
+        (n.type === 'text' || n.type === 'emoji') &&
+        n.marks?.some(m => m.type === 'italic')
+      ) {
+        j++;
+      } else {
+        break;
+      }
+    }
+
+    // Process each node in the run WITHOUT the italic mark,
+    // then wrap the whole group in one *...*
+    const innerText = nodes.slice(i, j).map(n => {
+      const nonItalicMarks = (n.marks || []).filter(m => m.type !== 'italic');
+      const raw = n.type === 'emoji'
+        ? (n.attrs?.emoji || '')
+        : convertInlineComponents(convertClassSyntax(n.text || ''));
+      return applyMarks(raw, nonItalicMarks);
+    }).join('');
+
+    const trimmed = innerText.trim();
+    const leading  = innerText.slice(0, innerText.length - innerText.trimStart().length);
+    const trailing = innerText.slice(innerText.trimEnd().length);
+    parts.push(trimmed ? `${leading}*${trimmed}*${trailing}` : innerText);
+
+    i = j;
+  }
+
+  return parts.join('');
+}
+
+/**
  * Convert a Storyblok rich text node tree to markdown string.
  */
 function richTextToMdx(node, indent = '') {
@@ -242,9 +302,8 @@ function richTextToMdx(node, indent = '') {
 
   // Paragraph
   if (node.type === 'paragraph') {
-    const inner = (node.content || []).map(n => richTextToMdx(n, indent)).join('');
-    // Collapse adjacent identical markers produced by consecutive bold/italic nodes:
-    // **foo****bar** → **foobar**, *foo**bar* → *foobar*, etc.
+    const inner = processInlineContent(node.content || [], indent);
+    // Collapse adjacent bold markers that survive (e.g. **foo****bar** → **foobar**)
     return inner.replace(/\*\*\*\*/g, '') + '\n';
   }
 
@@ -418,6 +477,10 @@ function convertButton(blok) {
   const href = resolveStoryblokLink(blok.url);
   if (href && href !== '#') attrs.push(`url="${escapeAttr(href)}"`);
 
+  // Preserve target="_blank" for links that open in a new tab
+  const linkTarget = blok.url?.target;
+  if (linkTarget) attrs.push(`target="${linkTarget}"`);
+
   if (blok.variant && blok.variant !== 'default') attrs.push(`variant="${blok.variant}"`);
   if (blok.download) attrs.push('download');
   if (blok.icon) attrs.push(`icon="${blok.icon}"`);
@@ -470,12 +533,16 @@ function convertVideoEmbed(blok) {
 
 function convertRiskLevel(blok) {
   const level = blok.level || 'everyone';
+  const mode = blok.mode || 'default';
   const body = blok.body ? richTextToMdx(blok.body).trim() : '';
 
+  // Only emit mode attr when non-default (default = use default text or inline float)
+  const modeAttr = (mode && mode !== 'default') ? ` mode="${mode}"` : '';
+
   if (!body) {
-    return `<RiskLevel level="${level}" />\n`;
+    return `<RiskLevel level="${level}"${modeAttr} />\n`;
   }
-  return `<RiskLevel level="${level}">\n\n${body}\n\n</RiskLevel>\n`;
+  return `<RiskLevel level="${level}"${modeAttr}>\n\n${body}\n\n</RiskLevel>\n`;
 }
 
 function convertTable(blok) {
@@ -652,6 +719,8 @@ const INLINE_SLUG_REMAP = {
   },
   'ice': {
     'secondary': 'secondary-ice',
+    'proton-docs': 'proton-docs-mail',   // ice version covers both Docs and Mail
+    'emergency-plan': 'emergency-plan-ice', // ice version is about arrest risk, not doxxing
   },
   'doxxing': {
     'essentials': 'essentials-doxxing',

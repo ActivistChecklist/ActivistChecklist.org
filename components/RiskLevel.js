@@ -68,7 +68,7 @@ export function RiskLevel({ blok, level, body, mode = "default", children, class
   const config = LEVEL_CONFIG[normalizedLevel] || LEVEL_CONFIG.everyone;
   const levelClass = styles[normalizedLevel] || styles.everyone;
   const useDefaultText = (mode === "default" || !mode) && !children;
-  const isSingleLine = mode === "single_line";
+  const showHeader = mode === "for_you_if" || mode === "for_you";
   const introText = INTRO_LINES[mode] || INTRO_LINES.for_you_if;
 
   // Body content: prefer React children (MDX mode), fall back to RichText doc (Storyblok mode)
@@ -89,16 +89,7 @@ export function RiskLevel({ blok, level, body, mode = "default", children, class
             <p>{config.defaultText}</p>
           </div>
         </div>
-      ) : isSingleLine ? (
-        <div className={styles.riskLevelFloatWrap}>
-          <span className={styles.riskLevelBadgeFloat}>
-            <RiskLevelBadge level={normalizedLevel} />
-          </span>
-          <div className={cn(styles.riskLevelBody, styles.riskLevelBodyInline)}>
-            {bodyContent}
-          </div>
-        </div>
-      ) : (
+      ) : showHeader ? (
         <>
           <div className={cn("flex flex-wrap items-baseline gap-2", styles.riskLevelFirstRow)}>
             <RiskLevelBadge level={normalizedLevel} />
@@ -108,6 +99,15 @@ export function RiskLevel({ blok, level, body, mode = "default", children, class
             {bodyContent}
           </div>
         </>
+      ) : (
+        <div className={styles.riskLevelFloatWrap}>
+          <span className={styles.riskLevelBadgeFloat}>
+            <RiskLevelBadge level={normalizedLevel} />
+          </span>
+          <div className={cn(styles.riskLevelBody, styles.riskLevelBodyInline)}>
+            {bodyContent}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -22,8 +22,8 @@ const DynamicIcon = ({ iconName, className, ...props }) => {
 };
 
 export const ButtonEmbed = (props) => {
-  const { title, url, variant, size, className, icon, iconPosition, download, alignment } = props;
-  
+  const { title, url, variant, size, className, icon, iconPosition, download, alignment, target: targetProp } = props;
+
   // Extract the actual URL and target from the url prop.
   // Dual-mode: url can be a plain string (MDX mode) or a Storyblok multilink object.
   const getRawHref = () => {
@@ -41,7 +41,8 @@ export const ButtonEmbed = (props) => {
     return path;
   };
   const href = getRawHref();
-  const target = url?.target || (href?.startsWith('http') ? '_blank' : undefined);
+  // targetProp: explicit prop (MDX mode); url?.target: Storyblok multilink object; fallback: external links open in new tab
+  const target = targetProp || url?.target || (href?.startsWith('http') ? '_blank' : undefined);
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;
   const position = iconPosition || 'left';
