@@ -267,12 +267,28 @@ function richTextToMdx(node, indent = '') {
 
   // List item
   if (node.type === 'list_item') {
-    const inner = (node.content || []).map(n => richTextToMdx(n, indent)).join('').trim();
-    // Check if parent was ordered list (third arg is counter)
-    if (typeof arguments[2] === 'number') {
-      return `${indent}${arguments[2]}. ${inner}\n`;
+    const isOrdered = typeof arguments[2] === 'number';
+    const marker = isOrdered ? `${arguments[2]}. ` : '- ';
+    const contIndent = indent + ' '.repeat(marker.length);
+    const children = node.content || [];
+
+    if (children.length === 0) {
+      return `${indent}${marker}\n`;
     }
-    return `${indent}- ${inner}\n`;
+
+    const firstText = richTextToMdx(children[0], indent).trim();
+
+    if (children.length === 1) {
+      return `${indent}${marker}${firstText}\n`;
+    }
+
+    // Multi-child: additional block nodes need continuation indent + blank lines
+    const restParts = children.slice(1).map(n => {
+      const raw = richTextToMdx(n, indent).trim();
+      return raw.split('\n').map(line => (line ? `${contIndent}${line}` : '')).join('\n');
+    });
+
+    return `${indent}${marker}${firstText}\n\n${restParts.join('\n\n')}\n\n`;
   }
 
   // Blockquote
