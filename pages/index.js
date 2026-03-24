@@ -14,6 +14,7 @@ import GuideCard from '@/components/GuideCard';
 import NewsBlock, { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
 import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
 const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
 
@@ -44,15 +45,17 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
   const t = useTranslations();
   const router = useRouter();
   const baseUrl = getBaseUrl();
-  const locale = router.locale;
-  const defaultLocale = router.defaultLocale;
+  // Static export disables next.config i18n; router.locale/defaultLocale are often missing — never interpolate raw undefined into URLs.
+  const defaultLocale = router.defaultLocale || DEFAULT_LOCALE || 'en';
+  const locale = router.locale || defaultLocale;
+  const hrefLangLocales = router.locales ?? Object.keys(LOCALES);
 
   return (
     <div>
       <Head>
         <title>{t('site.title')}</title>
         <link rel="canonical" href={locale === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${locale}/`} key="canonical" />
-        {router.locales.map((loc) => (
+        {hrefLangLocales.map((loc) => (
           <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${loc}/`} key={`hrefLang-${loc}`} />
         ))}
         <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/`} key="hrefLang-default" />

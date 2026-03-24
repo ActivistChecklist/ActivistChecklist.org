@@ -16,6 +16,7 @@ import {
   extractChecklistItems,
   serializeFrontmatter,
 } from '@/lib/content';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
 const DEFAULT_DESCRIPTION = "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
 
@@ -31,8 +32,9 @@ export default function SlugPage({
 }) {
   const baseUrl = getBaseUrl();
   const router = useRouter();
-  const locale = router.locale;
-  const defaultLocale = router.defaultLocale;
+  const defaultLocale = router.defaultLocale || DEFAULT_LOCALE || 'en';
+  const locale = router.locale || defaultLocale;
+  const hrefLangLocales = router.locales ?? Object.keys(LOCALES);
   const localePrefix = locale !== defaultLocale ? `${locale}/` : '';
   const canonicalUrl = `${baseUrl}/${localePrefix}${slug}`;
 
@@ -62,7 +64,7 @@ export default function SlugPage({
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
 
         {/* Hreflang alternate links */}
-        {router.locales.map((loc) => (
+        {hrefLangLocales.map((loc) => (
           <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/${slug}` : `${baseUrl}/${loc}/${slug}`} key={`hreflang-${loc}`} />
         ))}
         <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/${slug}`} key="hreflang-default" />
