@@ -6,7 +6,7 @@
  * Usage:
  *   yarn news
  *   yarn news "https://example.com/article"
- *   yarn news "https://..." --source=the-intercept   # known slug or source name, else stored as raw label
+ *   yarn news "https://..." --source="The Intercept"   # optional; otherwise inferred from page metadata
  *   yarn news "https://..." --tags="ice, surveillance"
  *
  * First positional argument is the article URL (no flag). Other options use --key=value.
@@ -20,7 +20,6 @@ const matter = require('gray-matter');
 const ogs = require('open-graph-scraper');
 
 const CONTENT_NEWS = path.join(__dirname, '..', 'content', 'en', 'news');
-const CONTENT_SOURCES = path.join(__dirname, '..', 'content', 'en', 'news-sources');
 const NEWS_IMAGES_DIR = path.join(__dirname, '..', 'public', 'images', 'news');
 const FETCH_SCRIPT = path.join(__dirname, 'fetch-news-images.js');
 const { loadNewsItems } = require('./fetch-news-images.js');
@@ -55,13 +54,6 @@ function normalizeHost(hostname) {
     .toLowerCase();
 }
 
-function normSourceName(x) {
-  return String(x || '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
 function slugify(text) {
   const s = String(text || '')
     .toLowerCase()
@@ -84,34 +76,12 @@ function uniqueSlug(base) {
   return s;
 }
 
-function loadNewsSources() {
-  if (!fs.existsSync(CONTENT_SOURCES)) return [];
-  return fs.readdirSync(CONTENT_SOURCES)
-    .filter((f) => f.endsWith('.mdx'))
-    .map((file) => {
-      const full = path.join(CONTENT_SOURCES, file);
-      const raw = fs.readFileSync(full, 'utf8');
-      const { data } = matter(raw);
-      const slug = (data.slug || path.basename(file, '.mdx')).trim();
-      const name = String(data.name || '').trim();
-      const url = data.url ? String(data.url).trim() : '';
-      return { slug, name, url };
-    });
-}
-
 /**
- * If the publication matches content/en/news-sources, use that slug.
- * Otherwise use a raw display string (see lib/content.js toNewsWireItem).
+ * Publication label stored verbatim in news MDX frontmatter (`source:`).
  */
-function resolveSource(articleUrl, siteNameHint, sources, explicit) {
+function pickSourceDisplayName(articleUrl, siteNameHint, explicit) {
   if (explicit) {
-    const e = String(explicit).trim();
-    const bySlug = sources.find((s) => s.slug === e);
-    if (bySlug) return { kind: 'slug', value: bySlug.slug, record: bySlug };
-    const n = normSourceName(e);
-    const byName = sources.find((s) => normSourceName(s.name) === n);
-    if (byName) return { kind: 'slug', value: byName.slug, record: byName };
-    return { kind: 'raw', value: e, record: null };
+    return String(explicit).trim();
   }
 
   let articleHost;
@@ -121,34 +91,7 @@ function resolveSource(articleUrl, siteNameHint, sources, explicit) {
     throw new Error('Invalid article URL.');
   }
 
-  for (const s of sources) {
-    if (!s.url) continue;
-    try {
-      const sh = normalizeHost(new URL(s.url).hostname);
-      if (articleHost === sh) return { kind: 'slug', value: s.slug, record: s };
-      if (articleHost.endsWith(`.${sh}`)) return { kind: 'slug', value: s.slug, record: s };
-    } catch {
-      /* skip */
-    }
-  }
-
-  if (siteNameHint) {
-    const n = normSourceName(siteNameHint);
-    for (const s of sources) {
-      if (normSourceName(s.name) === n) return { kind: 'slug', value: s.slug, record: s };
-    }
-    const sug = slugify(siteNameHint);
-    const bySlugified = sources.find((s) => s.slug === sug);
-    if (bySlugified) return { kind: 'slug', value: bySlugified.slug, record: bySlugified };
-  }
-
-  const firstSeg = articleHost.split('.')[0];
-  const sugHost = slugify(firstSeg);
-  const byHostSlug = sources.find((s) => s.slug === sugHost);
-  if (byHostSlug) return { kind: 'slug', value: byHostSlug.slug, record: byHostSlug };
-
-  const raw = (siteNameHint && siteNameHint.trim()) || articleHost;
-  return { kind: 'raw', value: raw, record: null };
+  return (siteNameHint && siteNameHint.trim()) || articleHost;
 }
 
 function parsePublishedDate(result) {
@@ -272,13 +215,7 @@ async function main() {
       og.ogArticlePublisher && String(og.ogArticlePublisher).trim(),
       og.articlePublisher && String(og.articlePublisher).trim(),
     ].find(Boolean) || '';
-    const sources = loadNewsSources();
-    const resolved = resolveSource(articleUrl, publisherHint, sources, explicitSource);
-    const sourceField = resolved.value;
-    const sourceLabel =
-      resolved.kind === 'slug'
-        ? `${resolved.value} (${resolved.record.name || resolved.value})`
-        : `${JSON.stringify(resolved.value)} (raw name, not in news-sources list)`;
+    const sourceField = pickSourceDisplayName(articleUrl, publisherHint, explicitSource);
 
     const baseSlug = slugify(title);
     const slug = uniqueSlug(baseSlug);
@@ -296,8 +233,8 @@ async function main() {
     console.log(`URL:              ${articleUrl}`);
     console.log(`Title:            ${title}`);
     console.log(`Slug:             ${slug}`);
-    console.log(`Source:           ${sourceLabel}`);
-    if (publisherHint && resolved.kind === 'slug') {
+    console.log(`Source:           ${JSON.stringify(sourceField)}`);
+    if (publisherHint) {
       console.log(`Site / publisher: ${publisherHint}`);
     }
     console.log(`Date published:   ${published}`);

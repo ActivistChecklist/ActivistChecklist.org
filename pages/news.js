@@ -110,11 +110,10 @@ const NewsPage = ({ newsItems = [] }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllNewsItems, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const { getAllNewsItems, toNewsWireItem } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
-  const sourcesMap = getAllNewsSourcesMap(locale);
-  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
+  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item));
 
   return {
     props: {
