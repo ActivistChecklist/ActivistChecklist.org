@@ -2,6 +2,7 @@
 
 /**
  * Compare two rendered-page snapshots with a colored git-style diff.
+ * Shows character-level highlighting (like GitHub) on modified lines.
  *
  * Usage:
  *   node scripts/compare-snapshots.mjs snapshots/before.json snapshots/after.json
@@ -10,6 +11,38 @@
  */
 
 import fs from 'fs';
+
+const TERM_WIDTH = process.stdout.columns || 120;
+
+// Strip ANSI escape codes to measure visible length
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+function visibleLen(s) { return s.replace(ANSI_RE, '').length; }
+
+// Wrap a pre-colored line to terminal width, preserving the prefix (e.g. '- ', '+ ', '  ')
+// and re-applying the line's base color on each continuation line.
+function wrapLine(line, prefix = '  ', baseColor = s => s) {
+  const maxWidth = TERM_WIDTH - 2;
+  const visible = line.replace(ANSI_RE, '');
+  if (visible.length <= maxWidth) return line;
+
+  // Split on word boundaries and re-wrap, carrying ANSI state is complex,
+  // so we work on the raw colored string and split it by visible char count.
+  // Simple approach: strip colors, wrap text, re-apply prefix color.
+  const words = visible.slice(prefix.length).split(' ');
+  const result = [];
+  let cur = prefix;
+  for (const word of words) {
+    const candidate = cur === prefix ? cur + word : cur + ' ' + word;
+    if (candidate.length > maxWidth && cur !== prefix) {
+      result.push(cur);
+      cur = prefix + '  ' + word; // indent continuation
+    } else {
+      cur = candidate;
+    }
+  }
+  if (cur !== prefix) result.push(cur);
+  return result.map(r => baseColor(r)).join('\n');
+}
 
 const [,, beforeFile, afterFile] = process.argv;
 const ROUTE_FILTER = process.argv.find(a => a.startsWith('--route='))?.split('=')[1];
@@ -24,97 +57,180 @@ const before = JSON.parse(fs.readFileSync(beforeFile, 'utf-8'));
 const after  = JSON.parse(fs.readFileSync(afterFile,  'utf-8'));
 
 // ─── ANSI colors ──────────────────────────────────────────────
-const RED    = s => `\x1b[31m${s}\x1b[0m`;
-const GREEN  = s => `\x1b[32m${s}\x1b[0m`;
-const CYAN   = s => `\x1b[36m${s}\x1b[0m`;
-const BOLD   = s => `\x1b[1m${s}\x1b[0m`;
-const DIM    = s => `\x1b[2m${s}\x1b[0m`;
+const c = {
+  red:       s => `\x1b[31m${s}\x1b[0m`,
+  green:     s => `\x1b[32m${s}\x1b[0m`,
+  cyan:      s => `\x1b[36m${s}\x1b[0m`,
+  bold:      s => `\x1b[1m${s}\x1b[0m`,
+  dim:       s => `\x1b[2m${s}\x1b[0m`,
+  // Inline highlight: bright bg for the changed portion within a line
+  redBg:     s => `\x1b[41m\x1b[97m${s}\x1b[0m\x1b[31m`,
+  greenBg:   s => `\x1b[42m\x1b[97m${s}\x1b[0m\x1b[32m`,
+};
 
 // ─── Text → lines ─────────────────────────────────────────────
-// Break the flat text blob into meaningful lines so the diff is readable.
-// Splits on sentence-ending punctuation AND newlines, keeping context.
+// Break the flat text blob into short, diffable lines by splitting on
+// sentence endings AND phrase boundaries (comma/semicolon/colon).
 function toLines(text) {
-  // Normalize whitespace, then split on sentence boundaries
-  return text
-    .replace(/\s+/g, ' ')
-    .split(/(?<=[.!?])\s+(?=[A-Z"'])|(?<=\n)/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-}
+  text = text.replace(/[ \t]+/g, ' ').trim();
 
-// ─── Myers diff ───────────────────────────────────────────────
-// Returns array of { type: 'eq'|'del'|'ins', line } objects.
-function diff(aLines, bLines) {
-  const m = aLines.length;
-  const n = bLines.length;
+  // First split on blank lines and explicit newlines
+  const paragraphs = text.split(/\n+/);
+  const lines = [];
 
-  // For very long sequences, fall back to a simpler chunk-based diff
-  // to avoid O(m*n) memory blowup.
-  if (m * n > 500_000) return simpleDiff(aLines, bLines);
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) continue;
 
-  // LCS table (0-indexed)
-  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      dp[i][j] = aLines[i] === bLines[j]
-        ? dp[i + 1][j + 1] + 1
-        : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    // Split on sentence-ending punctuation followed by a capital letter
+    const sentences = trimmed.split(/(?<=[.!?])\s+(?=[A-Z"'\u2018\u201C\d])/);
+
+    for (const sentence of sentences) {
+      const s = sentence.trim();
+      if (!s) continue;
+
+      if (s.length <= 120) {
+        lines.push(s);
+      } else {
+        // Long sentence: split further at comma/semicolon/colon
+        const parts = s.split(/(?<=[,;:])\s+/);
+        let buf = '';
+        for (const part of parts) {
+          const candidate = buf ? buf + ', ' + part : part;
+          if (buf && candidate.length > 120) {
+            lines.push(buf.trim());
+            buf = part;
+          } else {
+            buf = candidate;
+          }
+        }
+        if (buf.trim()) lines.push(buf.trim());
+      }
     }
   }
 
+  return lines;
+}
+
+// ─── LCS diff on arrays ───────────────────────────────────────
+function lcs(a, b) {
+  const m = a.length, n = b.length;
+  if (m * n > 400_000) return null; // too large, skip LCS
+  const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+  for (let i = m - 1; i >= 0; i--)
+    for (let j = n - 1; j >= 0; j--)
+      dp[i][j] = a[i] === b[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  return dp;
+}
+
+function lineDiff(aLines, bLines) {
+  const dp = lcs(aLines, bLines);
+  if (!dp) {
+    // Fallback: mark everything as del then ins
+    return [...aLines.map(l => ({ type: 'del', line: l })),
+            ...bLines.map(l => ({ type: 'ins', line: l }))];
+  }
   const result = [];
   let i = 0, j = 0;
-  while (i < m || j < n) {
-    if (i < m && j < n && aLines[i] === bLines[j]) {
-      result.push({ type: 'eq', line: aLines[i] });
-      i++; j++;
-    } else if (j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j])) {
-      result.push({ type: 'ins', line: bLines[j] });
-      j++;
+  while (i < aLines.length || j < bLines.length) {
+    if (i < aLines.length && j < bLines.length && aLines[i] === bLines[j]) {
+      result.push({ type: 'eq',  line: aLines[i] }); i++; j++;
+    } else if (j < bLines.length && (i >= aLines.length || dp[i][j+1] >= dp[i+1][j])) {
+      result.push({ type: 'ins', line: bLines[j] }); j++;
     } else {
-      result.push({ type: 'del', line: aLines[i] });
-      i++;
+      result.push({ type: 'del', line: aLines[i] }); i++;
     }
   }
   return result;
 }
 
-// Simple O(n) fallback: find changed sentences without LCS
-function simpleDiff(aLines, bLines) {
-  const bSet = new Set(bLines);
-  const aSet = new Set(aLines);
-  const result = [];
-  for (const l of aLines) result.push({ type: bSet.has(l) ? 'eq' : 'del', line: l });
-  for (const l of bLines) if (!aSet.has(l)) result.push({ type: 'ins', line: l });
-  return result;
+// ─── Word/char-level diff for inline highlighting ─────────────
+// Splits on word boundaries, computes LCS, wraps changed tokens
+// in a bright background color so the exact change is obvious.
+function inlineDiff(delLine, insLine) {
+  // Tokenize into words + whitespace tokens (keep separators so we can rejoin)
+  const tokenize = s => s.split(/(\s+)/);
+  const dToks = tokenize(delLine);
+  const iToks = tokenize(insLine);
+
+  const dp = lcs(dToks, iToks);
+  if (!dp) {
+    return {
+      del: c.red(`- ${delLine}`),
+      ins: c.green(`+ ${insLine}`),
+    };
+  }
+
+  let di = 0, ii = 0;
+  let delOut = c.red('- ');
+  let insOut = c.green('+ ');
+
+  while (di < dToks.length || ii < iToks.length) {
+    const eq = di < dToks.length && ii < iToks.length && dToks[di] === iToks[ii];
+    if (eq) {
+      delOut += dToks[di];
+      insOut += iToks[ii];
+      di++; ii++;
+    } else if (ii < iToks.length && (di >= dToks.length || dp[di][ii+1] >= dp[di+1][ii])) {
+      insOut += c.greenBg(iToks[ii]);
+      ii++;
+    } else {
+      delOut += c.redBg(dToks[di]);
+      di++;
+    }
+  }
+
+  return { del: delOut, ins: insOut };
 }
 
 // ─── Render diff with context ─────────────────────────────────
 function renderDiff(hunks) {
-  const lines = [];
-  const changed = hunks.map((h, i) => h.type !== 'eq' ? i : -1).filter(i => i >= 0);
+  const changed = hunks.reduce((a, h, i) => { if (h.type !== 'eq') a.push(i); return a; }, []);
   if (changed.length === 0) return null;
 
-  // Build ranges of context + changed lines to show
   const shown = new Set();
-  for (const ci of changed) {
-    for (let k = Math.max(0, ci - CONTEXT); k <= Math.min(hunks.length - 1, ci + CONTEXT); k++) {
+  for (const ci of changed)
+    for (let k = Math.max(0, ci - CONTEXT); k <= Math.min(hunks.length - 1, ci + CONTEXT); k++)
       shown.add(k);
+
+  const lines = [];
+  let prevIdx = -1;
+
+  // Pre-process: pair consecutive del+ins as "modified" lines for inline diff
+  const pairMap = new Map(); // del index → ins index
+  for (let k = 0; k < hunks.length - 1; k++) {
+    if (hunks[k].type === 'del' && hunks[k+1].type === 'ins') {
+      pairMap.set(k, k + 1);
     }
   }
 
-  let prevIdx = -1;
+  const skipped = new Set();
+
   for (const idx of [...shown].sort((a, b) => a - b)) {
-    if (prevIdx >= 0 && idx > prevIdx + 1) {
-      lines.push(CYAN('  ···'));
-    }
+    if (skipped.has(idx)) continue;
+    if (prevIdx >= 0 && idx > prevIdx + 1) lines.push(c.cyan('  ···'));
+
     const h = hunks[idx];
-    const text = h.line.length > 160 ? h.line.slice(0, 160) + '…' : h.line;
-    if (h.type === 'del') lines.push(RED(`- ${text}`));
-    else if (h.type === 'ins') lines.push(GREEN(`+ ${text}`));
-    else lines.push(DIM(`  ${text}`));
+    const text = h.line.length > 200 ? h.line.slice(0, 200) + '…' : h.line;
+
+    if (h.type === 'del' && pairMap.has(idx) && shown.has(pairMap.get(idx))) {
+      // Modified line: show inline diff
+      const insIdx = pairMap.get(idx);
+      const { del, ins } = inlineDiff(h.line, hunks[insIdx].line);
+      lines.push(wrapLine(del, '- ', s => c.red(s)));
+      lines.push(wrapLine(ins, '+ ', s => c.green(s)));
+      skipped.add(insIdx);
+    } else if (h.type === 'del') {
+      lines.push(wrapLine(c.red(`- ${text}`), '- ', s => c.red(s)));
+    } else if (h.type === 'ins') {
+      lines.push(wrapLine(c.green(`+ ${text}`), '+ ', s => c.green(s)));
+    } else {
+      lines.push(wrapLine(c.dim(`  ${text}`), '  ', s => c.dim(s)));
+    }
+
     prevIdx = idx;
   }
+
   return lines.join('\n');
 }
 
@@ -138,35 +254,39 @@ for (const route of allRoutes) {
     continue;
   }
   if (!b.text || !a.text) { results.skipped++; continue; }
-  if (b.text === a.text)  { results.match++;   continue; }
+  if (b.text === a.text)  { results.match++; continue; }
 
-  const aLines = toLines(b.text);
-  const bLines = toLines(a.text);
-  const hunks  = diff(aLines, bLines);
+  const hunks    = lineDiff(toLines(b.text), toLines(a.text));
   const rendered = renderDiff(hunks);
 
   if (!rendered) { results.match++; continue; }
 
   results.changed++;
-  const label = b.label || a.label || '';
-  output.push({ route, label, type: 'CONTENT', rendered });
+  output.push({ route, label: b.label || a.label || '', type: 'CONTENT', rendered });
 }
 
 // ─── Report ───────────────────────────────────────────────────
-console.log(`\n${BOLD('Before:')} ${beforeFile} (${before.createdAt})`);
-console.log(`${BOLD('After:')}  ${afterFile} (${after.createdAt})\n`);
-console.log(`${BOLD('Summary:')} ${GREEN(results.match + ' match')}  ${results.changed ? RED(results.changed + ' changed') : '0 changed'}  ${results.skipped} skipped  ${results.onlyBefore} only-before  ${results.onlyAfter} only-after\n`);
+console.log(`\n${c.bold('Before:')} ${beforeFile} (${before.createdAt})`);
+console.log(`${c.bold('After:')}  ${afterFile} (${after.createdAt})\n`);
+
+const summary = [
+  c.green(`${results.match} match`),
+  results.changed ? c.red(`${results.changed} changed`) : '0 changed',
+  `${results.skipped} skipped`,
+  results.onlyBefore ? c.red(`${results.onlyBefore} only-before`) : null,
+  results.onlyAfter  ? c.green(`${results.onlyAfter} only-after`)  : null,
+].filter(Boolean).join('  ');
+console.log(`${c.bold('Summary:')} ${summary}\n`);
 
 for (const item of output) {
   if (item.type === 'ONLY_BEFORE') {
-    console.log(RED(`✗ MISSING IN AFTER  ${item.route}`));
+    console.log(c.red(`✗ MISSING IN AFTER  ${item.route}`));
   } else if (item.type === 'ONLY_AFTER') {
-    console.log(GREEN(`+ NEW IN AFTER  ${item.route}`));
+    console.log(c.green(`+ NEW IN AFTER  ${item.route}`));
   } else if (item.type === 'STATUS') {
-    console.log(RED(`✗ STATUS CHANGED  ${item.route}  (${item.detail})`));
+    console.log(c.red(`✗ STATUS  ${item.route}  (${item.detail})`));
   } else {
-    const header = BOLD(CYAN(`\n@@ ${item.route}${item.label ? '  ' + item.label : ''} @@`));
-    console.log(header);
+    console.log(c.bold(c.cyan(`\n@@ ${item.route}${item.label ? '  ' + item.label : ''} @@`)));
     console.log(item.rendered);
   }
 }
