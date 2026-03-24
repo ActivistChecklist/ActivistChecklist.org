@@ -243,7 +243,9 @@ function richTextToMdx(node, indent = '') {
   // Paragraph
   if (node.type === 'paragraph') {
     const inner = (node.content || []).map(n => richTextToMdx(n, indent)).join('');
-    return inner + '\n';
+    // Collapse adjacent identical markers produced by consecutive bold/italic nodes:
+    // **foo****bar** → **foobar**, *foo**bar* → *foobar*, etc.
+    return inner.replace(/\*\*\*\*/g, '') + '\n';
   }
 
   // Headings
