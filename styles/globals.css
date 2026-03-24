@@ -498,6 +498,11 @@ a {
       @apply !mr-0 !ml-6;
     }
 
+    /* Inline code */
+    code:not(pre code) {
+      @apply bg-muted rounded px-1 py-0.5 text-sm font-normal before:content-none after:content-none;
+    }
+
     /* Links */
     a:not(.button) {
       @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;

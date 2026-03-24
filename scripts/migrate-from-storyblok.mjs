@@ -139,9 +139,13 @@ function applyMarks(text, marks) {
         result = inner ? `${leading}**${inner}**${trailing}` : result;
         break;
       }
-      case 'italic':
-        result = `*${result}*`;
+      case 'italic': {
+        const inner = result.trim();
+        const leading = result.slice(0, result.length - result.trimStart().length);
+        const trailing = result.slice(result.trimEnd().length);
+        result = inner ? `${leading}*${inner}*${trailing}` : result;
         break;
+      }
       case 'strike':
         result = `~~${result}~~`;
         break;
@@ -476,9 +480,19 @@ function convertTable(blok) {
   const table = blok.table;
   if (!table) return '';
 
-  const headers = (table.thead || []).map(h => h.value || '');
+  // Process a cell value: convert rich text if needed, then collapse
+  // newlines to <br> since GFM table cells can't span multiple lines.
+  const cellToMd = (value) => {
+    if (!value) return '';
+    const text = typeof value === 'object' ? richTextToMdx(value).trim() : String(value);
+    // GFM table cells can't span multiple lines. Replace any line break form
+    // (plain \n, trailing-space \n, or backslash-\n) with <br>.
+    return text.replace(/[ \t]*\\?[\r\n]+/g, '<br>').trim();
+  };
+
+  const headers = (table.thead || []).map(h => cellToMd(h.value));
   const rows = (table.tbody || []).map(row =>
-    (row.body || []).map(cell => cell.value || '')
+    (row.body || []).map(cell => cellToMd(cell.value))
   );
 
   if (headers.length === 0 && rows.length === 0) return '';
