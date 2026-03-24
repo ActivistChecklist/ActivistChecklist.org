@@ -537,36 +537,15 @@ After migration, a replacement script (`scripts/fetch-news-images-local.mjs`) wi
 
 ---
 
-## Comparison Testing (Automated, Temporary)
+## Comparison testing (historical)
 
-This testing code is temporary — it exists only to verify the migration, then gets deleted.
-
-### Before migration (Phase 1):
-
-1. Build the current Storyblok-backed site
-2. Script crawls every route, captures normalized text content (strip HTML, normalize whitespace)
-3. Store snapshots in a temp directory
-
-### After migration (Phase 3):
-
-1. Build the file-based site
-2. Same script captures text content from new build
-3. **Automated diff loop**: Compare normalized text for every route. Flag mismatches.
-4. Claude fixes discrepancies and re-runs until all routes match.
-5. Once verified, delete all comparison testing code.
-
-### What gets compared:
-
-- Checklist item titles, descriptions, body content
-- Guide section structure and ordering
-- All embedded component output (Alert, HowTo, Button text/URLs)
-- Link targets, image paths
-- News items, changelog entries
-- Page content
+Phases 1–3 are complete. Rendered-page snapshot tooling (`scripts/snapshot-rendered-pages.mjs`, `scripts/compare-snapshots.mjs`, `snapshots/`) and Storyblok-vs-MDX text comparison (`scripts/compare-content.mjs`) were used during migration verification and **have been removed** from this repository.
 
 ---
 
 ## Implementation Phases
+
+**Phases 1–3 are complete** (migration foundation, dual-mode components, and file-based data sources are shipped).
 
 ### Phase 1: Foundation (no breaking changes)
 
@@ -597,9 +576,9 @@ Site continues running on Storyblok throughout.
 1. Rewrite `pages/[...slug].js` getStaticProps/getStaticPaths
 2. Rewrite `pages/index.js`, `news.js`, `changelog.js`, `checklists.js` getStaticProps
 3. Update build scripts (RSS, OG images, build check)
-4. **Run automated comparison tests** — diff every route against Phase 1 snapshots
-5. Fix discrepancies until normalized text matches across all routes
-6. Delete comparison testing code
+4. **Run automated comparison tests** — diff every route against Phase 1 snapshots *(done; tooling then removed)*
+5. Fix discrepancies until normalized text matches across all routes *(done)*
+6. Delete comparison testing code *(done — snapshot + compare scripts removed)*
 
 ### Phase 4: Clean up
 
@@ -615,6 +594,47 @@ Site continues running on Storyblok throughout.
 10. Add CODEOWNERS for `content/` directory
 11. Preserve metadata scrubbing: `metadata-cli.cjs`, `pre-commit-metadata.cjs` (unchanged)
 12. Final build verification
+
+### Progress Log (repo audit)
+
+Audit date: 2026-03-24 (updated: phases 1–3 marked complete; comparison scripts removed).
+
+Legend (for Phase 4 onward):
+- `DONE` = present in codebase and appears implemented
+- `PARTIAL` = partly implemented, but not fully completed per plan intent
+- `PENDING` = not implemented yet
+- `UNKNOWN` = cannot be verified from static repo inspection alone
+
+#### Phase 1: Foundation — **COMPLETE**
+
+All items treated as done: dependencies, `lib/content.js`, MDX pipeline, `validate-content.mjs`, migration script, populated `content/`, validation and review, snapshot/comparison workflow used during migration then removed.
+
+#### Phase 2: Component adaptation — **COMPLETE**
+
+All items treated as done: dual-mode components, `ChecklistItemsContext`, guide MDX (`<Section>` + `<ChecklistItem slug="…" />` in content), embedded components with plain props, slug-based localStorage, dual-mode tests (`__tests__/dual-mode-components.test.js`).
+
+#### Phase 3: Switch data sources — **COMPLETE**
+
+All items treated as done: static props/paths and listings read from files; RSS/OG/build scripts updated; route comparison performed during migration; **removed from repo**: `scripts/snapshot-rendered-pages.mjs`, `scripts/compare-snapshots.mjs`, `scripts/compare-content.mjs`, `snapshots/`, and related `package.json` scripts.
+
+#### Phase 4: Clean up — **IN PROGRESS**
+
+1. Remove Storyblok packages (`@storyblok/react`, `storyblok-rich-text-react-renderer`) — `PENDING`
+2. Delete `RichText.js`, `ChecklistItemRef.js`, `ChecklistItemReference.js` — `PARTIAL` (`RichText.js` still present; reference files appear removed)
+3. Delete Storyblok export scripts (see "Scripts: Remove vs. Preserve") — `PARTIAL` (migration script `migrate-from-storyblok.mjs` may remain for optional re-runs; export pipeline scripts still to prune per Phase 4)
+4. Replace `scripts/fetch-news-images.js` with `scripts/fetch-news-images-local.mjs` — `PENDING`
+5. Remove `storyblokInit` from `_app.js`, bridge code, `storyblokEditable` calls — `DONE` (no `storyblokInit`/`storyblokEditable` usage found)
+6. Remove dual-mode prop handling from components — `PENDING` (dual-mode remains intentionally present)
+7. Remove Storyblok env vars, update `next.config.js` (remove `a.storyblok.com`) — `PARTIAL` (`next.config.js` appears clean; Storyblok env usage remains in scripts)
+8. Update `package.json` scripts (...) and update `fetch-news` — `PENDING` (`fetch-news` still points to `scripts/fetch-news-images.js`)
+9. Add CI step for `validate-content.mjs` — `UNKNOWN` (CI config not verified in this plan)
+10. Add CODEOWNERS for `content/` directory — `PENDING` (no CODEOWNERS file found)
+11. Preserve metadata scrubbing scripts — `DONE` (scripts still present)
+12. Final build verification — `UNKNOWN` (not logged in this plan)
+
+#### Phase 5 (future): Visual editing with Keystatic
+
+- Status: `PENDING` (future phase; no Keystatic package/config present yet)
 
 ### Pre-requisite: Translation / i18n — RESOLVED
 
@@ -674,5 +694,6 @@ After each phase:
 2. `yarn test` passes
 3. `node scripts/validate-content.mjs` passes (Phases 1+)
 4. Visual spot-check of key pages (essentials guide, signal guide, about page, news page)
-5. After Phase 3: automated comparison test suite passes for all routes
+
+Temporary route snapshot / Storyblok-vs-MDX comparison scripts were removed after Phase 3 completed; they are not part of ongoing verification.
 
