@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, NODE_HEADING } from 'storyblok-rich-text-react-renderer';
-import { StoryblokComponent } from "@storyblok/react";
 import { Alert } from "@/components/ui/alert";
 import { RiskLevel } from "@/components/RiskLevel";
 import { RichTextTable } from "@/components/RichTextTable";
@@ -343,16 +342,16 @@ const postProcessWrappers = (content) => {
 
 const blokResolvers = {
     alert: (props) => {
-      return <Alert variant={props.type} title={props.title || null} blok={props} {...props} ><RichText document={ props.body} /></Alert>;
+      return <Alert variant={props.type} title={props.title || null} block={props} {...props} ><RichText document={ props.body} /></Alert>;
     },
     risk_level: (props) => {
-      return <RiskLevel blok={props} level={props.level} body={props.body} {...props} />;
+      return <RiskLevel block={props} level={props.level} body={props.body} {...props} />;
     },
     table: (props) => {
-      return <RichTextTable blok={props} {...props} />;
+      return <RichTextTable block={props} {...props} />;
     },
     how_to: (props) => {
-      return <HowTo blok={props} {...props} />;
+      return <HowTo block={props} {...props} />;
     },
     button: (props) => {
       return <ButtonEmbed {...props} className={`my-2 mr-2 ${props.className || ''}`} />;
@@ -364,7 +363,7 @@ const blokResolvers = {
       return <ImageEmbed {...props} className={`my-4 ${props.className || ''}`} />;
     },
     related_guides: (props) => {
-      return <RelatedGuides blok={props} {...props} />;
+      return <RelatedGuides block={props} {...props} />;
     }
 }
 
@@ -394,6 +393,7 @@ const nodeResolvers = {
 };
 
 export function RichText({ document, className, noWrapper = false, ...props }) {
+  if (!document) return null;
   const rawContent = render(document, {
     nodeResolvers: {
       ...nodeResolvers,
@@ -427,8 +427,8 @@ export function RichText({ document, className, noWrapper = false, ...props }) {
       return parseClasses(withComponents);
     },
     defaultBlokResolver: (name, props) => {
-      const blok = { ...props, component: name };
-      return <StoryblokComponent blok={blok} key={props._uid} />;
+      const block = { ...props, component: name };
+      console.warn(`RichText: unknown block type ""`); return null;
     }
   });
 

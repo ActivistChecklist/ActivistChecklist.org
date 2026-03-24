@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
+import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { IoStar } from 'react-icons/io5';
 
-const ChangeLogEntry = ({ blok, story }) => {
+const ChangeLogEntry = ({ block, story }) => {
   const [entryDate, setEntryDate] = useState('');
   const [isClient, setIsClient] = useState(false);
 
-  if (!blok) {
-    console.log('⚠️ ChangeLogEntry: blok is undefined. Skipping');
+  if (!block) {
+    console.log('⚠️ ChangeLogEntry: block is undefined. Skipping');
     return null;
   }
 
@@ -29,7 +29,7 @@ const ChangeLogEntry = ({ blok, story }) => {
 
   return (
     <div 
-      {...storyblokEditable(blok)}
+     
       className={cn(
         "changelog-entry"
       )}
@@ -42,12 +42,16 @@ const ChangeLogEntry = ({ blok, story }) => {
         >
           {displayDate}
         </time>
-        {blok.body && (
-          <div className="prose prose-slate max-w-none text-sm flex-1">
-            {blok.type === 'major' && (
-              <IoStar className="text-yellow-500 inline mr-1 align-baseline" size={16} />
+        {(block.body || block.bodyText) && (
+          <div className="flex items-start gap-1 flex-1">
+            {block.type === 'major' && (
+              <IoStar className="text-yellow-500 shrink-0 mt-[2px]" size={16} />
             )}
-            <RichText document={blok.body} noWrapper={true} {...storyblokEditable(blok)} />
+            <div className="prose prose-slate max-w-none text-sm flex-1">
+              {block.body
+                ? <RichText document={block.body} noWrapper={true} />
+                : <Markdown content={block.bodyText} isProse={false} />}
+            </div>
           </div>
         )}
       </div>

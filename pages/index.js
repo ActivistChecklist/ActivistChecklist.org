@@ -13,6 +13,7 @@ import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
 import NewsBlock from '@/components/NewsBlock';
 import { RichText } from '@/components/RichText';
+import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
 
 const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
@@ -40,7 +41,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, latestMajorUpdate = null }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = null }) => {
   const t = useTranslations();
   const router = useRouter();
   const baseUrl = getBaseUrl();
@@ -94,7 +95,9 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
                 {latestMajorUpdate && (
                   <div className="mt-8 text-muted-foreground">
                     <Sparkles className="h-4 w-4 inline mr-1" />
-                    <RichText document={latestMajorUpdate.body} noWrapper={true} />
+                    {latestMajorUpdate.body
+                      ? <RichText document={latestMajorUpdate.body} noWrapper={true} />
+                      : <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />}
                   </div>
                 )}
               </div>
@@ -160,7 +163,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
           </section>
 
           {/* Latest News */}
-          <NewsBlock newsItems={newsItems} imageManifest={imageManifest} />
+          <NewsBlock newsItems={newsItems} />
 
           {/* Recent Updates */}
           <section className="mb-16">
@@ -183,62 +186,28 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  try {
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchAllChangelogEntries, fetchNewsData } = await import('../utils/core');
+  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const messages = (await import(`../messages/${locale}.json`)).default;
 
-    const storyblokApi = getStoryblokApi();
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
 
-    // Fetch changelog entries and news data in parallel
-    const [allEntries, { newsItems, imageManifest }] = await Promise.all([
-      fetchAllChangelogEntries(storyblokApi, {
-        version: getStoryblokVersion(),
-        language: locale,
-      }),
-      fetchNewsData(storyblokApi, {
-        version: getStoryblokVersion(),
-        language: locale,
-      })
-    ]);
+  // Latest major update for hero section
+  const latestMajor = changelogEntries.find((e) => e.content.type === 'major');
+  const latestMajorUpdate = latestMajor
+    ? { body: null, bodyText: latestMajor.content.bodyText }
+    : null;
 
-    // Sort changelog entries by first_published_at or created_at as fallback, newest first
-    const sortedEntries = (allEntries || []).sort((a, b) => {
-      const dateA = new Date(a.first_published_at || a.created_at);
-      const dateB = new Date(b.first_published_at || b.created_at);
-      return dateB - dateA; // Newest first
-    });
+  const sourcesMap = getAllNewsSourcesMap(locale);
+  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
 
-    // Find the latest major update
-    const latestMajorUpdate = sortedEntries.find(entry => entry.content?.type === 'major');
-
-    // Format the latest major update
-    const latestMajorUpdateFormatted = latestMajorUpdate ? {
-      body: latestMajorUpdate.content.body
-    } : null;
-
-    return {
-      props: {
-        changelogEntries: sortedEntries.slice(0, 5), // Limit to 5 for homepage
-        newsItems,
-        imageManifest,
-        latestMajorUpdate: latestMajorUpdateFormatted,
-        messages,
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching homepage data:', error);
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    return {
-      props: {
-        changelogEntries: [],
-        newsItems: [],
-        imageManifest: {},
-        latestMajorUpdate: null,
-        messages,
-      }
-    };
-  }
+  return {
+    props: {
+      changelogEntries: changelogEntries.slice(0, 5),
+      newsItems,
+      latestMajorUpdate,
+      messages,
+    },
+  };
 }
 
 export default HomePage;

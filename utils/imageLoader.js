@@ -1,7 +1,7 @@
 export default function imageLoader({ src, width, quality }) {
   const isDev = process.env.NODE_ENV === 'development';
   
-  // In development, use Storyblok CDN with width and quality params
+  // In development, use external CDN with width and quality params
   if (isDev) {
     return `${src}?w=${width}&q=${quality || 75}`;
   }

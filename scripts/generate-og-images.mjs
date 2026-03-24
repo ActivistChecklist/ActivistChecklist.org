@@ -10,12 +10,15 @@
  */
 import fs from 'fs';
 import path from 'path';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
 
 const shouldClean = process.argv.includes('--clean');
 
 async function main() {
-  const outputDir = path.join(process.cwd(), 'public', 'images', 'og');
+  const outputDir = path.join(ROOT, 'public', 'images', 'og');
 
   if (shouldClean && fs.existsSync(outputDir)) {
     console.log('Cleaning existing OG images...');
@@ -24,74 +27,47 @@ async function main() {
 
   fs.mkdirSync(outputDir, { recursive: true });
 
-  // Import the shared generator
   const { generateOgImageForStory } = await import('../lib/og-image.js');
+  const { getAllGuides, getAllPages } = await import('../lib/content.js');
 
-  // Initialize Storyblok
-  const { storyblokInit, apiPlugin, getStoryblokApi } = await import('@storyblok/react');
-  const { getStoryblokVersion, fetchAllStories } = await import('../utils/core.js');
+  const allContent = [
+    ...getAllGuides('en').map((g) => ({ type: 'guide', item: g })),
+    ...getAllPages('en').map((p) => ({ type: 'page', item: p })),
+  ];
 
-  storyblokInit({
-    accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
-    use: [apiPlugin],
-    apiOptions: {
-      region: "us",
-      version: process.env.NODE_ENV === 'development' ? 'draft' : 'published'
-    }
-  });
-
-  const storyblokApi = getStoryblokApi();
-
-  console.log('Fetching stories from Storyblok...');
-  const allStories = await fetchAllStories(storyblokApi, {
-    version: getStoryblokVersion(),
-  });
-
-  const eligibleStories = allStories.filter(story => {
-    if (story.is_folder) return false;
-    const component = story.content?.component;
-    return component === 'page' || component === 'guide';
-  });
-
-  console.log(`Found ${eligibleStories.length} pages/guides`);
+  console.log(`Generating OG images for ${allContent.length} pages...`);
 
   let generated = 0;
   let skipped = 0;
   let errors = 0;
 
-  for (const story of eligibleStories) {
+  for (const { type, item } of allContent) {
+    const slug = item.frontmatter.slug || item.slug;
+    const title = item.frontmatter.title;
+
     try {
-      const result = await generateOgImageForStory(story);
-      if (result) {
-        // Check if file was already cached (generateOgImageForStory skips existing)
+      const result = await generateOgImageForStory({
+        content: { title, component: type },
+        full_slug: slug,
+        name: title,
+      });
+
+      if (result && result !== '/images/og-image.png') {
         generated++;
-        console.log(`  ${result}: ${story.content?.title || story.name}`);
+        console.log(`  ✓ ${slug}`);
       } else {
         skipped++;
       }
-    } catch (error) {
-      console.error(`  Error: ${story.full_slug}: ${error.message}`);
+    } catch (err) {
       errors++;
+      console.warn(`  ✗ ${slug}: ${err.message}`);
     }
   }
 
-  // Copy to out/ if static build
-  if (process.env.BUILD_MODE === 'static') {
-    const outDir = path.join(process.cwd(), 'out', 'images', 'og');
-    if (fs.existsSync(outputDir)) {
-      fs.mkdirSync(outDir, { recursive: true });
-      const files = fs.readdirSync(outputDir);
-      for (const file of files) {
-        fs.copyFileSync(path.join(outputDir, file), path.join(outDir, file));
-      }
-      console.log(`Copied ${files.length} images to out/images/og/`);
-    }
-  }
-
-  console.log(`Done: ${generated} generated, ${skipped} skipped, ${errors} errors`);
+  console.log(`\nDone. Generated: ${generated}, Skipped: ${skipped}, Errors: ${errors}`);
 }
 
-main().catch(error => {
-  console.error('Fatal error:', error);
+main().catch((err) => {
+  console.error('Fatal:', err);
   process.exit(1);
 });

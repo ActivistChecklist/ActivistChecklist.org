@@ -1,6 +1,4 @@
 import React from "react";
-import { RichText } from "@/components/RichText";
-import { storyblokEditable } from "@storyblok/react";
 import { cn } from "@/lib/utils";
 import styles from "../styles/RiskLevel.module.css";
 
@@ -55,18 +53,24 @@ const INTRO_LINES = {
   for_you: "This section is for:",
 };
 
-export function RiskLevel({ blok, level, body, mode = "default", className, ...props }) {
+/**
+ * RiskLevel — renders a risk/audience callout box.
+ *   <RiskLevel level="everyone">markdown children</RiskLevel>
+ */
+export function RiskLevel({ level, mode = "default", children, className, ...props }) {
   const normalizedLevel = (level || "everyone").toLowerCase().replace(/-|\s/g, "_");
   const config = LEVEL_CONFIG[normalizedLevel] || LEVEL_CONFIG.everyone;
   const levelClass = styles[normalizedLevel] || styles.everyone;
-  const useDefaultText = mode === "default" || !mode;
-  const isSingleLine = mode === "single_line";
+  const useDefaultText = (mode === "default" || !mode) && !children;
+  const showHeader = mode === "for_you_if" || mode === "for_you";
   const introText = INTRO_LINES[mode] || INTRO_LINES.for_you_if;
+
+  const bodyContent = children;
 
   return (
     <div
       className={cn(styles.riskLevel, levelClass, "prose", className)}
-      {...storyblokEditable(blok)}
+     
       {...props}
     >
       {useDefaultText ? (
@@ -78,25 +82,25 @@ export function RiskLevel({ blok, level, body, mode = "default", className, ...p
             <p>{config.defaultText}</p>
           </div>
         </div>
-      ) : isSingleLine ? (
-        <div className={styles.riskLevelFloatWrap}>
-          <span className={styles.riskLevelBadgeFloat}>
-            <RiskLevelBadge level={normalizedLevel} />
-          </span>
-          <div className={cn(styles.riskLevelBody, styles.riskLevelBodyInline)}>
-            <RichText document={body} />
-          </div>
-        </div>
-      ) : (
+      ) : showHeader ? (
         <>
           <div className={cn("flex flex-wrap items-baseline gap-2", styles.riskLevelFirstRow)}>
             <RiskLevelBadge level={normalizedLevel} />
             <strong className={styles.riskLevelIntro}>{introText}</strong>
           </div>
           <div className={styles.riskLevelBody}>
-            <RichText document={body} />
+            {bodyContent}
           </div>
         </>
+      ) : (
+        <div className={styles.riskLevelFloatWrap}>
+          <span className={styles.riskLevelBadgeFloat}>
+            <RiskLevelBadge level={normalizedLevel} />
+          </span>
+          <div className={cn(styles.riskLevelBody, styles.riskLevelBodyInline)}>
+            {bodyContent}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -11,7 +11,6 @@ import {
 } from "react-icons/io5"
 
 import { cn } from "@/lib/utils"
-import { storyblokEditable } from "@storyblok/react";
 
 const iconMap = {
   default: IoInformationCircle,
@@ -28,7 +27,7 @@ const Alert = React.forwardRef(({
   hideIcon = false, 
   title,
   children, 
-  blok,
+  block,
   ...props 
 }, ref) => {
   if (!variant) variant = 'default'
@@ -52,7 +51,7 @@ const Alert = React.forwardRef(({
       ref={ref}
       role="alert"
       className={cn(styles.alert, title && styles.alertWithTitle, styles[variant], "prose", className)}
-      {...storyblokEditable(blok)}
+     
       {...props}>
       {showIcon && <Icon className={cn(styles.alertIcon)} />}
       <div className={cn(

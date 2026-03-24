@@ -28,7 +28,7 @@ const ChangeLogRecentEntries = ({ entries = [] }) => {
                 <div className="absolute left-[23px] top-[26px] w-px bg-border h-full"></div>
               )}
               <ChangeLogEntry 
-                blok={story.content}
+                block={story.content}
                 story={story}
               />
             </div>

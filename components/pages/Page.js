@@ -1,63 +1,56 @@
-import React from "react";
-import { storyblokEditable, StoryblokComponent } from "@storyblok/react";
-import { RichText } from "../RichText";
-import { useDebug } from '../../contexts/DebugContext'
-import { useLayout } from "@/contexts/LayoutContext";
-import { useEffect } from "react";
-import { MetaBar, getDateMetaItem } from "@/components/ui/meta-bar";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/router";
+import React, { useEffect } from 'react';
+import { MDXRemote } from 'next-mdx-remote';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/router';
+import { mdxComponents } from '@/lib/mdx-components';
+import { useLayout } from '@/contexts/LayoutContext';
+import { MetaBar, getDateMetaItem } from '@/components/ui/meta-bar';
+import RelatedGuides from '@/components/RelatedGuides';
 
-function Page({ blok, story }) {
+function parseRelatedGuides(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string') return [];
+  return value
+    .split(',')
+    .map((slug) => slug.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Renders a generic page sourced from MDX files.
+ *
+ * Sources content from:
+ *   - frontmatter: title, lastUpdated (date)
+ *   - serializedBody: next-mdx-remote compiled MDX
+ */
+export default function Page({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
   const t = useTranslations();
   const router = useRouter();
   const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
-  const { setDebugData } = useDebug() || {}
   const { setSidebarType } = useLayout();
 
   useEffect(() => {
     setSidebarType('navigation');
   }, []);
 
-  if (setDebugData) {
-    setDebugData(blok)
-  }
-
   const metaBarItems = [
-    getDateMetaItem(story.updated_at, t('meta.lastUpdatedOn'), dateLocale)
-  ];
+    getDateMetaItem(frontmatter.lastUpdated, t('meta.lastUpdatedOn'), dateLocale),
+  ].filter(Boolean);
+  const relatedGuideSlugs = parseRelatedGuides(frontmatter.relatedGuides);
 
   return (
-    <>  
-      <h1 className="mb-6">
-        {story.name}
-      </h1>
-      <MetaBar items={metaBarItems} />
-      <div className="prose prose-slate max-w-none" {...storyblokEditable(blok)}>
-        <RichText document={blok.body} />
+    <>
+      <h1 className="mb-6">{frontmatter.title}</h1>
+      {metaBarItems.length > 0 && <MetaBar items={metaBarItems} />}
+      <div className="prose prose-slate max-w-none">
+        <MDXRemote {...serializedBody} components={mdxComponents} />
       </div>
-      
-      {/* Render blocks if they exist */}
-      {blok.blocks && blok.blocks.length > 0 && (
-        <div className="mt-8">
-          {blok.blocks.map((nestedBlok) => {
-            // Pass isBlock prop for related-guides components
-            const props = nestedBlok.component === 'related-guides' 
-              ? { isBlock: true } 
-              : {};
-            
-            return (
-              <StoryblokComponent 
-                blok={nestedBlok} 
-                key={nestedBlok._uid}
-                {...props}
-              />
-            );
-          })}
-        </div>
+      {relatedGuideSlugs.length > 0 && (
+        <RelatedGuides isBlock guideSlugs={relatedGuideSlugs} />
+      )}
+      {serializedRelatedGuides && (
+        <MDXRemote {...serializedRelatedGuides} components={mdxComponents} />
       )}
     </>
   );
 }
-
-export default Page;

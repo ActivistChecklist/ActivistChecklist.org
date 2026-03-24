@@ -170,6 +170,7 @@ a {
     /* Text variants - darker for better readability */
     --text-error: 0 84.2% 45%;
     --text-warning: 38 92% 40%;
+    --text-success: 142 76% 28%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 98%;
@@ -230,6 +231,7 @@ a {
     /* Text variants - lighter for dark mode readability */
     --text-error: 0 84.2% 70%;
     --text-warning: 38 92% 65%;
+    --text-success: 142 76% 45%;
 
     /* Semantic Grays */
     --gray-50: 0 0% 15%;
@@ -263,6 +265,11 @@ a {
     @apply underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary;
   }
 
+  /* Inline markdown (outside prose) should keep standard link styling */
+  .inline-markdown a:not(.button) {
+    @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
+  }
+
   /* Muted links that stay muted until hover - override prose styling */
   .muted-links a:not(.button) {
     @apply text-muted-foreground underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary transition-colors !important;
@@ -280,6 +287,10 @@ a {
 
   .text-warning {
     color: hsl(var(--text-warning));
+  }
+
+  .text-success {
+    color: hsl(var(--text-success));
   }
 }
 
@@ -492,13 +503,18 @@ a {
       @apply !mr-0 !ml-6;
     }
 
+    /* Inline code */
+    code:not(pre code) {
+      @apply bg-muted rounded px-1 py-0.5 text-sm font-normal before:content-none after:content-none;
+    }
+
     /* Links */
     a:not(.button) {
       @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
     }
 
-    /* Make links in tools/stop sections inherit font weight */
-    .prose a:not(.button) {
+    /* Make links in do/dont sections inherit font weight */
+    a:not(.button) {
       font-weight: inherit;
     }
 

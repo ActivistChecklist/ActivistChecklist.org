@@ -45,9 +45,9 @@ export default function CopyButton({ className = '' }) {
 
   const copyToClipboard = async () => {
     try {
-      // Get the grandparent element's text content
-      const grandparentElement = buttonRef.current.parentElement.parentElement
-      const formattedText = formatTextContent(grandparentElement)
+      // Find the nearest blockquote ancestor; fall back to parent element
+      const targetElement = buttonRef.current.closest('blockquote') || buttonRef.current.parentElement
+      const formattedText = formatTextContent(targetElement)
         .replace(/Copy|Copied/g, '') // Remove "Copy" and "Copied" text
         .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double newlines
         .trim()

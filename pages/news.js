@@ -6,7 +6,7 @@ import RSSButton from '@/components/ui/RSSButton';
 import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
 
-const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
+const NewsPage = ({ newsItems = [] }) => {
   // Group news items by year
   const groupNewsByYear = (items) => {
     const groups = {};
@@ -39,11 +39,10 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
         <h2 className="text-2xl font-bold pb-4 text-foreground">{year}</h2>
         <div className="space-y-4">
           {items.map((story) => (
-            <NewsItem 
-              key={story.uuid} 
-              blok={story.content}
+            <NewsItem
+              key={story.uuid}
+              block={story.content}
               story={story}
-              imageManifest={imageManifest}
             />
           ))}
         </div>
@@ -111,36 +110,18 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  try {
-    const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    
-    const storyblokApi = getStoryblokApi();
-    
-    // Fetch news data using shared utility
-    const { newsItems, imageManifest } = await fetchNewsData(storyblokApi, {
-      version: getStoryblokVersion()
-    });
+  const { getAllNewsItems, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const messages = (await import(`../messages/${locale}.json`)).default;
 
-    return {
-      props: {
-        newsItems,
-        imageManifest,
-        messages
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching news items:', error);
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    return {
-      props: {
-        newsItems: [],
-        imageManifest: {},
-        messages
-      }
-    };
-  }
+  const sourcesMap = getAllNewsSourcesMap(locale);
+  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
+
+  return {
+    props: {
+      newsItems,
+      messages,
+    },
+  };
 }
 
 export default NewsPage;
