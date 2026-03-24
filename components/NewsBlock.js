@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
-const NewsBlock = ({ newsItems = [], imageManifest = {}, limit = 3 }) => {
+const NewsBlock = ({ newsItems = [], limit = 3 }) => {
   const t = useTranslations();
   // Take only the first N items (already sorted by date in getStaticProps)
   const recentNews = newsItems.slice(0, limit);
@@ -28,11 +28,10 @@ const NewsBlock = ({ newsItems = [], imageManifest = {}, limit = 3 }) => {
       
       <div className="space-y-4">
         {recentNews.map((story) => (
-          <NewsItem 
-            key={story.uuid} 
-            blok={story.content}
+          <NewsItem
+            key={story.uuid}
+            block={story.content}
             story={story}
-            imageManifest={imageManifest}
           />
         ))}
       </div>

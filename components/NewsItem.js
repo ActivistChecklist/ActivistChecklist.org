@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { IoNewspaperOutline } from 'react-icons/io5';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const NewsItem = ({ block, story, imageManifest = {} }) => {
+const NewsItem = ({ block, story }) => {
   const isMobile = useIsMobile();
   
   if (!block) {
@@ -18,23 +18,9 @@ const NewsItem = ({ block, story, imageManifest = {} }) => {
   const url = { url: block.url };
   const displaySource = source?.name || source || null;
   
-  // Check if image exists using build-time manifest
-  const getImageInfo = () => {
-    if (!story?.slug) {
-      return { exists: false, src: null };
-    }
-    
-    // Check if the story slug exists in the image manifest
-    const imagePath = imageManifest[story.slug];
-    
-    if (imagePath) {
-      return { exists: true, src: imagePath };
-    } else {
-      return { exists: false, src: null };
-    }
-  };
-  
-  const imageInfo = getImageInfo();
+  const imageInfo = story?.imagePath
+    ? { exists: true, src: story.imagePath }
+    : { exists: false, src: null };
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();

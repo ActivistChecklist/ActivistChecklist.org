@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 import Layout from "../components/layout/Layout";
 import { cn, getBaseUrl } from "@/lib/utils";
 import TranslationFallbackBanner from '@/components/TranslationFallbackBanner';
-import GuideMdx from '@/components/guides/GuideMdx';
-import PageMdx from '@/components/pages/PageMdx';
+import Guide from '@/components/guides/Guide';
+import ContentPage from '@/components/pages/Page';
 import { serialize } from 'next-mdx-remote/serialize';
 import { mdxOptions } from '@/lib/mdx-options';
 import {
@@ -19,7 +19,7 @@ import {
 
 const DEFAULT_DESCRIPTION = "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
 
-export default function Page({
+export default function SlugPage({
   type,
   slug,
   frontmatter,
@@ -69,7 +69,7 @@ export default function Page({
       <Layout sidebarType={type === 'guide' ? 'toc' : 'navigation'}>
         {isFallbackContent && <TranslationFallbackBanner />}
         {type === 'guide' && (
-          <GuideMdx
+          <Guide
             frontmatter={frontmatter}
             serializedBody={serializedBody}
             checklistItems={checklistItems}
@@ -77,7 +77,7 @@ export default function Page({
           />
         )}
         {type === 'page' && (
-          <PageMdx
+          <ContentPage
             frontmatter={frontmatter}
             serializedBody={serializedBody}
             serializedRelatedGuides={serializedRelatedGuides}
@@ -159,7 +159,7 @@ export async function getStaticProps({ params, locale = 'en' }) {
   if (page) {
     const { frontmatter, content, isFallback } = page;
 
-    // Render trailing RelatedGuides outside of prose wrapper in PageMdx.
+    // Render trailing RelatedGuides outside of prose wrapper in Page.
     // This keeps card layouts from inheriting prose typography styles.
     const relatedGuidesMatch = content.match(/<RelatedGuides[\s\S]*?<\/RelatedGuides>\s*$/);
     const relatedGuidesMdx = relatedGuidesMatch ? relatedGuidesMatch[0] : null;

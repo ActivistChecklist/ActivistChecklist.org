@@ -27,7 +27,7 @@ function parseRelatedGuides(value) {
  *   - serializedBody: next-mdx-remote compiled MDX (contains <Section> + <ChecklistItem> tags)
  *   - checklistItems: { [slug]: { frontmatter, serializedBody } } map for ChecklistItemsContext
  */
-export default function GuideMdx({ frontmatter, serializedBody, checklistItems = {}, slug }) {
+export default function Guide({ frontmatter, serializedBody, checklistItems = {}, slug }) {
   const t = useTranslations();
   const router = useRouter();
   const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';

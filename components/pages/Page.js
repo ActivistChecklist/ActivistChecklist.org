@@ -23,7 +23,7 @@ function parseRelatedGuides(value) {
  *   - frontmatter: title, lastUpdated (date)
  *   - serializedBody: next-mdx-remote compiled MDX
  */
-export default function PageMdx({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
+export default function Page({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
   const t = useTranslations();
   const router = useRouter();
   const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';

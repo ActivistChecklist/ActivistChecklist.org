@@ -1008,7 +1008,7 @@ function convertNewsItemStory(story, sourceMap) {
   // Tags
   const tags = story.tag_list || [];
   if (tags.length > 0) {
-    frontmatter.tags = tags.map(t => t.toLowerCase()).join(', ');
+    frontmatter.tags = tags.map(t => t.toLowerCase());
   }
 
   const body = c.comment ? richTextToMdx(c.comment).trim() : '';
@@ -1078,6 +1078,9 @@ function serializeFrontmatter(fm) {
     if (Array.isArray(value)) {
       if (value.length === 0) {
         lines.push(`${key}: []`);
+      } else if (key === 'tags') {
+        const inline = value.map((item) => yamlString(item)).join(', ');
+        lines.push(`${key}: [${inline}]`);
       } else {
         lines.push(`${key}:`);
         for (const item of value) {
@@ -1384,11 +1387,11 @@ async function main() {
     };
 
     // Also map news override images by scanning what's in the directory
-    const newsImageDir = path.join(ROOT, 'public', 'images', 'content', 'news');
+    const newsImageDir = path.join(ROOT, 'public', 'images', 'news');
     if (fs.existsSync(newsImageDir)) {
       for (const file of fs.readdirSync(newsImageDir)) {
         // These map from any Storyblok URL ending with this filename
-        cdnReplacements[`__news_image__${file}`] = `/images/content/news/${file}`;
+        cdnReplacements[`__news_image__${file}`] = `/images/news/${file}`;
       }
     }
 

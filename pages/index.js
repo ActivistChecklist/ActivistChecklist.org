@@ -41,7 +41,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, latestMajorUpdate = null }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = null }) => {
   const t = useTranslations();
   const router = useRouter();
   const baseUrl = getBaseUrl();
@@ -163,7 +163,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
           </section>
 
           {/* Latest News */}
-          <NewsBlock newsItems={newsItems} imageManifest={imageManifest} />
+          <NewsBlock newsItems={newsItems} />
 
           {/* Recent Updates */}
           <section className="mb-16">
@@ -186,7 +186,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, getAllNewsItems, getImageManifest, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
   const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
@@ -197,7 +197,6 @@ export async function getStaticProps({ locale = 'en' }) {
     ? { body: null, bodyText: latestMajor.content.bodyText }
     : null;
 
-  const imageManifest = getImageManifest();
   const sourcesMap = getAllNewsSourcesMap(locale);
   const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
 
@@ -205,7 +204,6 @@ export async function getStaticProps({ locale = 'en' }) {
     props: {
       changelogEntries: changelogEntries.slice(0, 5),
       newsItems,
-      imageManifest,
       latestMajorUpdate,
       messages,
     },

@@ -6,7 +6,7 @@ import RSSButton from '@/components/ui/RSSButton';
 import Link from '@/components/Link';
 import { cn } from "@/lib/utils";
 
-const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
+const NewsPage = ({ newsItems = [] }) => {
   // Group news items by year
   const groupNewsByYear = (items) => {
     const groups = {};
@@ -39,11 +39,10 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
         <h2 className="text-2xl font-bold pb-4 text-foreground">{year}</h2>
         <div className="space-y-4">
           {items.map((story) => (
-            <NewsItem 
-              key={story.uuid} 
+            <NewsItem
+              key={story.uuid}
               block={story.content}
               story={story}
-              imageManifest={imageManifest}
             />
           ))}
         </div>
@@ -111,17 +110,15 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllNewsItems, getImageManifest, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const { getAllNewsItems, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
   const sourcesMap = getAllNewsSourcesMap(locale);
   const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
-  const imageManifest = getImageManifest();
 
   return {
     props: {
       newsItems,
-      imageManifest,
       messages,
     },
   };
