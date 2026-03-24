@@ -30,15 +30,15 @@ git clone https://github.com/ActivistChecklist/ActivistChecklist.org.git
 cd ActivistChecklist.org
 ```
 
-2. Install dependencies:
+1. Install dependencies:
 
 ```bash
 yarn install
 ```
 
-3. Copy the `.env.template` file to `.env` and set the Storyblok access token and other environment variables.
+1. Copy the `.env.template` file to `.env` and set the Storyblok access token and other environment variables.
 
-4. Start the development server:
+2. Start the development server:
 
 ```bash
 yarn dev
@@ -50,7 +50,7 @@ The application will be available at `https://localhost:3001`
 
 ### Node installation
 
-You'll need to get Node running on your server if you intend to use the contact form, stats tracking, or other server side code.
+You'll need to get Node running on your server if you intend to use the contact form, stats tracking, or other server side code..
 
 If you're hosting on May First, follow these instructions to get the [latest verison of Node.js installed](https://help.mayfirst.org/en/guide/how-to-install-node-js-using-nvm).
 
