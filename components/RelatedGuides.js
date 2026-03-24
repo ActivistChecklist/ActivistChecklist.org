@@ -8,14 +8,19 @@ import { cn } from '@/lib/utils';
  * RelatedGuides — dual-mode component.
  *
  * Storyblok mode: <RelatedGuides blok={{ guide1: { cached_url }, ... }} />
- * MDX mode:       <RelatedGuides guides={["essentials", "protest"]} />
- *                 Slugs are converted to paths: "essentials" → "/essentials"
+ * MDX mode:       <RelatedGuides><RelatedGuide slug="essentials" /><RelatedGuide slug="protest" /></RelatedGuides>
+ *                 Slugs are extracted from child <RelatedGuide> elements.
  */
-const RelatedGuides = ({ blok, guides: guidesProp, isBlock = false }) => {
+const RelatedGuides = ({ blok, children, isBlock = false }) => {
 
-  // Extract guide URLs: prefer guidesProp array (MDX), fall back to blok fields (Storyblok)
-  const guides = guidesProp
-    ? guidesProp.map(slug => slug.startsWith('/') ? slug : `/${slug}`)
+  // Extract guide URLs from children (<RelatedGuide slug="...">), or fall back to blok fields (Storyblok)
+  const guides = children
+    ? React.Children.toArray(children)
+        .filter(child => child?.props?.slug)
+        .map(child => {
+          const slug = child.props.slug;
+          return slug.startsWith('/') ? slug : `/${slug}`;
+        })
     : [
         blok?.guide1?.cached_url,
         blok?.guide2?.cached_url,

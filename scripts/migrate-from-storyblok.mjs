@@ -522,7 +522,8 @@ function convertRelatedGuides(blok) {
   }
 
   if (guides.length === 0) return '';
-  return `<RelatedGuides guides={${JSON.stringify(guides)}} />\n`;
+  const children = guides.map(slug => `  <RelatedGuide slug="${slug}" />`).join('\n');
+  return `<RelatedGuides>\n${children}\n</RelatedGuides>\n`;
 }
 
 function convertSectionHeader(blok) {
