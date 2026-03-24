@@ -1,4 +1,4 @@
-# Claude rueles
+# Claude rules
 
 ## General rules
 
