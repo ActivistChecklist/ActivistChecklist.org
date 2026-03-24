@@ -6,7 +6,7 @@ ActivistChecklist.org is a comprehensive digital security resource designed spec
 
 ## Install the prerequisites
 
-A Next.js project integrated with Storyblok CMS.
+A Next.js project with file-based MDX content.
 
 If you're new to node and yarn, follow these steps to install the prerequisites:
 
@@ -36,8 +36,7 @@ cd ActivistChecklist.org
 yarn install
 ```
 
-1. Copy the `.env.template` file to `.env` and set the Storyblok access token and other environment variables.
-
+1. Copy the `.env.template` file to `.env` and set required environment variables.
 2. Start the development server:
 
 ```bash
@@ -107,7 +106,7 @@ ProxyPassReverse /api-server http://localhost:4321/api-server
 
 This server side API needs to run in production (in our case, a LAMP server).
 
-Separately, we need to use the built-in Next.js API routes for a staging deployment on a service like Vercel so we can use Storyblok's preview mode to allow for inline editing and previews of draft content.
+Separately, we use built-in Next.js API routes for staging deployments on services like Vercel.
 
 ### Interacting with API server
 
@@ -165,11 +164,11 @@ yarn build && upload  # upload is a custom alias for rsync
 ActivistChecklist.org
 ├── api - API server (Running on fastify at /api-server/ – Separate from Next.js)
 ├── components - React components  
-├── content - Content backup (YAML/JSON) for version control
+├── content - Source content (MDX frontmatter + body) tracked in git
 ├── lib - Core business logic
-├── out - Static build of the production site  (run `yarn build` to generate)
+├── out - Static build output (generated during static export flow)
 ├── pages - Next.js pages
-│   └── api - API routes specifically for preview mode in Vercel (run via Next.js)
+│   └── api - Next.js API routes
 ├── public - Public assets (images, fonts, etc.)
 │   └── scripts - Public PHP scripts (stats, contact form, etc.)
 ├── scripts - Build and utility scripts (JS)
@@ -179,55 +178,25 @@ ActivistChecklist.org
 
 ## Contributing changes to the content
 
-If you'd like to suggest content changes, please open an issue. The content doesn't live in the repository, so there isn't a way to submit pull requests for content changes at the moment.
+Content lives in this repository under `content/`, so you can submit content updates directly via pull request.
+
+Typical workflow:
+
+1. Edit/add MDX files under `content/`.
+2. Run the site locally (`yarn dev`) and validate your changes.
+3. Run checks as needed (for example `yarn buildstatic` / `yarn check-links`).
+4. Open a PR with your content and/or code changes.
 
 ## Where does the content live?
 
-All the content is stored in the Storyblok CMS.  You can export the content locally using the export utility:
+Primary source of truth is file-based content in this repo:
 
-```bash
-# Export both content and images (default)
-node scripts/export.js
-
-# Export only content
-node scripts/export.js --mode content
-
-# Export only images
-node scripts/export.js --mode images
-
-# Show detailed progress
-node scripts/export.js --verbose
-```
-
-Content will be exported as JSON files maintaining the same structure as in Storyblok. Images will be downloaded to the specified directory, with automatic skipping of previously downloaded files.
-
-## Editing the content in Storyblok
-
-### Rich text inline JSX Components
-
-Special parsing available inside rich text fields:
-
-The following text will be parsed as components and rendered as JSX components:
-
-```jsx
-<Badge variant="destructive">advanced</Badge>
-<ProtectionBadge type="baseline" />
-<ProtectionBadge type="enhanced" />
-```
-
-### Rich text inline CSS classes
-
-The following text will be parsed as a CSS class:
-
-```text
-{font-bold text-lg}my fancy text here{/}
-```
-
-will be rendered as:
-
-```html
-<span class="font-bold text-lg">my fancy text here</span>
-```
+- `content/en/guides`
+- `content/en/checklist-items`
+- `content/en/pages`
+- `content/en/news`
+- `content/en/changelog`
+- `content/en/news-sources`
 
 ## License
 
