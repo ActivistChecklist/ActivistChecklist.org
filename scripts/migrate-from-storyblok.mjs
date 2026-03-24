@@ -953,12 +953,13 @@ function convertNewsItemStory(story, sourceMap) {
     if (resolvedArchive) frontmatter.archiveUrl = resolvedArchive;
   }
 
-  // Source can be a resolved story object or a UUID string
-  if (c.source) {
+  // source_override (plain display string) takes priority over the source relation field
+  if (c.source_override) {
+    frontmatter.source = c.source_override;
+  } else if (c.source) {
     if (typeof c.source === 'object' && c.source.slug) {
       frontmatter.source = c.source.slug;
     } else if (typeof c.source === 'string') {
-      // It's a UUID — look it up in the source map
       const resolvedSource = sourceMap?.get(c.source);
       if (resolvedSource) {
         frontmatter.source = resolvedSource;

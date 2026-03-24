@@ -1,42 +1,36 @@
 import React from 'react';
-import GuideCardBlock from '@/components/GuideCardBlock';
+import GuideCard from '@/components/GuideCard';
+import { NAV_ITEMS } from '@/config/navigation';
 import { cn } from '@/lib/utils';
+
+const ALL_GUIDE_ITEMS = Object.values(NAV_ITEMS).filter(item => item.icon && item.href);
+
+function findGuideBySlug(slug) {
+  const normalized = slug.replace(/^\/+|\/+$/g, '');
+  return ALL_GUIDE_ITEMS.find(item =>
+    item.href.replace(/^\/+|\/+$/g, '') === normalized
+  );
+}
 
 /**
  * RelatedGuides — <RelatedGuides><RelatedGuide slug="essentials" />...</RelatedGuides>
  */
 const RelatedGuides = ({ children, isBlock = false }) => {
 
-  const guides = React.Children.toArray(children)
+  const guideItems = React.Children.toArray(children)
     .filter(child => child?.props?.slug)
-    .map(child => {
-      const slug = child.props.slug;
-      return slug.startsWith('/') ? slug : `/${slug}`;
-    });
+    .map(child => findGuideBySlug(child.props.slug))
+    .filter(Boolean);
 
-  if (guides.length === 0) {
+  if (guideItems.length === 0) {
     return null;
   }
 
-  // Determine grid layout based on number of guides
   const getGridClass = () => {
-    switch (guides.length) {
-      case 1:
-        return "grid grid-cols-1 max-w-md mx-auto";
-      case 2:
-        // 2 and 4 should behave the same way
-      case 4:
-        // 2x2 grid - break to single column sooner (use lg instead of md)
-        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
-      case 3:
-        // Max 2 columns — third card wraps to its own row (never 3 across)
-        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
-      default:
-        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
-    }
+    if (guideItems.length === 1) return "grid grid-cols-1 max-w-md mx-auto";
+    return "grid grid-cols-1 lg:grid-cols-2 gap-8";
   };
 
-  // Different styling based on context
   const containerClass = isBlock
     ? "not-prose bg-muted/50 border border-border/50 rounded-lg p-6 my-8"
     : "not-prose mt-12 pt-8 border-t border-border/50";
@@ -51,28 +45,16 @@ const RelatedGuides = ({ children, isBlock = false }) => {
 
   return (
     <div className={containerClass}>
-      {/* Title section */}
       <div className="mb-6">
         <h3 className={cn(titleClass)} id="related">
           {defaultTitle}
         </h3>
       </div>
 
-      {/* Guides grid */}
       <div className={getGridClass()}>
-        {guides.map((guideUrl, index) => {
-          // Create a fake block object for GuideCardBlock
-          const fakeBlok = {
-            url: { url: guideUrl },
-          };
-
-          return (
-            <GuideCardBlock 
-              key={index} 
-              block={fakeBlok} 
-            />
-          );
-        })}
+        {guideItems.map((guideItem, index) => (
+          <GuideCard key={index} guideItem={guideItem} size="medium" />
+        ))}
       </div>
     </div>
   );
