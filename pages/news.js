@@ -12,7 +12,7 @@ const NewsPage = ({ newsItems = [] }) => {
     const groups = {};
 
     items.forEach(item => {
-      const itemDate = new Date(item.content.date || item.first_published_at || item.created_at);
+      const itemDate = new Date(item.date || item.first_published_at || item.created_at);
       const year = itemDate.getFullYear();
       
       if (!groups[year]) {
@@ -38,11 +38,10 @@ const NewsPage = ({ newsItems = [] }) => {
       <section className={cn("pb-12")}>
         <h2 className="text-2xl font-bold pb-4 text-foreground">{year}</h2>
         <div className="space-y-4">
-          {items.map((story) => (
+          {items.map((item) => (
             <NewsItem
-              key={story.uuid}
-              block={story.content}
-              story={story}
+              key={item.slug}
+              entry={item}
             />
           ))}
         </div>
@@ -110,10 +109,10 @@ const NewsPage = ({ newsItems = [] }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllNewsItems, toNewsWireItem } = await import('@/lib/content');
+  const { getAllNewsItems, toNewsListItem } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
-  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item));
+  const newsItems = getAllNewsItems(locale).map((item) => toNewsListItem(item));
 
   return {
     props: {

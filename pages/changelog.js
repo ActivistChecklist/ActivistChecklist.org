@@ -52,8 +52,8 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
       <section className={cn("mb-12", !isFirst && "border-t pt-8")}>
         <h2 className="text-2xl font-bold mb-6 text-foreground">{title}</h2>
         <div className="relative">
-          {entries.map((story, index) => (
-            <div key={story.uuid} id={story.uuid} className="relative">
+          {entries.map((entry, index) => (
+            <div key={entry.slug} id={entry.slug} className="relative">
               <div className="py-3 pl-12 text-sm text-muted-foreground relative">
                 {/* Timeline dot */}
                 <div className="absolute left-5 top-[18px] w-2 h-2 bg-primary rounded-full"></div>
@@ -61,10 +61,7 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
                 {index < entries.length - 1 && (
                   <div className="absolute left-[23px] top-[26px] w-px bg-border h-full"></div>
                 )}
-                <ChangeLogEntry 
-                  block={story.content}
-                  story={story}
-                />
+                <ChangeLogEntry entry={entry} />
               </div>
             </div>
           ))}
@@ -136,10 +133,10 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, toChangelogWireEntry } = await import('@/lib/content');
+  const { getAllChangelogEntries, toChangelogListEntry } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
-  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogListEntry);
 
   return {
     props: { changelogEntries, messages },

@@ -7,21 +7,20 @@ import { IoNewspaperOutline } from 'react-icons/io5';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { isPaywallBypassActiveForUrl } from '@/lib/paywall-bypass-url';
 
-const NewsItem = ({ block, story }) => {
+const NewsItem = ({ entry }) => {
   const isMobile = useIsMobile();
-  
-  if (!block) {
+
+  if (!entry) {
     return null;
   }
 
-  const { date, source } = block;
-  const originalUrl = block.url;
+  const { date, source, url: originalUrl, title, imagePath, tags, commentText } = entry;
   const displaySource = source?.name || source || null;
-  
-  const imageInfo = story?.imagePath
-    ? { exists: true, src: story.imagePath }
+
+  const imageInfo = imagePath
+    ? { exists: true, src: imagePath }
     : { exists: false, src: null };
-  
+
   const dateString = date || new Date().toISOString();
   const hasUrl = !!originalUrl;
   const showBypassNotice = hasUrl && isPaywallBypassActiveForUrl(originalUrl);
@@ -31,10 +30,10 @@ const NewsItem = ({ block, story }) => {
     <div className="text-sm text-gray-600 mb-2">
       <div className="flex flex-wrap items-center gap-1">
         <span>{formatRelativeDate(dateString)}</span>
-        {story?.tag_list && story.tag_list.length > 0 && (
+        {tags && tags.length > 0 && (
           <>
             <span>•</span>
-            {story.tag_list.map((tag, index) => (
+            {tags.map((tag, index) => (
               <span key={index} className="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs whitespace-nowrap">
                 {tag}
               </span>
@@ -63,10 +62,10 @@ const NewsItem = ({ block, story }) => {
                     className="hover:underline hover:decoration-primary"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {story?.name || 'News Item'}
+                    {title || 'News Item'}
                   </Link>
                 ) : (
-                  <span>{story?.name || 'News Item'}</span>
+                  <span>{title || 'News Item'}</span>
                 )}
                 {displaySource && (
                   <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
@@ -75,7 +74,7 @@ const NewsItem = ({ block, story }) => {
                 )}
               </h3>
             </div>
-            
+
             {/* Image */}
             <div className="flex-shrink-0">
               {hasUrl ? (
@@ -87,7 +86,7 @@ const NewsItem = ({ block, story }) => {
                     {imageInfo.exists ? (
                       <Image
                         src={imageInfo.src}
-                        alt={story?.name || 'News item'}
+                        alt={title || 'News item'}
                         width={128}
                         height={80}
                         className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
@@ -105,7 +104,7 @@ const NewsItem = ({ block, story }) => {
                   {imageInfo.exists ? (
                     <Image
                       src={imageInfo.src}
-                      alt={story?.name || 'News item'}
+                      alt={title || 'News item'}
                       width={128}
                       height={80}
                       className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
@@ -120,17 +119,17 @@ const NewsItem = ({ block, story }) => {
               )}
             </div>
           </div>
-          
+
           {/* Meta row below title and image */}
           <MetaRow />
-          
+
           {/* Comment */}
-          {block.commentText && (
+          {commentText && (
             <div className="prose prose-slate max-w-none text-sm">
-              <Markdown content={block.commentText} isProse={false} />
+              <Markdown content={commentText} isProse={false} />
             </div>
           )}
-          
+
           {/* Paywall Notice */}
           {showBypassNotice && (
             <div className="text-xs text-gray-500 italic">
@@ -163,10 +162,10 @@ const NewsItem = ({ block, story }) => {
                   className="hover:underline hover:decoration-primary"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {story?.name || 'News Item'}
+                  {title || 'News Item'}
                 </Link>
               ) : (
-                <span>{story?.name || 'News Item'}</span>
+                <span>{title || 'News Item'}</span>
               )}
               {displaySource && (
                 <span className="text-lg font-normal text-gray-400 group-hover:text-gray-600 ml-1">
@@ -174,17 +173,17 @@ const NewsItem = ({ block, story }) => {
                 </span>
               )}
             </h3>
-            
+
             {/* Comment */}
-            {block.commentText && (
+            {commentText && (
               <div className="prose prose-slate max-w-none text-sm mb-2">
-                <Markdown content={block.commentText} isProse={false} />
+                <Markdown content={commentText} isProse={false} />
               </div>
             )}
-            
+
             {/* Meta row: Date • Source • Tags */}
             <MetaRow />
-            
+
             {/* Paywall Notice */}
             {showBypassNotice && (
               <div className="text-xs text-gray-500 italic">
@@ -201,7 +200,7 @@ const NewsItem = ({ block, story }) => {
               </div>
             )}
           </div>
-          
+
           {/* Image */}
           <div className="flex-shrink-0">
             {hasUrl ? (
@@ -213,7 +212,7 @@ const NewsItem = ({ block, story }) => {
                   {imageInfo.exists ? (
                     <Image
                       src={imageInfo.src}
-                      alt={story?.name || 'News item'}
+                      alt={title || 'News item'}
                       width={192}
                       height={112}
                       className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
@@ -231,7 +230,7 @@ const NewsItem = ({ block, story }) => {
                 {imageInfo.exists ? (
                   <Image
                     src={imageInfo.src}
-                    alt={story?.name || 'News item'}
+                    alt={title || 'News item'}
                     width={192}
                     height={112}
                     className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
@@ -252,8 +251,8 @@ const NewsItem = ({ block, story }) => {
 
   // Return the content in a div container
   return (
-    <div 
-     
+    <div
+
       className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group"
     >
       <NewsItemContent />

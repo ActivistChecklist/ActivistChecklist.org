@@ -3,17 +3,17 @@ import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { IoStar } from 'react-icons/io5';
 
-const ChangeLogEntry = ({ block, story }) => {
+const ChangeLogEntry = ({ entry }) => {
   const [entryDate, setEntryDate] = useState('');
   const [isClient, setIsClient] = useState(false);
 
-  if (!block) {
-    console.log('⚠️ ChangeLogEntry: block is undefined. Skipping');
+  if (!entry) {
+    console.log('⚠️ ChangeLogEntry: entry is undefined. Skipping');
     return null;
   }
 
-  const dateString = story?.first_published_at || story?.created_at || story?.published_at || new Date().toISOString();
-  
+  const dateString = entry.first_published_at || entry.created_at || entry.published_at || new Date().toISOString();
+
   // Format date for hover tooltip (YYYY-MM-DD)
   const hoverDate = new Date(dateString).toISOString().split('T')[0];
 
@@ -27,27 +27,27 @@ const ChangeLogEntry = ({ block, story }) => {
   const displayDate = isClient ? entryDate : hoverDate;
 
   return (
-    <div 
-     
+    <div
+
       className={cn(
         "changelog-entry"
       )}
     >
       <div className="flex flex-col sm:flex-row sm:gap-2">
-        <time 
+        <time
           className="text-sm text-muted-foreground italic sm:w-20 sm:shrink-0 mb-1 sm:mb-0"
           dateTime={dateString}
           title={hoverDate}
         >
           {displayDate}
         </time>
-        {block.bodyText && (
+        {entry.bodyText && (
           <div className="flex items-start gap-1 flex-1">
-            {block.type === 'major' && (
+            {entry.type === 'major' && (
               <IoStar className="text-yellow-500 shrink-0 mt-[2px]" size={16} />
             )}
             <div className="prose prose-slate max-w-none text-sm flex-1">
-              <Markdown content={block.bodyText} isProse={false} />
+              <Markdown content={entry.bodyText} isProse={false} />
             </div>
           </div>
         )}

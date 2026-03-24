@@ -29,11 +29,10 @@ const NewsBlock = ({ newsItems = [], limit = NEWS_BLOCK_DEFAULT_LIMIT }) => {
       </div>
       
       <div className="space-y-4">
-        {recentNews.map((story) => (
+        {recentNews.map((item) => (
           <NewsItem
-            key={story.uuid}
-            block={story.content}
-            story={story}
+            key={item.slug}
+            entry={item}
           />
         ))}
       </div>
