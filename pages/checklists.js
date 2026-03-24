@@ -1,7 +1,6 @@
-import { getStoryblokApi, storyblokEditable } from "@storyblok/react";
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
-import { getStoryblokVersion, fetchAllStories } from "@/utils/core";
+import { getAllGuides } from '@/lib/content';
 import { SECURITY_CHECKLISTS, NAV_ITEMS } from '../config/navigation';
 import GuideCard from '@/components/GuideCard';
 
@@ -84,32 +83,19 @@ const GuideList = ({ guides }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const storyblokApi = getStoryblokApi();
   const messages = (await import(`../messages/${locale}.json`)).default;
-  
-  // Fetch all guides with pagination support
-  const allStories = await fetchAllStories(storyblokApi, {
-    version: getStoryblokVersion(),
-    filter_query: {
-      component: {
-        in: "guide"
-      }
-    },
-    excluding_fields: 'body,blocks',
-    resolve_links: 'url'
-  });
 
-  const guides = allStories.map((guide) => {
-    guide.content.slug = guide.slug;
-    return guide;
-  });
+  const allGuides = getAllGuides(locale);
+  const guides = allGuides.map((guide) => ({
+    slug: guide.frontmatter.slug || guide.slug,
+    content: { slug: guide.frontmatter.slug || guide.slug },
+  }));
 
   return {
     props: {
       guides,
-      messages
+      messages,
     },
-    // revalidate: 3600 // Revalidate every hour
   };
 }
 

@@ -55,14 +55,8 @@ public/pagefind
 # URL scanner
 .approved-urls.json
 
-# Storyblok image cache (persists across builds to avoid re-download/re-scrub)
-.cache/
-
 # Backups
 buildbackups/
-
-# News image caching
-public/files/news/
 
 # Generated OG share images
 public/images/og/

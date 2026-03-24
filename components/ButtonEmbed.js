@@ -1,46 +1,32 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import * as IoIcons from 'react-icons/io5';
+import { IoCloudDownloadOutline, IoDocumentsOutline, IoOpenOutline } from 'react-icons/io5';
 import { trackFileDownload } from '@/lib/download-tracker';
 
-// Dynamic icon renderer for Ionicons 5
+// Static registry of icons used in content. Add new icons here as needed.
+const ICON_REGISTRY = {
+  IoCloudDownloadOutline,
+  IoDocumentsOutline,
+  IoOpenOutline,
+};
+
+// Icon renderer — looks up from static registry to avoid importing all icons
 const DynamicIcon = ({ iconName, className, ...props }) => {
   if (!iconName) return null;
-  
-  // Ensure the icon name starts with 'Io' for Ionicons 5
   const formattedIconName = iconName.startsWith('Io') ? iconName : `Io${iconName}`;
-  
-  // Get the icon component from the react-icons/io5 package
-  const IconComponent = IoIcons[formattedIconName];
-  
+  const IconComponent = ICON_REGISTRY[formattedIconName];
   if (!IconComponent) {
-    console.warn(`Icon "${formattedIconName}" not found in Ionicons 5`);
+    console.warn(`Icon "${formattedIconName}" not in ButtonEmbed registry. Add it to ICON_REGISTRY in ButtonEmbed.js`);
     return null;
   }
-  
   return <IconComponent className={className} {...props} />;
 };
 
 export const ButtonEmbed = (props) => {
-  const { title, url, variant, size, className, icon, iconPosition, download, alignment } = props;
-  
-  // Extract the actual URL and target from the url object
-  // For URL links (linktype === 'url'), prefer the url field which contains exactly what was entered
-  // For story links (linktype === 'story'), use cached_url which contains the story's full path
-  // This prevents Storyblok from transforming manually entered URLs through its content structure
-  const getRawHref = () => {
-    if (url?.linktype === 'url') {
-      return url?.url || url?.cached_url || '#';
-    }
-    // For story links, cached_url doesn't include leading slash
-    const path = url?.cached_url || url?.url || '#';
-    if (path !== '#' && !path.startsWith('/') && !path.startsWith('http')) {
-      return `/${path}`;
-    }
-    return path;
-  };
-  const href = getRawHref();
-  const target = url?.target || (href?.startsWith('http') ? '_blank' : undefined);
+  const { title, url, variant, size, className, icon, iconPosition, download, alignment, target: targetProp } = props;
+
+  const href = (typeof url === 'string' ? url : null) || '#';
+  const target = targetProp || (href.startsWith('http') ? '_blank' : undefined);
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;
   const position = iconPosition || 'left';

@@ -4,7 +4,6 @@ const baseConfig = {
   trailingSlash: true,
   images: {
     unoptimized: true,
-    domains: ['a.storyblok.com'],
   },
   webpack: (config) => {
     config.resolve.alias = {

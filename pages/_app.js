@@ -1,68 +1,14 @@
 import "../styles/globals.css";
-import { storyblokInit, apiPlugin } from "@storyblok/react";
 import { NextIntlClientProvider, IntlErrorCode } from 'next-intl';
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import ErrorBoundary from '../components/development/ErrorBoundary';
-import { useEffect } from "react";
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 import { getBaseUrl } from "@/lib/utils";
-import Page from "../components/pages/Page";
-import ChecklistItem from "../components/guides/ChecklistItem";
-import Guide, { SectionHeader } from "../components/guides/Guide";
-import ChecklistItemReference from "../components/guides/ChecklistItemReference";
-import ChecklistItemRef from "../components/guides/ChecklistItemRef";
-import ChangeLogEntry from "../components/ChangeLogEntry";
-import ChangeLogRecentEntries from "../components/ChangeLogRecentEntries";
-import GuideCardBlock from "../components/GuideCardBlock";
-import RelatedGuides from "../components/RelatedGuides";
-import NewsItem from "../components/NewsItem";
-
-const components = {
-  page: Page,
-  guide: Guide,
-  "checklist-item": ChecklistItem,
-  "checklist-item-reference": ChecklistItemReference,
-  "checklist-item-ref": ChecklistItemRef,
-  "section-header": SectionHeader,
-  "changelog-entry": ChangeLogEntry,
-  "changelog-recent-entries": ChangeLogRecentEntries,
-  "guide-card-block": GuideCardBlock,
-  "related-guides": RelatedGuides,
-  "news-item": NewsItem,
-};
-
-storyblokInit({
-  accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
-  use: [apiPlugin],
-  components,
-  apiOptions: {
-    region: "us",
-    version: process.env.NODE_ENV === 'development' ? 'draft' : 'published'
-  },
-  bridge: true // Enable the Storyblok Bridge for visual editing
-  // richText: {},
-  // enableFallbackComponent: false,
-  // customFallbackComponent: FallbackComponent,
-});
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-
-  useEffect(() => {
-    // Re-initialize bridge on client side for preview mode
-    if (process.env.NODE_ENV === 'development') {
-      const { StoryblokBridge } = window
-      if (typeof StoryblokBridge !== 'undefined') {
-        const storyblokInstance = new StoryblokBridge()
-        storyblokInstance.on(['input', 'published', 'change'], () => {
-          // Reload page on content changes
-          location.reload()
-        })
-      }
-    }
-  }, [])
 
   const { key, ...props } = pageProps;
   

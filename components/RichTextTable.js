@@ -1,13 +1,12 @@
 import React from 'react'
 import Markdown from './Markdown'
 import { cn } from '@/lib/utils'
-import { storyblokEditable } from "@storyblok/react";
 
 const RichTextTable = ({ 
   table, 
   caption, 
   className,
-  blok,
+  block,
   ...props
 }) => {
   if (!table || !table.thead || !table.tbody) {
@@ -15,7 +14,7 @@ const RichTextTable = ({
   }
 
   return (
-    <div className={cn("table-wrapper", className)} {...storyblokEditable(blok)}>
+    <div className={cn("table-wrapper", className)}>
       <table role="table">
         {caption && (
           <caption className="sr-only">

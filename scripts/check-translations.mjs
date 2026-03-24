@@ -11,9 +11,9 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join, basename } from 'path';
+import { DEFAULT_LOCALE } from '../lib/i18n-config.js';
 
 const MESSAGES_DIR = new URL('../messages', import.meta.url).pathname;
-const DEFAULT_LOCALE = 'en';
 const strict = process.argv.includes('--strict');
 
 function flattenKeys(obj, prefix = '') {

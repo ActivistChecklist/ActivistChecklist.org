@@ -89,6 +89,7 @@ export function NewsletterSubscribeForm({ onSuccess }) {
           <div className="flex gap-2">
             <Input
               type="email"
+              name="email"
               placeholder={t('newsletter.placeholders.emailLong')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -152,6 +153,7 @@ export function CompactNewsletterSubscribe() {
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             type="email"
+            name="email"
             placeholder={t('newsletter.placeholders.emailShort')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}

@@ -4,11 +4,6 @@
 
 set -e
 
-# Export Storyblok images (skip on Vercel)
-if [ "$VERCEL" != "1" ]; then
-  yarn storyblockexportimages
-fi
-
 # Generate sitemap, RSS feed, and search index
 next-sitemap
 yarn rss
@@ -17,16 +12,6 @@ yarn index
 # Static build tasks
 if [ "$BUILD_MODE" = "static" ]; then
   cp public/.htaccess out/.htaccess
-fi
-
-# Fetch news images (skip on Vercel)
-if [ "$VERCEL" != "1" ]; then
-  yarn fetch-news -q
-
-  if [ "$BUILD_MODE" = "static" ]; then
-    mkdir -p out/files
-    cp -r public/files/news out/files/ 2>/dev/null || true
-  fi
 fi
 
 # Clean up .DS_Store files from output

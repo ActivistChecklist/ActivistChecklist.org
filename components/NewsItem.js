@@ -1,41 +1,26 @@
 import React from 'react';
-import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
+import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
 import Image from 'next/image';
 import { IoNewspaperOutline } from 'react-icons/io5';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const NewsItem = ({ blok, story, imageManifest = {} }) => {
+const NewsItem = ({ block, story }) => {
   const isMobile = useIsMobile();
   
-  if (!blok) {
+  if (!block) {
     return null;
   }
 
-  const { date, source, source_override, url, paywall_mode = 'inactive', comment } = blok;
+  const { date, source, paywall_mode = 'inactive', comment } = block;
+  const url = { url: block.url };
+  const displaySource = source?.name || source || null;
   
-  // Use source_override if provided, otherwise fall back to source
-  const displaySource = source_override || (source?.name || source);
-  
-  // Check if image exists using build-time manifest
-  const getImageInfo = () => {
-    if (!story?.slug) {
-      return { exists: false, src: null };
-    }
-    
-    // Check if the story slug exists in the image manifest
-    const imagePath = imageManifest[story.slug];
-    
-    if (imagePath) {
-      return { exists: true, src: imagePath };
-    } else {
-      return { exists: false, src: null };
-    }
-  };
-  
-  const imageInfo = getImageInfo();
+  const imageInfo = story?.imagePath
+    ? { exists: true, src: story.imagePath }
+    : { exists: false, src: null };
   
   // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
@@ -163,9 +148,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           <MetaRow />
           
           {/* Comment */}
-          {comment && (
+          {(comment || block.commentText) && (
             <div className="prose prose-slate max-w-none text-sm">
-              <RichText document={comment} noWrapper={true} />
+              {comment
+                ? <RichText document={comment} noWrapper={true} />
+                : <Markdown content={block.commentText} isProse={false} />}
             </div>
           )}
           
@@ -216,9 +203,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             </h3>
             
             {/* Comment */}
-            {comment && (
+            {(comment || block.commentText) && (
               <div className="prose prose-slate max-w-none text-sm mb-2">
-                <RichText document={comment} noWrapper={true} />
+                {comment
+                  ? <RichText document={comment} noWrapper={true} />
+                  : <Markdown content={block.commentText} isProse={false} />}
               </div>
             )}
             
@@ -295,7 +284,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
   // Return the content in a div container
   return (
     <div 
-      {...storyblokEditable(blok)}
+     
       className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group"
     >
       <NewsItemContent />
