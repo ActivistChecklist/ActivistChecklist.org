@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { getAllGuides, getAllPages } from "@/lib/content";
 
-export default function OgPreview({ stories = [], isDev }) {
+export default function OgPreview({ ogTargets = [], isDev }) {
   if (!isDev) {
     return (
       <>
@@ -26,14 +26,14 @@ export default function OgPreview({ stories = [], isDev }) {
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 300px)', gap: '24px' }}>
-        {stories.map((story) => {
-          const title = story.content?.title || story.name;
-          const type = story.content?.component || 'page';
-          const slug = story.full_slug || '';
+        {ogTargets.map((target) => {
+          const title = target.title;
+          const type = target.pageType || 'page';
+          const slug = target.slug || '';
           const imgSrc = `/api/og-image?title=${encodeURIComponent(title)}&type=${encodeURIComponent(type)}&slug=${encodeURIComponent(slug)}`;
 
           return (
-            <div key={story.uuid} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', background: '#fafafa' }}>
+            <div key={slug} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', background: '#fafafa' }}>
               <img
                 src={imgSrc}
                 alt={`OG image for: ${title}`}
@@ -56,7 +56,7 @@ export default function OgPreview({ stories = [], isDev }) {
                   }}>
                     {type}
                   </span>
-                  <span style={{ marginLeft: '8px', color: '#aaa' }}>/{story.full_slug}</span>
+                  <span style={{ marginLeft: '8px', color: '#aaa' }}>/{slug}</span>
                 </div>
               </div>
             </div>
@@ -78,10 +78,9 @@ export async function getStaticProps({ locale = 'en' }) {
     const slug = g.frontmatter.slug || g.slug;
     const title = g.frontmatter.title;
     return {
-      uuid: slug,
-      name: title,
-      full_slug: slug,
-      content: { title, component: 'guide' },
+      slug,
+      title,
+      pageType: 'guide',
     };
   });
 
@@ -89,18 +88,17 @@ export async function getStaticProps({ locale = 'en' }) {
     const slug = p.frontmatter.slug || p.slug;
     const title = p.frontmatter.title;
     return {
-      uuid: slug,
-      name: title,
-      full_slug: slug,
-      content: { title, component: 'page' },
+      slug,
+      title,
+      pageType: 'page',
     };
   });
 
-  const stories = [...guides, ...pages].sort((a, b) =>
-    a.full_slug.localeCompare(b.full_slug)
+  const ogTargets = [...guides, ...pages].sort((a, b) =>
+    a.slug.localeCompare(b.slug)
   );
 
   return {
-    props: { stories, isDev: true, messages },
+    props: { ogTargets, isDev: true, messages },
   };
 }

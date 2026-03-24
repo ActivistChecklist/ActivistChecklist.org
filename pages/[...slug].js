@@ -129,11 +129,11 @@ export async function getStaticProps({ params, locale = 'en' }) {
     // OG image
     let ogImagePath = null;
     try {
-      const { generateOgImageForStory } = require('@/lib/og-image');
-      ogImagePath = await generateOgImageForStory({
-        content: { title: frontmatter.title, component: 'guide' },
-        full_slug: slug,
-        name: frontmatter.title,
+      const { generateOgImageForRoute } = require('@/lib/og-image');
+      ogImagePath = await generateOgImageForRoute({
+        title: frontmatter.title,
+        pageType: 'guide',
+        slug,
       });
     } catch (err) {
       console.warn(`OG image skipped for guide "${slug}":`, err.message);
@@ -178,11 +178,11 @@ export async function getStaticProps({ params, locale = 'en' }) {
 
     let ogImagePath = null;
     try {
-      const { generateOgImageForStory } = require('@/lib/og-image');
-      ogImagePath = await generateOgImageForStory({
-        content: { title: frontmatter.title, component: 'page' },
-        full_slug: slug,
-        name: frontmatter.title,
+      const { generateOgImageForRoute } = require('@/lib/og-image');
+      ogImagePath = await generateOgImageForRoute({
+        title: frontmatter.title,
+        pageType: 'page',
+        slug,
       });
     } catch (err) {
       console.warn(`OG image skipped for page "${slug}":`, err.message);

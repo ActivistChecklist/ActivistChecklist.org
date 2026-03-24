@@ -41,7 +41,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = null }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorBodyText = null }) => {
   const t = useTranslations();
   const router = useRouter();
   const baseUrl = getBaseUrl();
@@ -95,10 +95,10 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
                     </Link>
                   </Button>
                 </div>
-                {latestMajorUpdate && (
+                {latestMajorBodyText && (
                   <div className="mt-8 text-muted-foreground">
                     <Sparkles className="h-4 w-4 inline mr-1" />
-                    <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />
+                    <Markdown content={latestMajorBodyText} isProse={false} inlineOnly={true} />
                   </div>
                 )}
               </div>
@@ -187,24 +187,22 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem } = await import('@/lib/content');
+  const { getAllChangelogEntries, getAllNewsItems, toChangelogListEntry, toNewsListItem } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
-  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogListEntry);
 
   // Latest major update for hero section
-  const latestMajor = changelogEntries.find((e) => e.content.type === 'major');
-  const latestMajorUpdate = latestMajor
-    ? { body: null, bodyText: latestMajor.content.bodyText }
-    : null;
+  const latestMajor = changelogEntries.find((e) => e.type === 'major');
+  const latestMajorBodyText = latestMajor?.bodyText ?? null;
 
-  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item));
+  const newsItems = getAllNewsItems(locale).map((item) => toNewsListItem(item));
 
   return {
     props: {
       changelogEntries: changelogEntries.slice(0, 5),
       newsItems: newsItems.slice(0, NEWS_BLOCK_DEFAULT_LIMIT),
-      latestMajorUpdate,
+      latestMajorBodyText,
       messages,
     },
   };

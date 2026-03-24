@@ -27,7 +27,7 @@ async function main() {
 
   fs.mkdirSync(outputDir, { recursive: true });
 
-  const { generateOgImageForStory } = await import('../lib/og-image.js');
+  const { generateOgImageForRoute } = await import('../lib/og-image.js');
   const { getAllGuides, getAllPages } = await import('../lib/content.js');
 
   const allContent = [
@@ -46,10 +46,10 @@ async function main() {
     const title = item.frontmatter.title;
 
     try {
-      const result = await generateOgImageForStory({
-        content: { title, component: type },
-        full_slug: slug,
-        name: title,
+      const result = await generateOgImageForRoute({
+        title,
+        pageType: type,
+        slug,
       });
 
       if (result && result !== '/images/og-image.png') {
