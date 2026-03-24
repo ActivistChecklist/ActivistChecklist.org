@@ -61,9 +61,11 @@ export default function SlugPage({
         <meta name="twitter:description" content={pageDescription} key="twitter:description" />
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
 
-        <link rel="alternate" hreflang="en" href={`${baseUrl}/${slug}`} key="hreflang-en" />
-        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/${slug}`} key="hreflang-es" />
-        <link rel="alternate" hreflang="x-default" href={`${baseUrl}/${slug}`} key="hreflang-default" />
+        {/* Hreflang alternate links */}
+        {router.locales.map((loc) => (
+          <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/${slug}` : `${baseUrl}/${loc}/${slug}`} key={`hreflang-${loc}`} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/${slug}`} key="hreflang-default" />
       </Head>
 
       <Layout sidebarType={type === 'guide' ? 'toc' : 'navigation'}>

@@ -53,9 +53,10 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
       <Head>
         <title>{t('site.title')}</title>
         <link rel="canonical" href={locale === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${locale}/`} key="canonical" />
-        <link rel="alternate" hreflang="en" href={`${baseUrl}/`} key="hreflang-en" />
-        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/`} key="hreflang-es" />
-        <link rel="alternate" hreflang="x-default" href={`${baseUrl}/`} key="hreflang-default" />
+        {router.locales.map((loc) => (
+          <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${loc}/`} key={`hrefLang-${loc}`} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/`} key="hrefLang-default" />
       </Head>
       <Layout sidebarType={null} searchable={false} fullWidthMain={true}>
         <div className="max-w-6xl mx-auto px-4 py-8 -my-6 container">

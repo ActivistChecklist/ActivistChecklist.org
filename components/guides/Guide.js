@@ -9,6 +9,7 @@ import { FeedbackCTA } from '@/components/guides/FeedbackCTA';
 import { useLayout } from '@/contexts/LayoutContext';
 import { getGuideIcon } from '@/config/icons';
 import RelatedGuides from '@/components/RelatedGuides';
+import { LOCALES } from "@/lib/i18n-config";
 
 function parseRelatedGuides(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -30,7 +31,7 @@ function parseRelatedGuides(value) {
 export default function Guide({ frontmatter, serializedBody, checklistItems = {}, slug }) {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
+  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
   const { setSidebarType } = useLayout();
 
   useEffect(() => {
