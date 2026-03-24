@@ -150,7 +150,9 @@ function applyMarks(text, marks) {
         result = `~~${result}~~`;
         break;
       case 'code':
-        result = `\`${result}\``;
+        // Use explicit HTML <code> so nested inline markup (e.g. <span>)
+        // remains renderable/stylable after migration.
+        result = `<code>${result}</code>`;
         break;
       case 'underline':
         // Skip underline when the same text also has a link mark (redundant).
