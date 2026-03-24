@@ -129,9 +129,16 @@ function applyMarks(text, marks) {
 
   for (const mark of marks) {
     switch (mark.type) {
-      case 'bold':
-        result = `**${result}**`;
+      case 'bold': {
+        // Move whitespace outside the ** markers — CommonMark requires
+        // closing ** not preceded by whitespace and opening ** not followed
+        // by whitespace, but Storyblok stores spaces inside bold text nodes.
+        const inner = result.trim();
+        const leading = result.slice(0, result.length - result.trimStart().length);
+        const trailing = result.slice(result.trimEnd().length);
+        result = inner ? `${leading}**${inner}**${trailing}` : result;
         break;
+      }
       case 'italic':
         result = `*${result}*`;
         break;
