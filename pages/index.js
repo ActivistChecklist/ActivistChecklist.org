@@ -184,7 +184,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
   const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
@@ -195,8 +195,7 @@ export async function getStaticProps({ locale = 'en' }) {
     ? { body: null, bodyText: latestMajor.content.bodyText }
     : null;
 
-  const sourcesMap = getAllNewsSourcesMap(locale);
-  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
+  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item));
 
   return {
     props: {

@@ -1,10 +1,11 @@
 import React from 'react';
 import Markdown from '@/components/Markdown';
-import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
+import { cn, formatRelativeDate } from '@/lib/utils';
 import Image from 'next/image';
 import { IoNewspaperOutline } from 'react-icons/io5';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { isPaywallBypassActiveForUrl } from '@/lib/paywall-bypass-url';
 
 const NewsItem = ({ block, story }) => {
   const isMobile = useIsMobile();
@@ -13,36 +14,17 @@ const NewsItem = ({ block, story }) => {
     return null;
   }
 
-  const { date, source, paywall_mode = 'inactive' } = block;
-  const url = { url: block.url };
+  const { date, source } = block;
+  const originalUrl = block.url;
   const displaySource = source?.name || source || null;
   
   const imageInfo = story?.imagePath
     ? { exists: true, src: story.imagePath }
     : { exists: false, src: null };
   
-  // Get publication date from story metadata
   const dateString = date || new Date().toISOString();
-  const hoverDate = new Date(dateString).toISOString().split('T')[0];
-  
-  // Generate archive URL based on paywall_mode
-  const getArchiveUrl = (mode, originalUrl) => {
-    if (!originalUrl || !mode || mode === 'inactive') return null;
-    
-    if (mode === 'wayback') {
-      return `https://web.archive.org/web/${originalUrl}`;
-    }
-    
-    // archive.is modes
-    const baseUrl = 'https://archive.is';
-    const modePath = mode === 'oldest' ? 'oldest' : 'newest';
-    return `${baseUrl}/${modePath}/${originalUrl}`;
-  };
-  
-  const archiveUrl = getArchiveUrl(paywall_mode, url?.url);
-
-  const mainUrl = paywall_mode !== 'inactive' ? archiveUrl : url?.url;
-  const hasUrl = !!mainUrl;
+  const hasUrl = !!originalUrl;
+  const showBypassNotice = hasUrl && isPaywallBypassActiveForUrl(originalUrl);
 
   // Meta row component
   const MetaRow = () => (
@@ -76,15 +58,13 @@ const NewsItem = ({ block, story }) => {
                 hasUrl ? "text-black" : "text-gray-900"
               )}>
                 {hasUrl ? (
-                  <a 
-                    href={mainUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={originalUrl}
                     className="hover:underline hover:decoration-primary"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {story?.name || 'News Item'}
-                  </a>
+                  </Link>
                 ) : (
                   <span>{story?.name || 'News Item'}</span>
                 )}
@@ -99,10 +79,8 @@ const NewsItem = ({ block, story }) => {
             {/* Image */}
             <div className="flex-shrink-0">
               {hasUrl ? (
-                <a 
-                  href={mainUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={originalUrl}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
@@ -121,7 +99,7 @@ const NewsItem = ({ block, story }) => {
                       </div>
                     )}
                   </div>
-                </a>
+                </Link>
               ) : (
                 <div className="w-32 h-20 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
                   {imageInfo.exists ? (
@@ -154,18 +132,18 @@ const NewsItem = ({ block, story }) => {
           )}
           
           {/* Paywall Notice */}
-          {paywall_mode !== 'inactive' && url?.url && (
+          {showBypassNotice && (
             <div className="text-xs text-gray-500 italic">
               This link bypasses the paywall.{' '}
-              <Link 
-                href={url.url} 
+              <a
+                href={originalUrl}
                 className="underline hover:no-underline hover:text-primary transition-colors duration-200"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
               >
                 See original
-              </Link>.
+              </a>.
             </div>
           )}
         </div>
@@ -180,15 +158,13 @@ const NewsItem = ({ block, story }) => {
               hasUrl ? "text-black" : "text-gray-900"
             )}>
               {hasUrl ? (
-                <a 
-                  href={mainUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={originalUrl}
                   className="hover:underline hover:decoration-primary"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {story?.name || 'News Item'}
-                </a>
+                </Link>
               ) : (
                 <span>{story?.name || 'News Item'}</span>
               )}
@@ -210,18 +186,18 @@ const NewsItem = ({ block, story }) => {
             <MetaRow />
             
             {/* Paywall Notice */}
-            {paywall_mode !== 'inactive' && url?.url && (
+            {showBypassNotice && (
               <div className="text-xs text-gray-500 italic">
                 This link bypasses the paywall.{' '}
-                <Link 
-                  href={url.url} 
+                <a
+                  href={originalUrl}
                   className="underline hover:no-underline hover:text-primary transition-colors duration-200"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                 >
                   See original
-                </Link>.
+                </a>.
               </div>
             )}
           </div>
@@ -229,10 +205,8 @@ const NewsItem = ({ block, story }) => {
           {/* Image */}
           <div className="flex-shrink-0">
             {hasUrl ? (
-              <a 
-                href={mainUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={originalUrl}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
@@ -251,7 +225,7 @@ const NewsItem = ({ block, story }) => {
                     </div>
                   )}
                 </div>
-              </a>
+              </Link>
             ) : (
               <div className="w-48 h-28 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
                 {imageInfo.exists ? (
