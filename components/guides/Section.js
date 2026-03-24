@@ -17,6 +17,10 @@ import { SectionContext } from '@/contexts/SectionContext';
 const Section = ({ slug, title, description, children }) => {
   const [expandTrigger, setExpandTrigger] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const childrenArray = React.Children.toArray(children);
+
+  const isChecklistItemChild = (child) =>
+    child?.props?.slug !== undefined || child?.type?.name === 'ChecklistItemMdx';
 
   const triggerExpand = (shouldExpand) => {
     setIsExpanded(shouldExpand);
@@ -26,13 +30,23 @@ const Section = ({ slug, title, description, children }) => {
   // Count ChecklistItem children to decide whether to show the toggle button
   const checklistItemCount = useMemo(() => {
     let count = 0;
-    React.Children.forEach(children, (child) => {
-      if (child?.props?.slug !== undefined || child?.type?.name === 'ChecklistItemMdx') {
+    childrenArray.forEach((child) => {
+      if (isChecklistItemChild(child)) {
         count++;
       }
     });
     return count;
-  }, [children]);
+  }, [childrenArray]);
+
+  const sectionIntroChildren = useMemo(
+    () => childrenArray.filter((child) => !isChecklistItemChild(child)),
+    [childrenArray]
+  );
+
+  const checklistChildren = useMemo(
+    () => childrenArray.filter((child) => isChecklistItemChild(child)),
+    [childrenArray]
+  );
 
   return (
     <SectionContext.Provider value={{ expandTrigger, triggerExpand }}>
@@ -57,8 +71,13 @@ const Section = ({ slug, title, description, children }) => {
             <p>{description}</p>
           </div>
         )}
+        {sectionIntroChildren.length > 0 && (
+          <div className={description ? 'mt-2' : ''}>
+            {sectionIntroChildren}
+          </div>
+        )}
       </div>
-      {children}
+      {checklistChildren}
     </SectionContext.Provider>
   );
 };

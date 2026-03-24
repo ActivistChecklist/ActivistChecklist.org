@@ -77,7 +77,7 @@ export default function GuideMdx({ frontmatter, serializedBody, checklistItems =
       </div>
 
       {/* Body */}
-      <div className="mx-auto prose prose-slate max-w-none">
+      <div className="mx-auto">
         <div className="relative">
           <MDXRemote {...serializedBody} components={mdxComponents} />
           <FeedbackCTA />
