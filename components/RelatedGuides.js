@@ -4,15 +4,24 @@ import GuideCardBlock from '@/components/GuideCardBlock';
 import { RichText } from '@/components/RichText';
 import { cn } from '@/lib/utils';
 
-const RelatedGuides = ({ blok, isBlock = false }) => {
+/**
+ * RelatedGuides — dual-mode component.
+ *
+ * Storyblok mode: <RelatedGuides blok={{ guide1: { cached_url }, ... }} />
+ * MDX mode:       <RelatedGuides guides={["essentials", "protest"]} />
+ *                 Slugs are converted to paths: "essentials" → "/essentials"
+ */
+const RelatedGuides = ({ blok, guides: guidesProp, isBlock = false }) => {
 
-  // Extract guide URLs from blok (using cached_url for Storyblok multilink fields)
-  const guides = [
-    blok?.guide1?.cached_url,
-    blok?.guide2?.cached_url,
-    blok?.guide3?.cached_url,
-    blok?.guide4?.cached_url
-  ].filter(Boolean); // Remove empty/undefined entries
+  // Extract guide URLs: prefer guidesProp array (MDX), fall back to blok fields (Storyblok)
+  const guides = guidesProp
+    ? guidesProp.map(slug => slug.startsWith('/') ? slug : `/${slug}`)
+    : [
+        blok?.guide1?.cached_url,
+        blok?.guide2?.cached_url,
+        blok?.guide3?.cached_url,
+        blok?.guide4?.cached_url,
+      ].filter(Boolean);
 
   if (guides.length === 0) {
     return null;

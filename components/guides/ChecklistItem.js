@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichText } from '@/components/RichText';
+import { MDXRemote } from 'next-mdx-remote';
 import Markdown from '../Markdown';
 import { Recommendations } from '@/components/guides/Recommendations'
 import { IoInformationCircleOutline } from "react-icons/io5";
@@ -109,9 +110,47 @@ const CopyLinkButton = ({ slug, onCopy }) => {
   );
 }
 
-const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
-  if (!blok) {
-    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: blok is undefined. Skipping');
+/**
+ * ChecklistItem — dual-mode component.
+ *
+ * Storyblok mode: <ChecklistItem blok={{ _uid, slug, title, why, type, title_badges, body, tools, stop }} />
+ *   Body rendered via <RichText document={blok.body} />.
+ *
+ * MDX mode (from ChecklistItemsContext): direct props
+ *   <ChecklistItem slug title type why tools stop titleBadges serializedBody bodyComponents />
+ *   Body rendered via <MDXRemote {...serializedBody} components={bodyComponents} />.
+ *
+ * localStorage keys are slug-based (not _uid) so they survive remigration.
+ */
+const ChecklistItem = ({
+  // Storyblok mode
+  blok,
+  // MDX mode: direct props (normalized from frontmatter)
+  slug: slugProp,
+  title: titleProp,
+  type: typeProp,
+  why: whyProp,
+  tools: toolsProp,
+  stop: stopProp,
+  titleBadges: titleBadgesProp,
+  serializedBody,
+  bodyComponents,
+  // Shared
+  expandTrigger,
+  index,
+  editable = true,
+}) => {
+  // Normalize props from either source
+  const itemSlug = blok?.slug ?? slugProp;
+  const itemTitle = blok?.title ?? titleProp;
+  const itemType = blok?.type ?? typeProp;
+  const itemWhy = blok?.why ?? whyProp;
+  const itemTools = blok?.tools ?? toolsProp;
+  const itemStop = blok?.stop ?? stopProp;
+  const itemTitleBadges = blok?.title_badges ?? titleBadgesProp ?? [];
+
+  if (!itemSlug && !blok) {
+    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: no slug or blok provided. Skipping');
     return null;
   }
 
@@ -122,8 +161,9 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
   const { trackEvent } = useAnalytics();
   const hasTrackedExpansion = useRef(false);
   const cardRef = useRef(null);
-  const storageKey = `checklist-checked-${blok?._uid || 111}`;
-  const expandedStorageKey = `checklist-expanded-${blok?._uid || 222}`;
+  // Use slug-based keys so progress persists across remigrations (not _uid)
+  const storageKey = `checklist-checked-${itemSlug}`;
+  const expandedStorageKey = `checklist-expanded-${itemSlug}`;
   const checkedOpacity = 60;
 
   const setExpandedWithStorage = (expanded) => {
@@ -166,7 +206,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     // and scroll to them AFTER all items have restored their expanded states
     const checkUrlHash = (shouldScroll = false) => {
       const hash = window.location.hash.slice(1); // Remove the # symbol
-      if (hash === blok.slug && !isChecked) {
+      if (hash === itemSlug && !isChecked) {
         setExpandedWithStorage(true);
         
         // Scroll to this item after a delay to allow all other items to restore their states
@@ -200,7 +240,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
 
     // Cleanup listener
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [storageKey, expandedStorageKey, blok, isChecked]);
+  }, [storageKey, expandedStorageKey, itemSlug, isChecked]);
 
   // Handle expand/collapse trigger
   useEffect(() => {
@@ -217,7 +257,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       trackEvent({
         name: 'checklist_item_expanded',
         data: {
-          item_id: blok.slug,
+          item_id: itemSlug,
         }
       });
       hasTrackedExpansion.current = true;
@@ -232,7 +272,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       await trackEvent({
         name: 'checklist_item_checked',
         data: {
-          item_id: blok.slug,
+          item_id: itemSlug,
         }
       });
 
@@ -268,7 +308,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
     trackEvent({
       name: 'checklist_item_link_copied',
       data: {
-        item_id: blok.slug,
+        item_id: itemSlug,
       }
     });
   };
@@ -297,13 +337,13 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
       >
         <div className={cn(
           "grid grid-cols-[auto_1fr_auto] gap-3",
-          blok.why ? "items-start" : "items-center"
+          itemWhy ? "items-start" : "items-center"
         )}>
           <div className={cn(
             "w-5 h-5 relative",
-            blok.why ? "mt-1" : "mt-0"
+            itemWhy ? "mt-1" : "mt-0"
           )}>
-            {blok.type === 'info' ? (
+            {itemType === 'info' ? (
               <InfoItemIcon />
             ) : (
               <div onClick={(e) => e.stopPropagation()}>
@@ -326,13 +366,13 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
               )}
             >
               <h3 className="inline mt-0 text-lg"
-                id={hasMounted ? blok.slug : undefined}
-                data-slug={blok.slug} 
+                id={hasMounted ? itemSlug : undefined}
+                data-slug={itemSlug}
               >
                 {/* Render title badges inline at the beginning */}
-                {blok.title_badges && blok.title_badges.length > 0 && (
+                {itemTitleBadges && itemTitleBadges.length > 0 && (
                   <>
-                    {blok.title_badges.map((badgeType, index) => {
+                    {itemTitleBadges.map((badgeType, index) => {
                       const badgeConfig = TITLE_BADGE_TYPES[badgeType];
                       if (!badgeConfig) return null;
                       
@@ -353,12 +393,12 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 )}
                 {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
                 {/* <Markdown inlineOnly={true} content={blok.title} /> */}
-                {blok.title}
-                
+                {itemTitle}
+
                 {/* Copy link button - inline, only visible when expanded */}
                 {isExpanded && (
                   <span className="inline-block ml-2">
-                    <CopyLinkButton slug={blok.slug} onCopy={handleLinkCopy} />
+                    <CopyLinkButton slug={itemSlug} onCopy={handleLinkCopy} />
                   </span>
                 )}
               </h3>
@@ -369,7 +409,7 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <Markdown content={blok.why} isProse={false} />
+              <Markdown content={itemWhy} isProse={false} />
             </CardDescription>
           </div>
 
@@ -406,17 +446,19 @@ const ChecklistItem = ({ blok, expandTrigger, index, editable = true }) => {
             <Recommendations items={[
               {
                 type: "do",
-                content: blok.tools
+                content: itemTools
               },
               {
                 type: "dont",
-                content: blok.stop
+                content: itemStop
               }
             ]} />
-            <RichText document={blok.body} />
-            
+            {serializedBody
+              ? <MDXRemote {...serializedBody} components={bodyComponents} />
+              : <RichText document={blok?.body} />}
+
             {/* Mark as done button row */}
-            {blok.type !== 'info' && (
+            {itemType !== 'info' && (
               <div className={cn(
                 "pt-4 border-muted-foreground/20",
                 "flex flex-col sm:flex-row items-start sm:items-center gap-3",

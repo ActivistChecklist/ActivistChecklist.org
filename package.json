@@ -37,6 +37,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check-links": "node scripts/check-links.mjs",
+    "snapshot": "node scripts/snapshot-rendered-pages.mjs",
+    "compare-snapshots": "node scripts/compare-snapshots.mjs",
     "prepare": "sh scripts/install-hooks.sh"
   },
   "dependencies": {

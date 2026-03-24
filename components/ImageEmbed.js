@@ -6,23 +6,29 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "@/components/Link";
 
 /**
- * ImageEmbed component for embedding images in rich text content
+ * ImageEmbed — dual-mode component.
+ *
+ * Storyblok mode: <ImageEmbed image={{ filename }} alt caption={richTextDoc} link={{ linktype, url }} />
+ * MDX mode:       <ImageEmbed src="/path/to/img.jpg" alt="...">Caption text</ImageEmbed>
+ *                 <ImageEmbed src="..." alt="..." link="/some/path" />
  */
-export const ImageEmbed = ({ 
-  image, 
+export const ImageEmbed = ({
+  image,
+  src,        // MDX mode: plain string URL
   alt,
-  caption, 
-  size = 'medium', 
+  caption,    // Storyblok mode: RichText document
+  children,   // MDX mode: caption as React children
+  size = 'medium',
   alignment = 'center',
   link,
-  className, 
-  ...props 
+  className,
+  ...props
 }) => {
   const isMobile = useIsMobile();
-  
-  // Extract the image URL from Storyblok image structure
-  const imageUrl = image?.filename || image?.cached_url || image;
-  
+
+  // Resolve image URL: prefer src (MDX), then Storyblok asset object, then plain string image
+  const imageUrl = src || image?.filename || image?.cached_url || (typeof image === 'string' ? image : null);
+
   if (!imageUrl) {
     console.warn('ImageEmbed: No image URL provided');
     return null;
@@ -111,20 +117,21 @@ export const ImageEmbed = ({
     </Link>
   ) : imageElement;
 
+  // Caption content: prefer React children (MDX), fall back to RichText doc (Storyblok)
+  const captionContent = children
+    ? <div className="text-sm text-muted-foreground prose-sm max-w-none">{children}</div>
+    : caption
+      ? <RichText document={caption} className="text-sm text-muted-foreground prose-sm max-w-none" noWrapper={true} />
+      : null;
+
   // For floated images (left/right), don't wrap in a div to allow text wrapping
   if (alignment === 'left' || alignment === 'right') {
     return (
       <>
         {wrappedImage}
-        {caption && (
+        {captionContent && (
           <div className="mt-2 text-center max-w-full muted-links px-2 sm:px-0">
-            <div className="text-sm text-muted-foreground prose-sm max-w-none">
-              <RichText 
-                document={caption} 
-                className="text-sm text-muted-foreground prose-sm max-w-none" 
-                noWrapper={true}
-              />
-            </div>
+            {captionContent}
           </div>
         )}
       </>
@@ -135,15 +142,9 @@ export const ImageEmbed = ({
   return (
     <div className={cn("my-4", className)}>
       {wrappedImage}
-      {caption && (
+      {captionContent && (
         <div className="mt-2 text-center max-w-full muted-links px-2 sm:px-0">
-          <div className="text-sm text-muted-foreground prose-sm max-w-none">
-            <RichText 
-              document={caption} 
-              className="text-sm text-muted-foreground prose-sm max-w-none" 
-              noWrapper={true}
-            />
-          </div>
+          {captionContent}
         </div>
       )}
     </div>

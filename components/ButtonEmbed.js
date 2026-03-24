@@ -24,15 +24,16 @@ const DynamicIcon = ({ iconName, className, ...props }) => {
 export const ButtonEmbed = (props) => {
   const { title, url, variant, size, className, icon, iconPosition, download, alignment } = props;
   
-  // Extract the actual URL and target from the url object
-  // For URL links (linktype === 'url'), prefer the url field which contains exactly what was entered
-  // For story links (linktype === 'story'), use cached_url which contains the story's full path
-  // This prevents Storyblok from transforming manually entered URLs through its content structure
+  // Extract the actual URL and target from the url prop.
+  // Dual-mode: url can be a plain string (MDX mode) or a Storyblok multilink object.
   const getRawHref = () => {
+    // MDX mode: plain string URL
+    if (typeof url === 'string') return url || '#';
+    // Storyblok URL link: use url field (exact as entered) over cached_url
     if (url?.linktype === 'url') {
       return url?.url || url?.cached_url || '#';
     }
-    // For story links, cached_url doesn't include leading slash
+    // Storyblok story link: cached_url may lack leading slash
     const path = url?.cached_url || url?.url || '#';
     if (path !== '#' && !path.startsWith('/') && !path.startsWith('http')) {
       return `/${path}`;
