@@ -55,7 +55,7 @@ export const SectionHeader = ({ blok, checklistItemCount, isExpanded, onToggleEx
 const Guide = ({ blok, story }) => {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = LOCALES[router.locale]?.dateLocale || 'en-US';
+  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
   const { setSidebarType } = useLayout();
   const [sectionExpandStates, setSectionExpandStates] = useState({});
   const [expandTriggers, setExpandTriggers] = useState({});

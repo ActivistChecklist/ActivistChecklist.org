@@ -12,7 +12,7 @@ import { LOCALES } from "@/lib/i18n-config";
 function Page({ blok, story }) {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = LOCALES[router.locale]?.dateLocale || 'en-US';
+  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
   const { setDebugData } = useDebug() || {}
   const { setSidebarType } = useLayout();
 
