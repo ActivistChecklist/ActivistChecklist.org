@@ -204,6 +204,18 @@ function formatTagsForFrontmatter(tags) {
   return tags;
 }
 
+/**
+ * gray-matter uses js-yaml, which quotes `YYYY-MM-DD` *strings* so they stay
+ * strings. Elsewhere in this repo we use unquoted YAML date scalars
+ * (`date: 2025-12-22`). Both parse the same; unquoted matches existing files.
+ */
+function normalizeWizardYamlDates(yamlDocument) {
+  return yamlDocument.replace(
+    /^(\s*(?:date|firstPublished|lastUpdated):\s*)'(\d{4}-\d{2}-\d{2})'$/gm,
+    '$1$2'
+  );
+}
+
 async function main() {
   const { positional, flags } = parseArgv(process.argv.slice(2));
 
@@ -319,7 +331,7 @@ async function main() {
       frontmatter.tags = tagArr;
     }
 
-    const mdxBody = matter.stringify('\n', frontmatter);
+    const mdxBody = normalizeWizardYamlDates(matter.stringify('\n', frontmatter));
 
     if (!fs.existsSync(outDir)) {
       fs.mkdirSync(outDir, { recursive: true });
