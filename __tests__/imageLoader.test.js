@@ -14,13 +14,13 @@ describe('imageLoader', () => {
     })
 
     it('returns src with width and quality params', () => {
-      const result = imageLoader({ src: 'https://a.storyblok.com/f/123/test.png', width: 800, quality: 90 })
-      expect(result).toBe('https://a.storyblok.com/f/123/test.png?w=800&q=90')
+      const result = imageLoader({ src: 'https://cdn.example.com/assets/test.png', width: 800, quality: 90 })
+      expect(result).toBe('https://cdn.example.com/assets/test.png?w=800&q=90')
     })
 
     it('uses default quality of 75 when not specified', () => {
-      const result = imageLoader({ src: 'https://a.storyblok.com/f/123/test.png', width: 600 })
-      expect(result).toBe('https://a.storyblok.com/f/123/test.png?w=600&q=75')
+      const result = imageLoader({ src: 'https://cdn.example.com/assets/test.png', width: 600 })
+      expect(result).toBe('https://cdn.example.com/assets/test.png?w=600&q=75')
     })
   })
 
@@ -30,12 +30,12 @@ describe('imageLoader', () => {
     })
 
     it('extracts filename and prefixes with /images/', () => {
-      const result = imageLoader({ src: 'https://a.storyblok.com/f/123/abc/test.png', width: 800 })
+      const result = imageLoader({ src: 'https://cdn.example.com/f/123/abc/test.png', width: 800 })
       expect(result).toBe('/images/test.png')
     })
 
     it('handles URLs with complex paths', () => {
-      const result = imageLoader({ src: 'https://a.storyblok.com/f/123/abc/def/image-file.jpg', width: 400 })
+      const result = imageLoader({ src: 'https://cdn.example.com/f/123/abc/def/image-file.jpg', width: 400 })
       expect(result).toBe('/images/image-file.jpg')
     })
 

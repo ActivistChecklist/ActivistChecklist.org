@@ -1,5 +1,4 @@
 import React from 'react';
-import { RichText } from '@/components/RichText';
 import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
@@ -14,7 +13,7 @@ const NewsItem = ({ block, story }) => {
     return null;
   }
 
-  const { date, source, paywall_mode = 'inactive', comment } = block;
+  const { date, source, paywall_mode = 'inactive' } = block;
   const url = { url: block.url };
   const displaySource = source?.name || source || null;
   
@@ -148,11 +147,9 @@ const NewsItem = ({ block, story }) => {
           <MetaRow />
           
           {/* Comment */}
-          {(comment || block.commentText) && (
+          {block.commentText && (
             <div className="prose prose-slate max-w-none text-sm">
-              {comment
-                ? <RichText document={comment} noWrapper={true} />
-                : <Markdown content={block.commentText} isProse={false} />}
+              <Markdown content={block.commentText} isProse={false} />
             </div>
           )}
           
@@ -203,11 +200,9 @@ const NewsItem = ({ block, story }) => {
             </h3>
             
             {/* Comment */}
-            {(comment || block.commentText) && (
+            {block.commentText && (
               <div className="prose prose-slate max-w-none text-sm mb-2">
-                {comment
-                  ? <RichText document={comment} noWrapper={true} />
-                  : <Markdown content={block.commentText} isProse={false} />}
+                <Markdown content={block.commentText} isProse={false} />
               </div>
             )}
             

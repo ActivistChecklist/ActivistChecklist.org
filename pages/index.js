@@ -12,7 +12,6 @@ import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
 import NewsBlock from '@/components/NewsBlock';
-import { RichText } from '@/components/RichText';
 import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
 
@@ -96,9 +95,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
                 {latestMajorUpdate && (
                   <div className="mt-8 text-muted-foreground">
                     <Sparkles className="h-4 w-4 inline mr-1" />
-                    {latestMajorUpdate.body
-                      ? <RichText document={latestMajorUpdate.body} noWrapper={true} />
-                      : <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />}
+                    <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />
                   </div>
                 )}
               </div>

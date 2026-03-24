@@ -12,12 +12,12 @@ describe('isFallbackStoryContent', () => {
     expect(isFallbackStoryContent('es', 'es')).toBe(false);
   });
 
-  it('shows fallback when Storyblok returns default language content', () => {
+  it('shows fallback when only default-locale content is available', () => {
     expect(isFallbackStoryContent('es', 'default')).toBe(true);
     expect(isFallbackStoryContent('es', undefined)).toBe(true);
   });
 
-  it('shows fallback when Storyblok returns a different non-requested locale', () => {
+  it('shows fallback when resolved locale does not match requested locale', () => {
     expect(isFallbackStoryContent('es', 'en')).toBe(true);
   });
 });

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { RichText } from '@/components/RichText';
 import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { IoStar } from 'react-icons/io5';
@@ -42,15 +41,13 @@ const ChangeLogEntry = ({ block, story }) => {
         >
           {displayDate}
         </time>
-        {(block.body || block.bodyText) && (
+        {block.bodyText && (
           <div className="flex items-start gap-1 flex-1">
             {block.type === 'major' && (
               <IoStar className="text-yellow-500 shrink-0 mt-[2px]" size={16} />
             )}
             <div className="prose prose-slate max-w-none text-sm flex-1">
-              {block.body
-                ? <RichText document={block.body} noWrapper={true} />
-                : <Markdown content={block.bodyText} isProse={false} />}
+              <Markdown content={block.bodyText} isProse={false} />
             </div>
           </div>
         )}

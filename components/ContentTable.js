@@ -1,20 +1,22 @@
-import React from 'react'
-import Markdown from './Markdown'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import Markdown from './Markdown';
+import { cn } from '@/lib/utils';
 
-const RichTextTable = ({ 
-  table, 
-  caption, 
+/**
+ * Renders a structured table from MDX (thead/tbody cell strings rendered as Markdown).
+ */
+export function ContentTable({
+  table,
+  caption,
   className,
-  block,
   ...props
-}) => {
+}) {
   if (!table || !table.thead || !table.tbody) {
-    return null
+    return null;
   }
 
   return (
-    <div className={cn("table-wrapper", className)}>
+    <div className={cn('table-wrapper', className)} {...props}>
       <table role="table">
         {caption && (
           <caption className="sr-only">
@@ -43,7 +45,7 @@ const RichTextTable = ({
         </tbody>
       </table>
     </div>
-  )
+  );
 }
 
-export { RichTextTable } 
+export default ContentTable;
