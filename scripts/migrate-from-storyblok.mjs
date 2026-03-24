@@ -489,7 +489,7 @@ function convertTable(blok) {
     const text = typeof value === 'object' ? richTextToMdx(value).trim() : String(value);
     // GFM table cells can't span multiple lines. Replace any line break form
     // (plain \n, trailing-space \n, or backslash-\n) with <br>.
-    return text.replace(/[ \t]*\\?[\r\n]+/g, '<br>').trim();
+    return text.replace(/[ \t]*\\?[\r\n]+/g, '<br />').trim();
   };
 
   const headers = (table.thead || []).map(h => cellToMd(h.value));
