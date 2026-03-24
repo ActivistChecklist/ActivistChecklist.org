@@ -769,6 +769,12 @@ function convertGuideStory(story) {
     sectionMdx += '\n</Section>\n';
   }
 
+  // Wrap intro body text in prose div so markdown (lists, paragraphs,
+  // links) renders with proper typography independent of the outer wrapper.
+  if (body) {
+    body = `<div className="prose prose-slate max-w-none">\n\n${body}\n\n</div>`;
+  }
+
   if (sectionMdx) {
     body = body ? body + '\n\n' + sectionMdx.trim() : sectionMdx.trim();
   }

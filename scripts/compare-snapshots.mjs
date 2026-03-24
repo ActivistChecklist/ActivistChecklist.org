@@ -1,209 +1,175 @@
 #!/usr/bin/env node
 
 /**
- * Compare two rendered-page snapshots (before vs after) produced by
- * snapshot-rendered-pages.mjs.
+ * Compare two rendered-page snapshots with a colored git-style diff.
  *
  * Usage:
  *   node scripts/compare-snapshots.mjs snapshots/before.json snapshots/after.json
- *   node scripts/compare-snapshots.mjs snapshots/before.json snapshots/after.json --verbose
  *   node scripts/compare-snapshots.mjs snapshots/before.json snapshots/after.json --route=/protest
+ *   node scripts/compare-snapshots.mjs snapshots/before.json snapshots/after.json --context=5
  */
 
 import fs from 'fs';
 
 const [,, beforeFile, afterFile] = process.argv;
-const VERBOSE = process.argv.includes('--verbose');
 const ROUTE_FILTER = process.argv.find(a => a.startsWith('--route='))?.split('=')[1];
+const CONTEXT = parseInt(process.argv.find(a => a.startsWith('--context='))?.split('=')[1] ?? '3', 10);
 
 if (!beforeFile || !afterFile) {
   console.error('Usage: node scripts/compare-snapshots.mjs <before.json> <after.json>');
   process.exit(1);
 }
 
-if (!fs.existsSync(beforeFile)) {
-  console.error(`Before snapshot not found: ${beforeFile}`);
-  process.exit(1);
-}
-if (!fs.existsSync(afterFile)) {
-  console.error(`After snapshot not found: ${afterFile}`);
-  process.exit(1);
-}
-
 const before = JSON.parse(fs.readFileSync(beforeFile, 'utf-8'));
-const after = JSON.parse(fs.readFileSync(afterFile, 'utf-8'));
+const after  = JSON.parse(fs.readFileSync(afterFile,  'utf-8'));
 
-console.log(`Before: ${beforeFile} (${before.createdAt})`);
-console.log(`After:  ${afterFile} (${after.createdAt})`);
-console.log();
+// ─── ANSI colors ──────────────────────────────────────────────
+const RED    = s => `\x1b[31m${s}\x1b[0m`;
+const GREEN  = s => `\x1b[32m${s}\x1b[0m`;
+const CYAN   = s => `\x1b[36m${s}\x1b[0m`;
+const BOLD   = s => `\x1b[1m${s}\x1b[0m`;
+const DIM    = s => `\x1b[2m${s}\x1b[0m`;
 
-// ─── Find contiguous missing chunks ──────────────────────────
-
-/**
- * Find sentences/phrases from `source` that are absent in `target`.
- * Splits on sentence boundaries and checks each chunk.
- */
-function findMissingChunks(source, target, minLength = 25) {
-  // Split on common sentence/phrase boundaries
-  const chunks = source
-    .split(/[.!?\n]/)
+// ─── Text → lines ─────────────────────────────────────────────
+// Break the flat text blob into meaningful lines so the diff is readable.
+// Splits on sentence-ending punctuation AND newlines, keeping context.
+function toLines(text) {
+  // Normalize whitespace, then split on sentence boundaries
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+(?=[A-Z"'])|(?<=\n)/)
     .map(s => s.trim())
-    .filter(s => s.length >= minLength);
-
-  return chunks.filter(chunk => !target.includes(chunk));
+    .filter(s => s.length > 0);
 }
 
-/**
- * Find phrases in `after` that weren't in `before` (new/extra content).
- */
-function findExtraChunks(before, after, minLength = 25) {
-  return findMissingChunks(after, before, minLength);
+// ─── Myers diff ───────────────────────────────────────────────
+// Returns array of { type: 'eq'|'del'|'ins', line } objects.
+function diff(aLines, bLines) {
+  const m = aLines.length;
+  const n = bLines.length;
+
+  // For very long sequences, fall back to a simpler chunk-based diff
+  // to avoid O(m*n) memory blowup.
+  if (m * n > 500_000) return simpleDiff(aLines, bLines);
+
+  // LCS table (0-indexed)
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = aLines[i] === bLines[j]
+        ? dp[i + 1][j + 1] + 1
+        : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const result = [];
+  let i = 0, j = 0;
+  while (i < m || j < n) {
+    if (i < m && j < n && aLines[i] === bLines[j]) {
+      result.push({ type: 'eq', line: aLines[i] });
+      i++; j++;
+    } else if (j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j])) {
+      result.push({ type: 'ins', line: bLines[j] });
+      j++;
+    } else {
+      result.push({ type: 'del', line: aLines[i] });
+      i++;
+    }
+  }
+  return result;
 }
 
-// ─── Compare ─────────────────────────────────────────────────
+// Simple O(n) fallback: find changed sentences without LCS
+function simpleDiff(aLines, bLines) {
+  const bSet = new Set(bLines);
+  const aSet = new Set(aLines);
+  const result = [];
+  for (const l of aLines) result.push({ type: bSet.has(l) ? 'eq' : 'del', line: l });
+  for (const l of bLines) if (!aSet.has(l)) result.push({ type: 'ins', line: l });
+  return result;
+}
 
-const allRoutes = new Set([
-  ...Object.keys(before.routes),
-  ...Object.keys(after.routes),
-]);
+// ─── Render diff with context ─────────────────────────────────
+function renderDiff(hunks) {
+  const lines = [];
+  const changed = hunks.map((h, i) => h.type !== 'eq' ? i : -1).filter(i => i >= 0);
+  if (changed.length === 0) return null;
 
+  // Build ranges of context + changed lines to show
+  const shown = new Set();
+  for (const ci of changed) {
+    for (let k = Math.max(0, ci - CONTEXT); k <= Math.min(hunks.length - 1, ci + CONTEXT); k++) {
+      shown.add(k);
+    }
+  }
+
+  let prevIdx = -1;
+  for (const idx of [...shown].sort((a, b) => a - b)) {
+    if (prevIdx >= 0 && idx > prevIdx + 1) {
+      lines.push(CYAN('  ···'));
+    }
+    const h = hunks[idx];
+    const text = h.line.length > 160 ? h.line.slice(0, 160) + '…' : h.line;
+    if (h.type === 'del') lines.push(RED(`- ${text}`));
+    else if (h.type === 'ins') lines.push(GREEN(`+ ${text}`));
+    else lines.push(DIM(`  ${text}`));
+    prevIdx = idx;
+  }
+  return lines.join('\n');
+}
+
+// ─── Compare ──────────────────────────────────────────────────
+const allRoutes = [...new Set([...Object.keys(before.routes), ...Object.keys(after.routes)])].sort();
 const results = { match: 0, changed: 0, onlyBefore: 0, onlyAfter: 0, skipped: 0 };
-const issues = [];
+const output = [];
 
-for (const route of [...allRoutes].sort()) {
+for (const route of allRoutes) {
   if (ROUTE_FILTER && route !== ROUTE_FILTER) continue;
 
   const b = before.routes[route];
   const a = after.routes[route];
 
-  // Route only in before snapshot
-  if (!a) {
-    results.onlyBefore++;
-    issues.push({ route, type: 'ONLY_BEFORE', detail: 'Route exists in before but not after snapshot' });
-    continue;
-  }
-
-  // Route only in after snapshot
-  if (!b) {
-    results.onlyAfter++;
-    issues.push({ route, type: 'ONLY_AFTER', detail: 'Route exists in after but not before snapshot' });
-    continue;
-  }
-
-  // Both 404 — consistent
-  if (b.status === 404 && a.status === 404) {
-    results.skipped++;
-    continue;
-  }
-
-  // 404 status changed
-  if (b.status === 404 || a.status === 404) {
+  if (!a) { results.onlyBefore++; output.push({ route, type: 'ONLY_BEFORE' }); continue; }
+  if (!b) { results.onlyAfter++;  output.push({ route, type: 'ONLY_AFTER'  }); continue; }
+  if (b.status === 404 && a.status === 404) { results.skipped++; continue; }
+  if (b.status !== a.status) {
     results.changed++;
-    issues.push({
-      route,
-      type: 'STATUS_CHANGED',
-      detail: `Status: ${b.status} → ${a.status}`,
-    });
+    output.push({ route, type: 'STATUS', detail: `${b.status} → ${a.status}` });
     continue;
   }
+  if (!b.text || !a.text) { results.skipped++; continue; }
+  if (b.text === a.text)  { results.match++;   continue; }
 
-  // Error in either
-  if (!b.text || !a.text) {
-    results.skipped++;
-    continue;
-  }
+  const aLines = toLines(b.text);
+  const bLines = toLines(a.text);
+  const hunks  = diff(aLines, bLines);
+  const rendered = renderDiff(hunks);
 
-  // Identical
-  if (b.text === a.text) {
-    results.match++;
-    continue;
-  }
-
-  // Find what changed
-  const missingFromAfter = findMissingChunks(b.text, a.text);
-  const addedInAfter = findExtraChunks(b.text, a.text);
-
-  if (missingFromAfter.length === 0 && addedInAfter.length === 0) {
-    // Tiny whitespace-only difference
-    results.match++;
-    continue;
-  }
+  if (!rendered) { results.match++; continue; }
 
   results.changed++;
-  issues.push({
-    route,
-    label: b.label || a.label,
-    type: 'CONTENT_CHANGED',
-    beforeLen: b.text.length,
-    afterLen: a.text.length,
-    missingFromAfter: missingFromAfter.slice(0, 8),
-    addedInAfter: addedInAfter.slice(0, 8),
-  });
+  const label = b.label || a.label || '';
+  output.push({ route, label, type: 'CONTENT', rendered });
 }
 
 // ─── Report ───────────────────────────────────────────────────
+console.log(`\n${BOLD('Before:')} ${beforeFile} (${before.createdAt})`);
+console.log(`${BOLD('After:')}  ${afterFile} (${after.createdAt})\n`);
+console.log(`${BOLD('Summary:')} ${GREEN(results.match + ' match')}  ${results.changed ? RED(results.changed + ' changed') : '0 changed'}  ${results.skipped} skipped  ${results.onlyBefore} only-before  ${results.onlyAfter} only-after\n`);
 
-console.log('═══════════════════════════════════════════');
-console.log('  Rendered Page Comparison Report');
-console.log('═══════════════════════════════════════════');
-console.log(`  Matching:    ${results.match}`);
-console.log(`  Changed:     ${results.changed}`);
-console.log(`  Only before: ${results.onlyBefore}`);
-console.log(`  Only after:  ${results.onlyAfter}`);
-console.log(`  Skipped:     ${results.skipped}`);
-console.log();
-
-if (issues.length === 0) {
-  console.log('  ✓ All rendered pages match!\n');
-  process.exit(0);
-}
-
-// Group by type
-const statusChanges = issues.filter(i => i.type === 'STATUS_CHANGED' || i.type === 'ONLY_BEFORE' || i.type === 'ONLY_AFTER');
-const contentChanges = issues.filter(i => i.type === 'CONTENT_CHANGED');
-
-if (statusChanges.length > 0) {
-  console.log(`── Route / Status Issues (${statusChanges.length}) ──`);
-  for (const issue of statusChanges) {
-    console.log(`  ${issue.type.padEnd(14)}  ${issue.route}`);
-    if (issue.detail) console.log(`                   ${issue.detail}`);
-  }
-  console.log();
-}
-
-if (contentChanges.length > 0) {
-  console.log(`── Content Changes (${contentChanges.length}) ──`);
-  for (const issue of contentChanges) {
-    const label = issue.label ? ` (${issue.label})` : '';
-    const lenDiff = issue.afterLen - issue.beforeLen;
-    const lenStr = lenDiff === 0 ? '' : ` [${lenDiff > 0 ? '+' : ''}${lenDiff} chars]`;
-    console.log(`\n  ${issue.route}${label}${lenStr}`);
-
-    if (issue.missingFromAfter.length > 0) {
-      console.log(`    ✗ Missing from after (${issue.missingFromAfter.length} chunks):`);
-      const limit = VERBOSE ? issue.missingFromAfter.length : Math.min(3, issue.missingFromAfter.length);
-      for (const chunk of issue.missingFromAfter.slice(0, limit)) {
-        const preview = chunk.length > 120 ? chunk.slice(0, 120) + '...' : chunk;
-        console.log(`        "${preview}"`);
-      }
-      if (!VERBOSE && issue.missingFromAfter.length > 3) {
-        console.log(`        ... and ${issue.missingFromAfter.length - 3} more (use --verbose)`);
-      }
-    }
-
-    if (VERBOSE && issue.addedInAfter.length > 0) {
-      console.log(`    + Added in after (${issue.addedInAfter.length} chunks):`);
-      for (const chunk of issue.addedInAfter.slice(0, 5)) {
-        const preview = chunk.length > 120 ? chunk.slice(0, 120) + '...' : chunk;
-        console.log(`        "${preview}"`);
-      }
-    }
+for (const item of output) {
+  if (item.type === 'ONLY_BEFORE') {
+    console.log(RED(`✗ MISSING IN AFTER  ${item.route}`));
+  } else if (item.type === 'ONLY_AFTER') {
+    console.log(GREEN(`+ NEW IN AFTER  ${item.route}`));
+  } else if (item.type === 'STATUS') {
+    console.log(RED(`✗ STATUS CHANGED  ${item.route}  (${item.detail})`));
+  } else {
+    const header = BOLD(CYAN(`\n@@ ${item.route}${item.label ? '  ' + item.label : ''} @@`));
+    console.log(header);
+    console.log(item.rendered);
   }
 }
 
 console.log();
-
-// Exit with error code if content changed
-if (results.changed > 0) {
-  process.exit(1);
-}
+if (results.changed > 0) process.exit(1);
