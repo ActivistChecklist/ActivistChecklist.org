@@ -41,7 +41,7 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
           {items.map((story) => (
             <NewsItem 
               key={story.uuid} 
-              blok={story.content}
+              block={story.content}
               story={story}
               imageManifest={imageManifest}
             />

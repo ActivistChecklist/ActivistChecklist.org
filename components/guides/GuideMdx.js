@@ -12,7 +12,7 @@ import { getGuideIcon } from '@/config/icons';
 /**
  * Renders a guide page sourced from MDX files.
  *
- * Mirrors the layout of Guide.js (Storyblok mode) but sources content from:
+ * Sources content from:
  *   - frontmatter: title, lastUpdated, estimatedTime
  *   - serializedBody: next-mdx-remote compiled MDX (contains <Section> + <ChecklistItem> tags)
  *   - checklistItems: { [slug]: { frontmatter, serializedBody } } map for ChecklistItemsContext

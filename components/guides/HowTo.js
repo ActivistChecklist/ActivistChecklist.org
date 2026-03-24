@@ -1,18 +1,12 @@
 import React from 'react';
-import { storyblokEditable } from '@storyblok/react';
 import { cn } from "@/lib/utils";
-import { RichText } from '@/components/RichText';
 import { Settings } from "lucide-react";
 
 
 /**
- * HowTo — dual-mode component.
- *
- * Storyblok mode: <HowTo blok={{ title, body }} />
- * MDX mode:       <HowTo title="...">markdown children</HowTo>
+ * HowTo — <HowTo title="...">markdown children</HowTo>
  */
-export const HowTo = ({ blok, title: titleProp, children }) => {
-  const title = blok?.title ?? titleProp;
+export const HowTo = ({ title, children }) => {
 
   return (
     <div className={cn(
@@ -21,7 +15,7 @@ export const HowTo = ({ blok, title: titleProp, children }) => {
       "mt-4 first:mt-0",
     )}>
       <div
-        {...storyblokEditable(blok)}
+       
         className={cn(
           "how-to mb-2 px-4 pb-4 md:px-6 relative",
           "bg-background",
@@ -47,7 +41,7 @@ export const HowTo = ({ blok, title: titleProp, children }) => {
           <div className={cn(
             "prose prose-slate max-w-none"
           )}>
-            {children ?? <RichText document={blok?.body} />}
+            {children}
           </div>
         </div>
       </div>

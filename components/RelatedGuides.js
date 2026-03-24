@@ -1,32 +1,18 @@
 import React from 'react';
-import { storyblokEditable } from '@storyblok/react';
 import GuideCardBlock from '@/components/GuideCardBlock';
-import { RichText } from '@/components/RichText';
 import { cn } from '@/lib/utils';
 
 /**
- * RelatedGuides — dual-mode component.
- *
- * Storyblok mode: <RelatedGuides blok={{ guide1: { cached_url }, ... }} />
- * MDX mode:       <RelatedGuides><RelatedGuide slug="essentials" /><RelatedGuide slug="protest" /></RelatedGuides>
- *                 Slugs are extracted from child <RelatedGuide> elements.
+ * RelatedGuides — <RelatedGuides><RelatedGuide slug="essentials" />...</RelatedGuides>
  */
-const RelatedGuides = ({ blok, children, isBlock = false }) => {
+const RelatedGuides = ({ children, isBlock = false }) => {
 
-  // Extract guide URLs from children (<RelatedGuide slug="...">), or fall back to blok fields (Storyblok)
-  const guides = children
-    ? React.Children.toArray(children)
-        .filter(child => child?.props?.slug)
-        .map(child => {
-          const slug = child.props.slug;
-          return slug.startsWith('/') ? slug : `/${slug}`;
-        })
-    : [
-        blok?.guide1?.cached_url,
-        blok?.guide2?.cached_url,
-        blok?.guide3?.cached_url,
-        blok?.guide4?.cached_url,
-      ].filter(Boolean);
+  const guides = React.Children.toArray(children)
+    .filter(child => child?.props?.slug)
+    .map(child => {
+      const slug = child.props.slug;
+      return slug.startsWith('/') ? slug : `/${slug}`;
+    });
 
   if (guides.length === 0) {
     return null;
@@ -64,29 +50,18 @@ const RelatedGuides = ({ blok, children, isBlock = false }) => {
     : "If you found this helpful, also check out these guides";
 
   return (
-    <div {...storyblokEditable(blok)} className={containerClass}>
+    <div className={containerClass}>
       {/* Title section */}
       <div className="mb-6">
-        <h3 className={cn(titleClass)}
-          id="related"
-        >
-          {blok?.title ? (
-            <RichText document={blok.title} />
-          ) : (
-            defaultTitle
-          )}
+        <h3 className={cn(titleClass)} id="related">
+          {defaultTitle}
         </h3>
-        {blok?.description && (
-          <div className="mt-2 text-muted-foreground">
-            <RichText document={blok.description} />
-          </div>
-        )}
       </div>
 
       {/* Guides grid */}
       <div className={getGridClass()}>
         {guides.map((guideUrl, index) => {
-          // Create a fake blok object for GuideCardBlock
+          // Create a fake block object for GuideCardBlock
           const fakeBlok = {
             url: { url: guideUrl },
           };
@@ -94,7 +69,7 @@ const RelatedGuides = ({ blok, children, isBlock = false }) => {
           return (
             <GuideCardBlock 
               key={index} 
-              blok={fakeBlok} 
+              block={fakeBlok} 
             />
           );
         })}

@@ -1,6 +1,4 @@
 import React from "react";
-import { RichText } from "@/components/RichText";
-import { storyblokEditable } from "@storyblok/react";
 import { cn } from "@/lib/utils";
 import styles from "../styles/RiskLevel.module.css";
 
@@ -56,14 +54,10 @@ const INTRO_LINES = {
 };
 
 /**
- * RiskLevel — dual-mode component.
- *
- * Storyblok mode: <RiskLevel blok={blok} level="everyone" body={richTextDoc} mode="default" />
- * MDX mode:       <RiskLevel level="everyone">markdown children</RiskLevel>
- *
- * When `children` is provided it is used as body content instead of `body` (RichText doc).
+ * RiskLevel — renders a risk/audience callout box.
+ *   <RiskLevel level="everyone">markdown children</RiskLevel>
  */
-export function RiskLevel({ blok, level, body, mode = "default", children, className, ...props }) {
+export function RiskLevel({ level, mode = "default", children, className, ...props }) {
   const normalizedLevel = (level || "everyone").toLowerCase().replace(/-|\s/g, "_");
   const config = LEVEL_CONFIG[normalizedLevel] || LEVEL_CONFIG.everyone;
   const levelClass = styles[normalizedLevel] || styles.everyone;
@@ -71,13 +65,12 @@ export function RiskLevel({ blok, level, body, mode = "default", children, class
   const showHeader = mode === "for_you_if" || mode === "for_you";
   const introText = INTRO_LINES[mode] || INTRO_LINES.for_you_if;
 
-  // Body content: prefer React children (MDX mode), fall back to RichText doc (Storyblok mode)
-  const bodyContent = children ?? <RichText document={body} />;
+  const bodyContent = children;
 
   return (
     <div
       className={cn(styles.riskLevel, levelClass, "prose", className)}
-      {...storyblokEditable(blok)}
+     
       {...props}
     >
       {useDefaultText ? (

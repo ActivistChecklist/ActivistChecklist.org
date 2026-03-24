@@ -9,7 +9,7 @@ import { MetaBar, getDateMetaItem } from '@/components/ui/meta-bar';
 /**
  * Renders a generic page sourced from MDX files.
  *
- * Mirrors the layout of Page.js (Storyblok mode) but sources content from:
+ * Sources content from:
  *   - frontmatter: title, lastUpdated (date)
  *   - serializedBody: next-mdx-remote compiled MDX
  */

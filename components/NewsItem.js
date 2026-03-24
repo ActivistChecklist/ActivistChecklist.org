@@ -1,5 +1,4 @@
 import React from 'react';
-import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
 import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from '@/lib/utils';
@@ -8,19 +7,15 @@ import Image from 'next/image';
 import { IoNewspaperOutline } from 'react-icons/io5';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const NewsItem = ({ blok, story, imageManifest = {} }) => {
+const NewsItem = ({ block, story, imageManifest = {} }) => {
   const isMobile = useIsMobile();
   
-  if (!blok) {
+  if (!block) {
     return null;
   }
 
-  const { date, source, paywall_mode = 'inactive', comment } = blok;
-  // url can be a Storyblok link object { url: string } or a plain string (MDX mode)
-  const url = typeof blok.url === 'string' ? { url: blok.url } : blok.url;
-
-  // source is already resolved: slug sources are looked up server-side, overrides passed through directly.
-  // Support Storyblok object mode (source.name) for backwards compat.
+  const { date, source, paywall_mode = 'inactive', comment } = block;
+  const url = { url: block.url };
   const displaySource = source?.name || source || null;
   
   // Check if image exists using build-time manifest
@@ -167,11 +162,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           <MetaRow />
           
           {/* Comment */}
-          {(comment || blok.commentText) && (
+          {(comment || block.commentText) && (
             <div className="prose prose-slate max-w-none text-sm">
               {comment
                 ? <RichText document={comment} noWrapper={true} />
-                : <Markdown content={blok.commentText} isProse={false} />}
+                : <Markdown content={block.commentText} isProse={false} />}
             </div>
           )}
           
@@ -222,11 +217,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             </h3>
             
             {/* Comment */}
-            {(comment || blok.commentText) && (
+            {(comment || block.commentText) && (
               <div className="prose prose-slate max-w-none text-sm mb-2">
                 {comment
                   ? <RichText document={comment} noWrapper={true} />
-                  : <Markdown content={blok.commentText} isProse={false} />}
+                  : <Markdown content={block.commentText} isProse={false} />}
               </div>
             )}
             
@@ -303,7 +298,7 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
   // Return the content in a div container
   return (
     <div 
-      {...storyblokEditable(blok)}
+     
       className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group"
     >
       <NewsItemContent />

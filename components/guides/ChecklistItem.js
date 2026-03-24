@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Check, Link2 } from 'lucide-react';
-import { storyblokEditable } from '@storyblok/react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -111,20 +110,12 @@ const CopyLinkButton = ({ slug, onCopy }) => {
 }
 
 /**
- * ChecklistItem — dual-mode component.
- *
- * Storyblok mode: <ChecklistItem blok={{ _uid, slug, title, why, type, title_badges, body, tools, stop }} />
- *   Body rendered via <RichText document={blok.body} />.
- *
- * MDX mode (from ChecklistItemsContext): direct props
- *   <ChecklistItem slug title type why tools stop titleBadges serializedBody bodyComponents />
- *   Body rendered via <MDXRemote {...serializedBody} components={bodyComponents} />.
- *
- * localStorage keys are slug-based (not _uid) so they survive remigration.
+ * ChecklistItem — accepts either a `block` prop (legacy) or direct props from MDX context.
+ *   Direct props: slug title type why tools stop titleBadges serializedBody bodyComponents
+ *   localStorage keys are slug-based so they survive content remigration.
  */
 const ChecklistItem = ({
-  // Storyblok mode
-  blok,
+  block,
   // MDX mode: direct props (normalized from frontmatter)
   slug: slugProp,
   title: titleProp,
@@ -141,16 +132,16 @@ const ChecklistItem = ({
   editable = true,
 }) => {
   // Normalize props from either source
-  const itemSlug = blok?.slug ?? slugProp;
-  const itemTitle = blok?.title ?? titleProp;
-  const itemType = blok?.type ?? typeProp;
-  const itemWhy = blok?.why ?? whyProp;
-  const itemTools = blok?.tools ?? toolsProp;
-  const itemStop = blok?.stop ?? stopProp;
-  const itemTitleBadges = blok?.title_badges ?? titleBadgesProp ?? [];
+  const itemSlug = block?.slug ?? slugProp;
+  const itemTitle = block?.title ?? titleProp;
+  const itemType = block?.type ?? typeProp;
+  const itemWhy = block?.why ?? whyProp;
+  const itemTools = block?.tools ?? toolsProp;
+  const itemStop = block?.stop ?? stopProp;
+  const itemTitleBadges = block?.title_badges ?? titleBadgesProp ?? [];
 
-  if (!itemSlug && !blok) {
-    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: no slug or blok provided. Skipping');
+  if (!itemSlug && !block) {
+    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: no slug or block provided. Skipping');
     return null;
   }
 
@@ -316,7 +307,6 @@ const ChecklistItem = ({
   return (
     <Card
       ref={cardRef}
-      {...(editable ? storyblokEditable(blok) : {})}
       className={cn(
         "checklist-item group/checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t-1",
@@ -392,7 +382,7 @@ const ChecklistItem = ({
                   </>
                 )}
                 {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
-                {/* <Markdown inlineOnly={true} content={blok.title} /> */}
+                {/* <Markdown inlineOnly={true} content={block.title} /> */}
                 {itemTitle}
 
                 {/* Copy link button - inline, only visible when expanded */}
@@ -455,7 +445,7 @@ const ChecklistItem = ({
             ]} />
             {serializedBody
               ? <MDXRemote {...serializedBody} components={bodyComponents} />
-              : <RichText document={blok?.body} />}
+              : <RichText document={block?.body} />}
 
             {/* Mark as done button row */}
             {itemType !== 'info' && (
