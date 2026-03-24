@@ -43,9 +43,8 @@ const RelatedGuides = ({ blok, children, isBlock = false }) => {
         // 2x2 grid - break to single column sooner (use lg instead of md)
         return "grid grid-cols-1 lg:grid-cols-2 gap-8";
       case 3:
-        // 2 columns on medium, 3rd item breaks to new row at 1/2 width
-        // Only use 3 columns on very large screens
-        return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8";
+        // Max 2 columns — third card wraps to its own row (never 3 across)
+        return "grid grid-cols-1 lg:grid-cols-2 gap-8";
       default:
         return "grid grid-cols-1 lg:grid-cols-2 gap-8";
     }
