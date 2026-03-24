@@ -52,9 +52,9 @@ const RelatedGuides = ({ blok, children, isBlock = false }) => {
   };
 
   // Different styling based on context
-  const containerClass = isBlock 
-    ? "bg-muted/50 border border-border/50 rounded-lg p-6 my-8" 
-    : "mt-12 pt-8 border-t border-border/50";
+  const containerClass = isBlock
+    ? "not-prose bg-muted/50 border border-border/50 rounded-lg p-6 my-8"
+    : "not-prose mt-12 pt-8 border-t border-border/50";
 
   const titleClass = isBlock 
     ? "text-xl font-semibold text-foreground mb-4" 
