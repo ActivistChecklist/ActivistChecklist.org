@@ -3,7 +3,6 @@ import { ChevronDown, Check, Link2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RichText } from '@/components/RichText';
 import { MDXRemote } from 'next-mdx-remote';
 import Markdown from '../Markdown';
 import { Recommendations } from '@/components/guides/Recommendations'
@@ -12,7 +11,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from '@/hooks/use-analytics';
-import { randomUUID } from 'crypto';
+import { migrateLegacyChecklistKeysForSlug } from '@/lib/checklist-storage-migrate';
 // Dictionary mapping title badge types to Badge components
 const TITLE_BADGE_TYPES = {
   important: {
@@ -110,38 +109,25 @@ const CopyLinkButton = ({ slug, onCopy }) => {
 }
 
 /**
- * ChecklistItem — accepts either a `block` prop (legacy) or direct props from MDX context.
- *   Direct props: slug title type why tools stop titleBadges serializedBody bodyComponents
- *   localStorage keys are slug-based so they survive content remigration.
+ * ChecklistItem — MDX-backed item (props from frontmatter + serialized body).
+ * localStorage keys are slug-based.
  */
 const ChecklistItem = ({
-  block,
-  // MDX mode: direct props (normalized from frontmatter)
-  slug: slugProp,
-  title: titleProp,
-  type: typeProp,
-  why: whyProp,
-  tools: toolsProp,
-  stop: stopProp,
-  titleBadges: titleBadgesProp,
+  slug: itemSlug,
+  title: itemTitle,
+  type: itemType,
+  why: itemWhy,
+  tools: itemTools,
+  stop: itemStop,
+  titleBadges: itemTitleBadges = [],
   serializedBody,
   bodyComponents,
-  // Shared
   expandTrigger,
   index,
   editable = true,
 }) => {
-  // Normalize props from either source
-  const itemSlug = block?.slug ?? slugProp;
-  const itemTitle = block?.title ?? titleProp;
-  const itemType = block?.type ?? typeProp;
-  const itemWhy = block?.why ?? whyProp;
-  const itemTools = block?.tools ?? toolsProp;
-  const itemStop = block?.stop ?? stopProp;
-  const itemTitleBadges = block?.title_badges ?? titleBadgesProp ?? [];
-
-  if (!itemSlug && !block) {
-    console.log('⚠️⚠️⚠️⚠️ ChecklistItem: no slug or block provided. Skipping');
+  if (!itemSlug) {
+    console.warn('ChecklistItem: no slug provided. Skipping');
     return null;
   }
 
@@ -181,6 +167,8 @@ const ChecklistItem = ({
   }, []);
   
   useEffect(() => {
+    migrateLegacyChecklistKeysForSlug(itemSlug);
+
     // Load checked state
     const stored = localStorage.getItem(storageKey);
     if (stored !== null) {
@@ -443,9 +431,9 @@ const ChecklistItem = ({
                 content: itemStop
               }
             ]} />
-            {serializedBody
-              ? <MDXRemote {...serializedBody} components={bodyComponents} />
-              : <RichText document={block?.body} />}
+            {serializedBody && (
+              <MDXRemote {...serializedBody} components={bodyComponents} />
+            )}
 
             {/* Mark as done button row */}
             {itemType !== 'info' && (

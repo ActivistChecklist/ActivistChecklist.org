@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "concurrently -n \"API,PROXY,NEXT\" -c \"blue,yellow,green\" \"NODE_NO_WARNINGS=1 yarn api:dev\" \"NODE_NO_WARNINGS=1 local-ssl-proxy --source 3001 --target 3000\" \"yarn next dev\"",
     "next:dev": "next dev",
-    "migrate": "NODE_OPTIONS='--experimental-vm-modules' node scripts/migrate-from-storyblok.mjs",
     "prebuild": "yarn audit --level high || true",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "postbuild": "bash scripts/postbuild.sh",
@@ -35,8 +34,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check-links": "node scripts/check-links.mjs",
-    "snapshot": "node scripts/snapshot-rendered-pages.mjs",
-    "compare-snapshots": "node scripts/compare-snapshots.mjs",
     "prepare": "sh scripts/install-hooks.sh"
   },
   "dependencies": {
@@ -66,7 +63,6 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@storyblok/react": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -91,7 +87,6 @@
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-html": "^16.0.1",
-    "storyblok-rich-text-react-renderer": "^3.0.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.3.6"
@@ -114,8 +109,6 @@
     "react-json-view": "^1.21.3",
     "satori": "^0.25.0",
     "sharp": "^0.34.5",
-    "storyblok-backup": "^0.6.0",
-    "storyblok-js-client": "^7.2.4",
     "tailwindcss": "^3.4.19",
     "vitest": "^4.1.0",
     "yarn": "^1.22.22"
