@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
+import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { IoStar } from 'react-icons/io5';
 
@@ -42,12 +43,14 @@ const ChangeLogEntry = ({ blok, story }) => {
         >
           {displayDate}
         </time>
-        {blok.body && (
+        {(blok.body || blok.bodyText) && (
           <div className="prose prose-slate max-w-none text-sm flex-1">
             {blok.type === 'major' && (
               <IoStar className="text-yellow-500 inline mr-1 align-baseline" size={16} />
             )}
-            <RichText document={blok.body} noWrapper={true} {...storyblokEditable(blok)} />
+            {blok.body
+              ? <RichText document={blok.body} noWrapper={true} {...storyblokEditable(blok)} />
+              : <Markdown content={blok.bodyText} isProse={false} />}
           </div>
         )}
       </div>

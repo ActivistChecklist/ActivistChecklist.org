@@ -1,6 +1,7 @@
 import React from 'react';
 import { storyblokEditable } from '@storyblok/react';
 import { RichText } from '@/components/RichText';
+import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import Link from '@/components/Link';
 import Image from 'next/image';
@@ -14,7 +15,9 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     return null;
   }
 
-  const { date, source, source_override, url, paywall_mode = 'inactive', comment } = blok;
+  const { date, source, source_override, paywall_mode = 'inactive', comment } = blok;
+  // url can be a Storyblok link object { url: string } or a plain string (MDX mode)
+  const url = typeof blok.url === 'string' ? { url: blok.url } : blok.url;
   
   // Use source_override if provided, otherwise fall back to source
   const displaySource = source_override || (source?.name || source);
@@ -163,9 +166,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
           <MetaRow />
           
           {/* Comment */}
-          {comment && (
+          {(comment || blok.commentText) && (
             <div className="prose prose-slate max-w-none text-sm">
-              <RichText document={comment} noWrapper={true} />
+              {comment
+                ? <RichText document={comment} noWrapper={true} />
+                : <Markdown content={blok.commentText} isProse={false} />}
             </div>
           )}
           

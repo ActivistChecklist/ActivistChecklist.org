@@ -111,36 +111,19 @@ const NewsPage = ({ newsItems = [], imageManifest = {} }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  try {
-    const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchNewsData } = await import('../utils/core');
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    
-    const storyblokApi = getStoryblokApi();
-    
-    // Fetch news data using shared utility
-    const { newsItems, imageManifest } = await fetchNewsData(storyblokApi, {
-      version: getStoryblokVersion()
-    });
+  const { getAllNewsItems, getImageManifest, toNewsWireItem } = await import('@/lib/content');
+  const messages = (await import(`../messages/${locale}.json`)).default;
 
-    return {
-      props: {
-        newsItems,
-        imageManifest,
-        messages
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching news items:', error);
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    return {
-      props: {
-        newsItems: [],
-        imageManifest: {},
-        messages
-      }
-    };
-  }
+  const newsItems = getAllNewsItems(locale).map(toNewsWireItem);
+  const imageManifest = getImageManifest();
+
+  return {
+    props: {
+      newsItems,
+      imageManifest,
+      messages,
+    },
+  };
 }
 
 export default NewsPage;

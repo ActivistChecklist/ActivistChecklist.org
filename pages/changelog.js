@@ -136,41 +136,14 @@ const ChangelogPage = ({ changelogEntries = [] }) => {
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  try {
-    const { getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion, fetchAllChangelogEntries } = await import('../utils/core');
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    
-    const storyblokApi = getStoryblokApi();
-    
-    // Fetch all changelog entries with pagination support
-    const allEntries = await fetchAllChangelogEntries(storyblokApi, {
-      version: getStoryblokVersion()
-    });
+  const { getAllChangelogEntries, toChangelogWireEntry } = await import('@/lib/content');
+  const messages = (await import(`../messages/${locale}.json`)).default;
 
-    // Sort by first_published_at or created_at as fallback, newest first
-    const sortedEntries = (allEntries || []).sort((a, b) => {
-      const dateA = new Date(a.first_published_at || a.created_at);
-      const dateB = new Date(b.first_published_at || b.created_at);
-      return dateB - dateA; // Newest first
-    });
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
 
-    return {
-      props: {
-        changelogEntries: sortedEntries,
-        messages
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching changelog entries:', error);
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    return {
-      props: {
-        changelogEntries: [],
-        messages
-      }
-    };
-  }
+  return {
+    props: { changelogEntries, messages },
+  };
 }
 
 export default ChangelogPage;

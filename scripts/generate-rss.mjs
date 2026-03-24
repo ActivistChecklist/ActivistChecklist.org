@@ -1,248 +1,121 @@
 import { Feed } from 'feed';
 import fs from 'fs';
 import path from 'path';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
 
-/**
- * Extensible RSS generator that can handle different content types
- * @param {Object} config - Configuration object
- * @param {string} config.feedType - Type of feed ('changelog' or 'news')
- * @param {string} config.title - Feed title
- * @param {string} config.description - Feed description
- * @param {string} config.filename - Output filename (e.g., 'rss.xml', 'news-rss.xml')
- * @param {Function} config.fetchItems - Function to fetch items
- * @param {Function} config.transformItem - Function to transform item for RSS
- * @param {Object} config.feedOptions - Additional feed options
- */
-async function generateRSSFeed(config) {
-  try {
-    // Import Storyblok utilities
-    const { storyblokInit, apiPlugin, getStoryblokApi } = await import('@storyblok/react');
-    const { getStoryblokVersion } = await import('../utils/core.js');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
 
-    // Initialize Storyblok (same config as _app.js)
-    storyblokInit({
-      accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
-      use: [apiPlugin],
-      apiOptions: {
-        region: "us",
-        version: process.env.NODE_ENV === 'development' ? 'draft' : 'published'
-      }
-    });
+// Import content functions (uses process.cwd() internally, works from root)
+const { getAllChangelogEntries, getAllNewsItems } = await import('../lib/content.js');
 
-    const storyblokApi = getStoryblokApi();
+const SITE_URL = 'https://activistchecklist.org';
 
-    // Fetch items using the provided function
-    const allItems = await config.fetchItems(storyblokApi, {
-      version: getStoryblokVersion()
-    });
-
-    // Sort by date, newest first
-    const sortedItems = (allItems || []).sort((a, b) => {
-      const dateA = new Date(a.content?.date || a.first_published_at || a.created_at);
-      const dateB = new Date(b.content?.date || b.first_published_at || b.created_at);
-      return dateB - dateA; // Newest first
-    });
-
-    // Default feed options
-    const defaultFeedOptions = {
-      title: config.title,
-      description: config.description,
-      id: "https://activistchecklist.org/",
-      link: "https://activistchecklist.org/",
-      language: "en",
-      image: "https://activistchecklist.org/images/logo-bg-white.png",
-      favicon: "https://activistchecklist.org/favicon.ico",
-      copyright: "All rights reserved, Activist Checklist",
-      updated: sortedItems.length > 0 ? new Date(sortedItems[0].content?.date || sortedItems[0].first_published_at || sortedItems[0].created_at) : new Date(),
-      generator: "Activist Checklist RSS Generator",
-      feedLinks: {
-        rss2: `https://activistchecklist.org/rss/${config.filename}`,
-      },
-      author: {
-        name: "Activist Checklist",
-        email: "contact@activistchecklist.org",
-        link: "https://activistchecklist.org/"
-      }
-    };
-
-    // Merge with custom feed options
-    const feedOptions = { ...defaultFeedOptions, ...config.feedOptions };
-
-    // Create feed
-    const feed = new Feed(feedOptions);
-
-    // Add entries to feed using the transform function
-    sortedItems.forEach(item => {
-      const rssItem = config.transformItem(item);
-      feed.addItem(rssItem);
-    });
-
-    // Write RSS file to out/rss directory (final static export destination)
-    const outDir = path.join(process.cwd(), 'out');
-    const rssDir = path.join(outDir, 'rss');
-
-    if (!fs.existsSync(rssDir)) {
-      fs.mkdirSync(rssDir, { recursive: true });
-    }
-
-    const rssPath = path.join(rssDir, config.filename);
-    fs.writeFileSync(rssPath, feed.rss2());
-
-    console.log(`✅ ${config.feedType} RSS feed generated with ${sortedItems.length} entries: ${rssPath}`);
-
-  } catch (error) {
-    console.error(`❌ Error generating ${config.feedType} RSS feed:`, error);
-    process.exit(1);
-  }
-}
-
-// Helper function to extract text from Storyblok rich text
-function extractTextFromRichText(richTextDoc) {
-  if (!richTextDoc || !richTextDoc.content) return '';
-
-  let text = '';
-
-  function extractFromNode(node) {
-    if (node.type === 'text') {
-      text += node.text || '';
-    } else if (node.content && Array.isArray(node.content)) {
-      node.content.forEach(extractFromNode);
-    }
-
-    // Add space after paragraphs and other block elements
-    if (node.type === 'paragraph' || node.type === 'heading') {
-      text += ' ';
-    }
-  }
-
-  richTextDoc.content.forEach(extractFromNode);
-
-  // Clean up extra whitespace
-  return text.replace(/\s+/g, ' ').trim();
+function writeFeed(feed, filename) {
+  const outDir = path.join(ROOT, 'out', 'rss');
+  fs.mkdirSync(outDir, { recursive: true });
+  const rssPath = path.join(outDir, filename);
+  fs.writeFileSync(rssPath, feed.rss2());
+  console.log(`✅ RSS feed written: ${rssPath}`);
 }
 
 /**
- * Generate changelog RSS feed
+ * Generate changelog RSS feed from MDX content files.
  */
 async function generateChangelogRSS() {
-  const { fetchAllChangelogEntries } = await import('../utils/core.js');
+  const entries = getAllChangelogEntries('en'); // sorted newest-first
 
-  return generateRSSFeed({
-    feedType: 'changelog',
-    title: "Activist Checklist - Recent Updates",
-    description: "Recent updates and improvements to Activist Checklist digital security guides",
-    filename: 'changelog.xml',
-    fetchItems: fetchAllChangelogEntries,
-    transformItem: (story) => {
-      const entryDate = new Date(story.first_published_at || story.created_at);
-
-      // Convert rich text to plain text for description
-      let description = '';
-      if (story.content && story.content.body) {
-        description = extractTextFromRichText(story.content.body);
-      }
-
-      return {
-        title: story.name || `Update from ${entryDate.toLocaleDateString()}`,
-        id: `https://activistchecklist.org/changelog#${story.uuid}`,
-        link: `https://activistchecklist.org/changelog#${story.uuid}`,
-        description: description || 'Site update',
-        content: description || 'Site update',
-        author: [{
-          name: "Activist Checklist",
-          email: "contact@activistchecklist.org",
-          link: "https://activistchecklist.org/"
-        }],
-        date: entryDate,
-      };
-    }
+  const feed = new Feed({
+    title: 'Activist Checklist - Recent Updates',
+    description: 'Recent updates and improvements to Activist Checklist digital security guides',
+    id: `${SITE_URL}/`,
+    link: `${SITE_URL}/`,
+    language: 'en',
+    image: `${SITE_URL}/images/logo-bg-white.png`,
+    favicon: `${SITE_URL}/favicon.ico`,
+    copyright: 'All rights reserved, Activist Checklist',
+    updated: entries.length > 0 ? new Date(entries[0].frontmatter.date) : new Date(),
+    generator: 'Activist Checklist RSS Generator',
+    feedLinks: { rss2: `${SITE_URL}/rss/changelog.xml` },
+    author: { name: 'Activist Checklist', email: 'contact@activistchecklist.org', link: SITE_URL },
   });
+
+  for (const entry of entries) {
+    const slug = entry.slug;
+    const date = new Date(entry.frontmatter.firstPublished || entry.frontmatter.date);
+    feed.addItem({
+      title: slug,
+      id: `${SITE_URL}/changelog#${slug}`,
+      link: `${SITE_URL}/changelog#${slug}`,
+      description: entry.content.trim() || 'Site update',
+      content: entry.content.trim() || 'Site update',
+      author: [{ name: 'Activist Checklist', email: 'contact@activistchecklist.org', link: SITE_URL }],
+      date,
+    });
+  }
+
+  writeFeed(feed, 'changelog.xml');
+  console.log(`✅ Changelog RSS: ${entries.length} entries`);
 }
 
 /**
- * Generate news RSS feed
+ * Generate news RSS feed from MDX content files.
  */
 async function generateNewsRSS() {
-  const { fetchAllNewsItems } = await import('../utils/core.js');
+  const items = getAllNewsItems('en'); // sorted newest-first
 
-  return generateRSSFeed({
-    feedType: 'news',
-    title: "Activist Checklist - News",
-    description: "Latest news about digital security, surveillance, and activism",
-    filename: 'news.xml',
-    fetchItems: fetchAllNewsItems,
-    transformItem: (story) => {
-      const entryDate = new Date(story.content?.date || story.first_published_at || story.created_at);
-      const { source, url, has_paywall } = story.content || {};
-
-      // Extract description from comment or use source
-      let description = '';
-      if (story.content?.comment) {
-        description = extractTextFromRichText(story.content.comment);
-      } else if (source) {
-        description = `News from ${source.name || source}`;
-      }
-
-      // Generate archive.is URL if has_paywall is true
-      const archiveUrl = has_paywall && url?.url ? `https://archive.is/newest/${url.url}` : null;
-
-      // Use archive URL for paywall articles, otherwise direct URL, fallback to site link
-      const articleUrl = has_paywall ? archiveUrl : (url?.url || `https://activistchecklist.org/news#${story.uuid}`);
-
-      // Build enhanced description with tags and link
-      let enhancedDescription = '';
-
-      // Add tags if available
-      if (story.tag_list && story.tag_list.length > 0) {
-        const tagsText = story.tag_list.join(', ');
-        enhancedDescription += `<strong>Tags:</strong> ${tagsText}`;
-      }
-
-
-      // Add "view the article here" link
-      enhancedDescription += `<br><br><a href="${articleUrl}">View the article here →</a>`;
-
-      // Add paywall information if applicable
-      if (has_paywall && url?.url) {
-        enhancedDescription += `<br><br>This link bypasses the paywall. <a href="${url.url}">See original</a>`;
-      }
-
-      return {
-        title: story.name || 'News Item',
-        id: articleUrl,
-        link: archiveUrl || articleUrl,
-        description: enhancedDescription,
-        content: enhancedDescription,
-        author: [{
-          name: source?.name || "Activist Checklist",
-          email: "contact@activistchecklist.org",
-          link: "https://activistchecklist.org/"
-        }],
-        date: entryDate,
-      };
-    }
+  const feed = new Feed({
+    title: 'Activist Checklist - News',
+    description: 'Latest news about digital security, surveillance, and activism',
+    id: `${SITE_URL}/`,
+    link: `${SITE_URL}/`,
+    language: 'en',
+    image: `${SITE_URL}/images/logo-bg-white.png`,
+    favicon: `${SITE_URL}/favicon.ico`,
+    copyright: 'All rights reserved, Activist Checklist',
+    updated: items.length > 0 ? new Date(items[0].frontmatter.date) : new Date(),
+    generator: 'Activist Checklist RSS Generator',
+    feedLinks: { rss2: `${SITE_URL}/rss/news.xml` },
+    author: { name: 'Activist Checklist', email: 'contact@activistchecklist.org', link: SITE_URL },
   });
+
+  for (const item of items) {
+    const fm = item.frontmatter;
+    const date = new Date(fm.date);
+    const articleUrl = fm.url || `${SITE_URL}/news#${item.slug}`;
+    const source = fm.source || null;
+
+    const tags = fm.tags ? String(fm.tags).split(',').map((t) => t.trim()).filter(Boolean) : [];
+    let description = '';
+    if (tags.length > 0) description += `<strong>Tags:</strong> ${tags.join(', ')}`;
+    description += `<br><br><a href="${articleUrl}">View the article here →</a>`;
+    if (item.content.trim()) description += `<br><br>${item.content.trim()}`;
+
+    feed.addItem({
+      title: fm.title || 'News Item',
+      id: articleUrl,
+      link: articleUrl,
+      description,
+      content: description,
+      author: [{ name: source || 'Activist Checklist', email: 'contact@activistchecklist.org', link: SITE_URL }],
+      date,
+    });
+  }
+
+  writeFeed(feed, 'news.xml');
+  console.log(`✅ News RSS: ${items.length} items`);
 }
 
-// Run if called directly
+// CLI entry point
 const feedType = process.argv[2];
 
 if (feedType === 'news') {
-  generateNewsRSS();
+  await generateNewsRSS();
 } else if (feedType === 'changelog') {
-  generateChangelogRSS();
+  await generateChangelogRSS();
 } else {
-  // Generate both by default
-  Promise.all([
-    generateChangelogRSS(),
-    generateNewsRSS()
-  ]).then(() => {
-    console.log('✅ All RSS feeds generated successfully');
-  }).catch(error => {
-    console.error('❌ Error generating RSS feeds:', error);
-    process.exit(1);
-  });
+  await Promise.all([generateChangelogRSS(), generateNewsRSS()]);
+  console.log('✅ All RSS feeds generated');
 }
 
-export { generateRSSFeed, generateChangelogRSS, generateNewsRSS };
+export { generateChangelogRSS, generateNewsRSS };
