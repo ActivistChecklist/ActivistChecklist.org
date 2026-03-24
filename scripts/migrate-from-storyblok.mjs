@@ -482,6 +482,7 @@ function convertButton(blok) {
   if (linkTarget) attrs.push(`target="${linkTarget}"`);
 
   if (blok.variant && blok.variant !== 'default') attrs.push(`variant="${blok.variant}"`);
+  if (blok.size && blok.size !== 'default') attrs.push(`size="${blok.size}"`);
   if (blok.download) attrs.push('download');
   if (blok.icon) attrs.push(`icon="${blok.icon}"`);
   if (blok.iconPosition && blok.iconPosition !== 'left') attrs.push(`iconPosition="${blok.iconPosition}"`);
@@ -627,9 +628,13 @@ function convertChecklistItemRef(blok, checklistSlugMap) {
   // Resolve UUID to content.slug via the map (parameter or module-level)
   const map = checklistSlugMap || _checklistSlugMap;
   const uuid = typeof ref === 'string' ? ref : (ref.uuid || '');
-  const slug = map?.get(uuid) || uuid;
-  if (slug === uuid) {
+  // Apply UUID-level slug override before regular map lookup
+  const slug = UUID_SLUG_OVERRIDE[uuid] || map?.get(uuid) || uuid;
+  if (slug === uuid && !UUID_SLUG_OVERRIDE[uuid]) {
     console.warn(`  Unresolved checklist-item UUID: ${uuid}`);
+  }
+  if (process.argv.includes('--debug-refs')) {
+    console.log(`  ref UUID=${uuid} → slug=${slug}`);
   }
   return `<ChecklistItem slug="${slug}" />\n`;
 }
@@ -709,6 +714,50 @@ const INLINE_PRIORITY = {
   'personal-secure': 'federal',    // federal guide has the VPN line
 };
 
+// UUID-level slug override. Applied when building the slug map and when writing
+// standalone checklist item files. Fixes cases where multiple Storyblok stories
+// share the same content.slug but have different content — the UUID uniquely
+// identifies which version gets which slug file.
+// Format: { uuid: customSlug }
+const UUID_SLUG_OVERRIDE = {
+  // "Use Proton Docs and Mail for activism..." — shares slug "proton-docs" with
+  // the simpler "Use Proton Docs instead of Google Docs" inline version.
+  'ebf74c78-533b-42f0-8fa2-56257f3d9617': 'proton-docs-mail',
+  // "Create your emergency plan if you are arrested..." — shares slug "emergency-plan"
+  // with the doxxing-focused "Make a personal emergency plan..." version.
+  '42bb5154-253e-4954-b202-175f1efad5b2': 'emergency-plan-ice',
+};
+
+// Guide-context slug remap for checklist-item-ref resolved slugs.
+// (Currently empty — UUID_SLUG_OVERRIDE handles the known conflicts above.)
+// Format: { guideSlug: { resolvedSlug: newSlug } }
+const REF_SLUG_REMAP = {};
+
+// Defines files to synthesize for ref-remapped slugs that have no Storyblok story.
+// Each entry inherits body + frontmatter from sourceSlug, then applies overrides.
+// Format: { newSlug: { sourceSlug, frontmatterOverrides } }
+const REF_REMAP_ITEMS = {
+  'proton-docs-mail': {
+    sourceSlug: 'proton-docs',
+    frontmatterOverrides: {
+      title: 'Use Proton Docs and Mail for activism instead of Google Docs and Gmail',
+      slug: 'proton-docs-mail',
+    },
+  },
+  'emergency-plan-ice': {
+    sourceSlug: 'emergency-plan',
+    frontmatterOverrides: {
+      title: 'Create your emergency plan if you are arrested (or feel unsafe at home)',
+      slug: 'emergency-plan-ice',
+    },
+  },
+};
+
+// Body inheritance for remapped inline items that have no Storyblok body of their own.
+// When the remapped item has no body, copy the body from the named source slug.
+// Format: { newSlug: sourceSlug }
+const INLINE_BODY_INHERIT = {};
+
 // Slug remapping for inline checklist items that conflict across guides.
 // Format: { guideSlug: { originalSlug: newSlug } }
 const INLINE_SLUG_REMAP = {
@@ -730,6 +779,11 @@ const INLINE_SLUG_REMAP = {
   },
   'federal': {
     'essentials': 'essentials-federal',
+  },
+  'signal': {
+    // signal guide has inline "Enable username and hide phone number" item;
+    // standalone story has same slug but different content ("Share your Signal username...")
+    'signal-username': 'signal-enable-username',
   },
   'secondary': {
     // Second "sim" in the advanced section (data-only SIM)
@@ -983,8 +1037,21 @@ function convertChangelogEntryStory(story) {
 // ─── Frontmatter serialization ───────────────────────────────────
 
 function serializeFrontmatter(fm) {
-  const lines = ['---'];
+  const trailingDateKeys = ['firstPublished', 'lastUpdated'];
+  const orderedEntries = [];
+
   for (const [key, value] of Object.entries(fm)) {
+    if (trailingDateKeys.includes(key)) continue;
+    orderedEntries.push([key, value]);
+  }
+  for (const key of trailingDateKeys) {
+    if (Object.prototype.hasOwnProperty.call(fm, key)) {
+      orderedEntries.push([key, fm[key]]);
+    }
+  }
+
+  const lines = ['---'];
+  for (const [key, value] of orderedEntries) {
     if (value === undefined || value === null) continue;
     if (Array.isArray(value)) {
       if (value.length === 0) {
@@ -1077,20 +1144,26 @@ async function main() {
   // ─── Build checklist UUID→slug map for resolving refs ───
   _checklistSlugMap = new Map();
   for (const story of (grouped['checklist-item'] || [])) {
-    const slug = story.content.slug || story.slug;
+    // UUID_SLUG_OVERRIDE takes priority over the story's own content.slug
+    const slug = UUID_SLUG_OVERRIDE[story.uuid] || story.content.slug || story.slug;
     if (story.uuid) _checklistSlugMap.set(story.uuid, slug);
     if (story.content._uid) _checklistSlugMap.set(story.content._uid, slug);
   }
   console.log(`Built checklist slug map (${_checklistSlugMap.size} UUID→slug entries)\n`);
 
   // ─── Checklist Items ───
-  // Track standalone slugs so inline extractions don't overwrite them
+  // Track standalone slugs so inline extractions don't overwrite them.
+  // Also collect bodies for use by INLINE_BODY_INHERIT.
   const standaloneChecklistSlugs = new Set();
+  const standaloneBodies = new Map(); // slug → body string
   if (!TYPE_FILTER || TYPE_FILTER === 'checklist-item') {
     console.log('Converting checklist items...');
     for (const story of (grouped['checklist-item'] || [])) {
       try {
-        const { frontmatter, body, slug } = convertChecklistItemStory(story);
+        const { frontmatter, body } = convertChecklistItemStory(story);
+        // UUID_SLUG_OVERRIDE takes priority over the story's content.slug
+        const slug = UUID_SLUG_OVERRIDE[story.uuid] || frontmatter.slug;
+        frontmatter.slug = slug;
         writeMdxFile(
           path.join(CONTENT_DIR, 'checklist-items'),
           `${slug}.mdx`,
@@ -1098,6 +1171,7 @@ async function main() {
           body
         );
         standaloneChecklistSlugs.add(slug);
+        if (body) standaloneBodies.set(slug, body);
         stats.written++;
       } catch (e) {
         console.error(`  Error converting checklist item "${story.slug}": ${e.message}`);
@@ -1152,11 +1226,18 @@ async function main() {
         continue;
       }
       try {
+        // Inherit body from source slug if this item has none (INLINE_BODY_INHERIT)
+        const body = item.body || (INLINE_BODY_INHERIT[slug]
+          ? standaloneBodies.get(INLINE_BODY_INHERIT[slug]) || ''
+          : '');
+        if (!item.body && INLINE_BODY_INHERIT[slug]) {
+          console.log(`  Inheriting body for "${slug}" from "${INLINE_BODY_INHERIT[slug]}"`);
+        }
         writeMdxFile(
           path.join(CONTENT_DIR, 'checklist-items'),
           `${slug}.mdx`,
           item.frontmatter,
-          item.body
+          body
         );
         stats.written++;
       } catch (e) {

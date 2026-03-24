@@ -236,11 +236,11 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                             </NavigationMenuContent>
                           </>
                         ) : (
-                          <Link href={item.href} legacyBehavior passHref>
-                            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                            <Link href={item.href}>
                               {item.label}
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         )}
                       </NavigationMenuItem>
                     ))}

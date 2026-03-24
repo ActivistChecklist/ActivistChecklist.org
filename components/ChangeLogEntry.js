@@ -44,13 +44,15 @@ const ChangeLogEntry = ({ blok, story }) => {
           {displayDate}
         </time>
         {(blok.body || blok.bodyText) && (
-          <div className="prose prose-slate max-w-none text-sm flex-1">
+          <div className="flex items-start gap-1 flex-1">
             {blok.type === 'major' && (
-              <IoStar className="text-yellow-500 inline mr-1 align-baseline" size={16} />
+              <IoStar className="text-yellow-500 shrink-0 mt-[2px]" size={16} />
             )}
-            {blok.body
-              ? <RichText document={blok.body} noWrapper={true} {...storyblokEditable(blok)} />
-              : <Markdown content={blok.bodyText} isProse={false} />}
+            <div className="prose prose-slate max-w-none text-sm flex-1">
+              {blok.body
+                ? <RichText document={blok.body} noWrapper={true} {...storyblokEditable(blok)} />
+                : <Markdown content={blok.bodyText} isProse={false} />}
+            </div>
           </div>
         )}
       </div>

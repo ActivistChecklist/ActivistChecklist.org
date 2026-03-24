@@ -265,6 +265,11 @@ a {
     @apply underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary;
   }
 
+  /* Inline markdown (outside prose) should keep standard link styling */
+  .inline-markdown a:not(.button) {
+    @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
+  }
+
   /* Muted links that stay muted until hover - override prose styling */
   .muted-links a:not(.button) {
     @apply text-muted-foreground underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary transition-colors !important;

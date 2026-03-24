@@ -15,12 +15,13 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
     return null;
   }
 
-  const { date, source, source_override, paywall_mode = 'inactive', comment } = blok;
+  const { date, source, paywall_mode = 'inactive', comment } = blok;
   // url can be a Storyblok link object { url: string } or a plain string (MDX mode)
   const url = typeof blok.url === 'string' ? { url: blok.url } : blok.url;
-  
-  // Use source_override if provided, otherwise fall back to source
-  const displaySource = source_override || (source?.name || source);
+
+  // source is already resolved: slug sources are looked up server-side, overrides passed through directly.
+  // Support Storyblok object mode (source.name) for backwards compat.
+  const displaySource = source?.name || source || null;
   
   // Check if image exists using build-time manifest
   const getImageInfo = () => {
@@ -221,9 +222,11 @@ const NewsItem = ({ blok, story, imageManifest = {} }) => {
             </h3>
             
             {/* Comment */}
-            {comment && (
+            {(comment || blok.commentText) && (
               <div className="prose prose-slate max-w-none text-sm mb-2">
-                <RichText document={comment} noWrapper={true} />
+                {comment
+                  ? <RichText document={comment} noWrapper={true} />
+                  : <Markdown content={blok.commentText} isProse={false} />}
               </div>
             )}
             

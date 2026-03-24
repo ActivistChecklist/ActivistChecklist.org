@@ -99,8 +99,10 @@ const findings = [];
 // Store all URLs with their locations
 const urlLocations = new Map(); // url -> Set<string> (filenames)
 
-// Only match explicit http/https URLs
-const URL_PATTERN = /https?:\/\/[^\s"'<>()]+/gi;
+// Extract only real HTML attributes (avoid JSON/script blobs like __NEXT_DATA__)
+const HREF_PATTERN = /href="([^"]*?)"/gi;
+const SRC_PATTERN = /src="([^"]*?)"/gi;
+const SRCSET_PATTERN = /srcset="([^"]*?)"/gi;
 
 // Store replacement stats
 const replacementStats = new Map();
@@ -116,14 +118,33 @@ function getContext(content, matchIndex, matchLength) {
   return context;
 }
 
+function recordUrl(url, filePath) {
+  if (!url || typeof url !== 'string') return;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return;
+  if (!urlLocations.has(url)) {
+    urlLocations.set(url, new Set());
+  }
+  urlLocations.get(url).add(filePath);
+}
+
 function extractUrls(content, filePath) {
+  // Only extract from rendered HTML attributes. This avoids false positives
+  // from serialized JSON, escaped strings, and code examples in page source.
+  if (!filePath.endsWith('.html')) return;
+
   let match;
-  while ((match = URL_PATTERN.exec(content)) !== null) {
-    const url = match[0];
-    if (!urlLocations.has(url)) {
-      urlLocations.set(url, new Set());
+  while ((match = HREF_PATTERN.exec(content)) !== null) {
+    recordUrl(match[1], filePath);
+  }
+  while ((match = SRC_PATTERN.exec(content)) !== null) {
+    recordUrl(match[1], filePath);
+  }
+  while ((match = SRCSET_PATTERN.exec(content)) !== null) {
+    const entries = match[1].split(',');
+    for (const entry of entries) {
+      const srcUrl = entry.trim().split(/\s+/)[0];
+      recordUrl(srcUrl, filePath);
     }
-    urlLocations.get(url).add(filePath);
   }
 }
 

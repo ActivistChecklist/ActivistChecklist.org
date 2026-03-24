@@ -97,7 +97,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
                     <Sparkles className="h-4 w-4 inline mr-1" />
                     {latestMajorUpdate.body
                       ? <RichText document={latestMajorUpdate.body} noWrapper={true} />
-                      : <Markdown content={latestMajorUpdate.bodyText} isProse={false} />}
+                      : <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />}
                   </div>
                 )}
               </div>
@@ -186,7 +186,7 @@ const HomePage = ({ changelogEntries = [], newsItems = [], imageManifest = {}, l
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, getAllNewsItems, getImageManifest, toChangelogWireEntry, toNewsWireItem } = await import('@/lib/content');
+  const { getAllChangelogEntries, getAllNewsItems, getImageManifest, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
   const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
@@ -198,7 +198,8 @@ export async function getStaticProps({ locale = 'en' }) {
     : null;
 
   const imageManifest = getImageManifest();
-  const newsItems = getAllNewsItems(locale).map(toNewsWireItem);
+  const sourcesMap = getAllNewsSourcesMap(locale);
+  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
 
   return {
     props: {

@@ -1,23 +1,24 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import * as IoIcons from 'react-icons/io5';
+import { IoCloudDownloadOutline, IoDocumentsOutline, IoOpenOutline } from 'react-icons/io5';
 import { trackFileDownload } from '@/lib/download-tracker';
 
-// Dynamic icon renderer for Ionicons 5
+// Static registry of icons used in content. Add new icons here as needed.
+const ICON_REGISTRY = {
+  IoCloudDownloadOutline,
+  IoDocumentsOutline,
+  IoOpenOutline,
+};
+
+// Icon renderer — looks up from static registry to avoid importing all icons
 const DynamicIcon = ({ iconName, className, ...props }) => {
   if (!iconName) return null;
-  
-  // Ensure the icon name starts with 'Io' for Ionicons 5
   const formattedIconName = iconName.startsWith('Io') ? iconName : `Io${iconName}`;
-  
-  // Get the icon component from the react-icons/io5 package
-  const IconComponent = IoIcons[formattedIconName];
-  
+  const IconComponent = ICON_REGISTRY[formattedIconName];
   if (!IconComponent) {
-    console.warn(`Icon "${formattedIconName}" not found in Ionicons 5`);
+    console.warn(`Icon "${formattedIconName}" not in ButtonEmbed registry. Add it to ICON_REGISTRY in ButtonEmbed.js`);
     return null;
   }
-  
   return <IconComponent className={className} {...props} />;
 };
 
