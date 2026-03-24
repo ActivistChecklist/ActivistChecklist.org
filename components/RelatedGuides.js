@@ -15,11 +15,15 @@ function findGuideBySlug(slug) {
 /**
  * RelatedGuides — <RelatedGuides><RelatedGuide slug="essentials" />...</RelatedGuides>
  */
-const RelatedGuides = ({ children, isBlock = false }) => {
+const RelatedGuides = ({ children, guideSlugs = [], isBlock = false }) => {
+  const slugsFromChildren = React.Children.toArray(children)
+    .filter((child) => child?.props?.slug)
+    .map((child) => child.props.slug);
 
-  const guideItems = React.Children.toArray(children)
-    .filter(child => child?.props?.slug)
-    .map(child => findGuideBySlug(child.props.slug))
+  const slugs = [...guideSlugs, ...slugsFromChildren];
+
+  const guideItems = slugs
+    .map((slug) => findGuideBySlug(slug))
     .filter(Boolean);
 
   if (guideItems.length === 0) {

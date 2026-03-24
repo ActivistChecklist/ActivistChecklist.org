@@ -578,7 +578,7 @@ function convertTable(blok) {
   return md + '\n';
 }
 
-function convertRelatedGuides(blok) {
+function extractRelatedGuideSlugs(blok) {
   const guides = [];
   for (let i = 1; i <= 4; i++) {
     const guide = blok[`guide${i}`];
@@ -591,6 +591,11 @@ function convertRelatedGuides(blok) {
     }
   }
 
+  return guides;
+}
+
+function convertRelatedGuides(blok) {
+  const guides = extractRelatedGuideSlugs(blok);
   if (guides.length === 0) return '';
   const children = guides.map(slug => `  <RelatedGuide slug="${slug}" />`).join('\n');
   return `<RelatedGuides isBlock>\n${children}\n</RelatedGuides>\n`;
@@ -831,6 +836,7 @@ function convertGuideStory(story) {
   const blocks = c.blocks || [];
   let sectionMdx = '';
   let inSection = false;
+  const relatedGuides = [];
 
   // Track how many times we've seen each slug (for secondary guide's duplicate "sim")
   const slugCounts = {};
@@ -881,7 +887,7 @@ function convertGuideStory(story) {
         sectionMdx += '\n</Section>\n\n';
         inSection = false;
       }
-      sectionMdx += convertRelatedGuides(block);
+      relatedGuides.push(...extractRelatedGuideSlugs(block));
     } else {
       sectionMdx += convertBlokToMdx(block);
     }
@@ -900,6 +906,10 @@ function convertGuideStory(story) {
 
   if (sectionMdx) {
     body = body ? body + '\n\n' + sectionMdx.trim() : sectionMdx.trim();
+  }
+
+  if (relatedGuides.length > 0) {
+    frontmatter.relatedGuides = [...new Set(relatedGuides)];
   }
 
   return { frontmatter, body, slug: story.slug, extractedItems };
@@ -924,9 +934,20 @@ function convertPageStory(story) {
 
   // Handle page blocks (like related-guides)
   const blocks = c.blocks || [];
-  const blocksMdx = blocks.map(b => convertBlokToMdx(b)).filter(Boolean).join('\n');
+  const relatedGuides = [];
+  const blocksMdx = blocks.map((b) => {
+    if (b.component === 'related-guides' || b.component === 'related_guides') {
+      relatedGuides.push(...extractRelatedGuideSlugs(b));
+      return '';
+    }
+    return convertBlokToMdx(b);
+  }).filter(Boolean).join('\n');
   if (blocksMdx) {
     body = body ? body + '\n\n' + blocksMdx.trim() : blocksMdx.trim();
+  }
+
+  if (relatedGuides.length > 0) {
+    frontmatter.relatedGuides = [...new Set(relatedGuides)];
   }
 
   return { frontmatter, body, slug: story.slug };

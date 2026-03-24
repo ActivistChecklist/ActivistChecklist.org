@@ -19,7 +19,16 @@ import {
 
 const DEFAULT_DESCRIPTION = "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
 
-export default function Page({ type, slug, frontmatter, serializedBody, checklistItems, ogImagePath, isFallbackContent }) {
+export default function Page({
+  type,
+  slug,
+  frontmatter,
+  serializedBody,
+  serializedRelatedGuides = null,
+  checklistItems,
+  ogImagePath,
+  isFallbackContent,
+}) {
   const baseUrl = getBaseUrl();
   const router = useRouter();
   const locale = router.locale;
@@ -71,6 +80,7 @@ export default function Page({ type, slug, frontmatter, serializedBody, checklis
           <PageMdx
             frontmatter={frontmatter}
             serializedBody={serializedBody}
+            serializedRelatedGuides={serializedRelatedGuides}
           />
         )}
       </Layout>
@@ -149,7 +159,18 @@ export async function getStaticProps({ params, locale = 'en' }) {
   if (page) {
     const { frontmatter, content, isFallback } = page;
 
-    const serializedBody = await serialize(content, mdxOptions);
+    // Render trailing RelatedGuides outside of prose wrapper in PageMdx.
+    // This keeps card layouts from inheriting prose typography styles.
+    const relatedGuidesMatch = content.match(/<RelatedGuides[\s\S]*?<\/RelatedGuides>\s*$/);
+    const relatedGuidesMdx = relatedGuidesMatch ? relatedGuidesMatch[0] : null;
+    const mainContent = relatedGuidesMatch
+      ? content.slice(0, relatedGuidesMatch.index).trimEnd()
+      : content;
+
+    const serializedBody = await serialize(mainContent, mdxOptions);
+    const serializedRelatedGuides = relatedGuidesMdx
+      ? await serialize(relatedGuidesMdx, mdxOptions)
+      : null;
 
     let ogImagePath = null;
     try {
@@ -169,6 +190,7 @@ export async function getStaticProps({ params, locale = 'en' }) {
         slug,
         frontmatter: serializeFrontmatter(frontmatter),
         serializedBody,
+        serializedRelatedGuides,
         checklistItems: {},
         ogImagePath,
         isFallbackContent: isFallback,

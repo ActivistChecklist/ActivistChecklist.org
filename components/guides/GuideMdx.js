@@ -8,6 +8,16 @@ import { ChecklistItemsContext } from '@/contexts/ChecklistItemsContext';
 import { FeedbackCTA } from '@/components/guides/FeedbackCTA';
 import { useLayout } from '@/contexts/LayoutContext';
 import { getGuideIcon } from '@/config/icons';
+import RelatedGuides from '@/components/RelatedGuides';
+
+function parseRelatedGuides(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string') return [];
+  return value
+    .split(',')
+    .map((slug) => slug.trim())
+    .filter(Boolean);
+}
 
 /**
  * Renders a guide page sourced from MDX files.
@@ -28,6 +38,7 @@ export default function GuideMdx({ frontmatter, serializedBody, checklistItems =
   }, []);
 
   const GuideIcon = getGuideIcon(slug);
+  const relatedGuideSlugs = parseRelatedGuides(frontmatter.relatedGuides);
 
   const metaBarItems = [];
 
@@ -80,6 +91,9 @@ export default function GuideMdx({ frontmatter, serializedBody, checklistItems =
       <div className="mx-auto">
         <div className="relative">
           <MDXRemote {...serializedBody} components={mdxComponents} />
+          {relatedGuideSlugs.length > 0 && (
+            <RelatedGuides isBlock guideSlugs={relatedGuideSlugs} />
+          )}
           <FeedbackCTA />
         </div>
       </div>
