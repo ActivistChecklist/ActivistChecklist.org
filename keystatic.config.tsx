@@ -258,10 +258,6 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        // Preserve existing frontmatter `slug:` without showing it in the UI.
-        // This lets us keep your current filenames as implicit slugs while avoiding
-        // repeated schema migrations.
-        slug: fields.ignored(),
         type: fields.select({
           label: 'Type',
           options: [
@@ -341,8 +337,6 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        // Preserve existing frontmatter `slug:` without showing it in the UI.
-        slug: fields.ignored(),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',
