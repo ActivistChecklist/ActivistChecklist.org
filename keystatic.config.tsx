@@ -1,8 +1,18 @@
 // @ts-nocheck
 import { config, collection, fields } from '@keystatic/core';
-import { wrapper, block, inline, repeating } from '@keystatic/core/content-components';
+import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';
+import { Icon } from '@keystar/ui/icon';
+import { boldIcon } from '@keystar/ui/icon/icons/boldIcon';
 import ChecklistItemEditorPreview from '@/components/keystatic/ChecklistItemEditorPreview';
 import AlertEditorPreview from '@/components/keystatic/AlertEditorPreview';
+
+/** MDX editor (toolbar image upload + public URLs). Same layout as `fields.image` for pages/news. */
+const mdxEditorOptionsContent = {
+  image: {
+    directory: 'public/images/content',
+    publicPath: '/images/content/',
+  },
+};
 
 // ─── Shared content components ────────────────────────────────────────────────
 
@@ -219,64 +229,20 @@ const copyButtonComponent = block({
   },
 });
 
-/** Inline highlight (replaces raw &lt;span className&gt; for Keystatic MDX). */
-const toneComponent = inline({
-  label: 'Text tone',
-  description: 'Short highlighted snippet (danger / success)',
+/** Wraps selected text; serializes as &lt;StyledSpan className&gt;…&lt;/StyledSpan&gt; (Keystatic mark). */
+const styledSpanComponent = mark({
+  label: 'Styled text',
+  description: 'Apply Tailwind classes to selected text',
+  icon: <Icon src={boldIcon} />,
+  tag: 'span',
   schema: {
-    tone: fields.select({
-      label: 'Tone',
-      options: [
-        { label: 'Danger', value: 'danger' },
-        { label: 'Success', value: 'success' },
-        { label: 'Default', value: 'default' },
-      ],
-      defaultValue: 'danger',
-    }),
-    text: fields.text({
-      label: 'Text',
-      description: 'Exact characters to show (URL fragment, label, etc.)',
+    className: fields.text({
+      label: 'CSS classes',
+      description: 'Tailwind utilities, e.g. text-error font-bold or !bg-destructive !text-destructive-foreground',
       multiline: true,
     }),
-    code: fields.checkbox({
-      label: 'Show as code',
-      description: 'Monospace & code styling (off for short prose labels)',
-      defaultValue: true,
-    }),
   },
-  ContentView(props) {
-    const tone = props.value.tone || 'danger';
-    const cls =
-      tone === 'danger'
-        ? 'bg-destructive text-destructive-foreground font-bold'
-        : tone === 'success'
-          ? 'text-success'
-          : '';
-    const text = props.value.text || '…';
-    const asCode = props.value.code !== false;
-    if (asCode) {
-      return (
-        <code
-          contentEditable={false}
-          suppressContentEditableWarning
-          className={cls || undefined}
-          style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', borderRadius: 4, padding: '1px 4px' }}
-        >
-          {text}
-        </code>
-      );
-    }
-    return (
-      <span
-        contentEditable={false}
-        suppressContentEditableWarning
-        className={cls || undefined}
-        style={{ fontSize: 13 }}
-      >
-        {text}
-      </span>
-    );
-  },
+  className: ({ value }) => value.className || '',
 });
 
 // Shared set used in most collections
@@ -287,7 +253,7 @@ const contentComponents = {
   ImageEmbed: imageEmbedComponent,
   VideoEmbed: videoEmbedComponent,
   CopyButton: copyButtonComponent,
-  Tone: toneComponent,
+  StyledSpan: styledSpanComponent,
 };
 
 // ─── Badge components (checklist items only) ──────────────────────────────────
@@ -493,7 +459,7 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         estimatedTime: fields.text({ label: 'Estimated Time' }),
-        excerpt: fields.mdx.inline({ label: 'Summary' }),
+        excerpt: fields.mdx.inline({ label: 'Summary', options: mdxEditorOptionsContent }),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',
@@ -505,6 +471,7 @@ export default config({
         lastUpdated: fields.date({ label: 'Last Updated' }),
         body: fields.mdx({
           label: 'Guide Content',
+          options: mdxEditorOptionsContent,
           components: {
             ...contentComponents,
             Section: sectionComponent,
@@ -540,6 +507,7 @@ export default config({
         lastUpdated: fields.date({ label: 'Last Updated' }),
         body: fields.mdx({
           label: 'Body',
+          options: mdxEditorOptionsContent,
           components: {
             ...contentComponents,
             Badge: badgeComponent,
@@ -599,6 +567,7 @@ export default config({
         lastUpdated: fields.date({ label: 'Last Updated' }),
         body: fields.mdx({
           label: 'Body',
+          options: mdxEditorOptionsContent,
           components: contentComponents,
         }),
       },
@@ -627,6 +596,7 @@ export default config({
         lastUpdated: fields.ignored(),
         body: fields.mdx({
           label: 'Comment (optional)',
+          options: mdxEditorOptionsContent,
           components: {},
         }),
       },
@@ -654,6 +624,7 @@ export default config({
         lastUpdated: fields.date({ label: 'Last Updated' }),
         body: fields.mdx({
           label: 'Body',
+          options: mdxEditorOptionsContent,
           components: {},
         }),
       },
