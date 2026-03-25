@@ -1,8 +1,11 @@
 // Format MDX files using the same pipeline as Keystatic.
 //
-// Body:  fromMarkdown → toMarkdown  (same extensions/options as Keystatic's ui.tsx)
-// YAML:  load → dump               (same as Keystatic's updating.tsx)
-// Dates: patched toISOString        (same as Keystatic's date field serialize)
+// YAML:  load → patch dates → add trailing \n to inline fields → dump
+// Body:  fromMarkdown → normalize MDAST → toMarkdown
+//
+// The MDAST normalization replicates ProseMirror behaviours:
+//   - marks (bold/italic/strikethrough) wrapping a link get swapped so link is outermost
+//   - list spread is set to false; list items with [paragraph, list] shape get spread: false
 //
 // Usage:
 //   node scripts/keystatic-format-mdx.mjs <dir-or-file> [--check|--write] [-r]
@@ -54,13 +57,43 @@ const serializeOptions = {
 };
 
 // ── Frontmatter ──────────────────────────────────────────────────────────────
-// Keystatic uses js-yaml load/dump with zero options.
-// Its date field serializer overrides toISOString on Date objects so that
-// dump() outputs bare YYYY-MM-DD instead of full ISO timestamps.
-// See: packages/keystatic/src/form/fields/date/index.tsx
-//      packages/keystatic/src/app/updating.tsx
+// Keystatic: js-yaml dump() with zero options (updating.tsx)
+// Date fields: serialize() overrides toISOString → bare YYYY-MM-DD (date/index.tsx)
+// Inline fields (markdoc.inline): serialize() appends \n → dump uses block scalars
 
 const FRONTMATTER_RE = /^---(?:\r?\n([^]*?))?\r?\n---\r?\n?/;
+
+// markdoc.inline / mdx.inline fields whose serialize adds trailing \n
+const INLINE_FIELDS = new Set(['preview', 'do', 'dont']);
+
+// Schema-ordered field keys + defaults per collection path pattern
+const COLLECTION_SCHEMAS = [
+  {
+    match: '/checklist-items/',
+    order: ['title', 'preview', 'do', 'dont', 'titleBadges', 'firstPublished', 'lastUpdated'],
+    defaults: { titleBadges: [] },
+  },
+  {
+    match: '/guides/',
+    order: ['title', 'estimatedTime', 'summary', 'relatedGuides', 'firstPublished', 'lastUpdated'],
+    defaults: {},
+  },
+  {
+    match: '/pages/',
+    order: ['title', 'relatedGuides', 'firstPublished', 'lastUpdated'],
+    defaults: {},
+  },
+  {
+    match: '/news/',
+    order: ['title', 'date', 'url', 'source', 'tags', 'imageOverride', 'firstPublished', 'lastUpdated'],
+    defaults: {},
+  },
+  {
+    match: '/changelog/',
+    order: ['slug', 'date', 'type', 'firstPublished', 'lastUpdated'],
+    defaults: {},
+  },
+];
 
 function patchDates(value) {
   if (value instanceof Date) {
@@ -82,25 +115,85 @@ function patchDates(value) {
   return value;
 }
 
-function reserializeFrontmatter(raw) {
+function reserializeFrontmatter(raw, filePath) {
   let data = raw.trim() ? load(raw) : {};
-  if (data == null || typeof data !== 'object' || Array.isArray(data)) {
-    data = {};
-  }
+  if (data == null || typeof data !== 'object' || Array.isArray(data)) data = {};
+
   patchDates(data);
+
+  // Inline content fields end with \n in Keystatic (markdoc.inline / mdx.inline serialize)
+  for (const key of INLINE_FIELDS) {
+    if (typeof data[key] === 'string' && !data[key].endsWith('\n')) {
+      data[key] += '\n';
+    }
+  }
+
+  // Add missing schema defaults and reorder keys to match Keystatic's field order
+  const schema = COLLECTION_SCHEMAS.find(s => filePath.includes(s.match));
+  if (schema) {
+    for (const [k, v] of Object.entries(schema.defaults)) {
+      if (!(k in data)) data[k] = v;
+    }
+    const ordered = {};
+    for (const k of schema.order) {
+      if (k in data) ordered[k] = data[k];
+    }
+    for (const k of Object.keys(data)) {
+      if (!(k in ordered)) ordered[k] = data[k];
+    }
+    data = ordered;
+  }
+
   return dump(data);
+}
+
+// ── MDAST normalization (replicates ProseMirror behaviour) ───────────────────
+
+function normalizeTree(node) {
+  if (!node.children) return;
+
+  // Process children first (bottom-up)
+  for (const child of node.children) normalizeTree(child);
+
+  // Marks wrapping a single link → link wrapping the mark
+  // ProseMirror keeps link as outermost: **[text](url)** → [**text**](url)
+  for (let i = 0; i < node.children.length; i++) {
+    const child = node.children[i];
+    if (
+      (child.type === 'strong' || child.type === 'emphasis' || child.type === 'delete') &&
+      child.children.length === 1 &&
+      child.children[0].type === 'link'
+    ) {
+      const link = child.children[0];
+      node.children[i] = { ...link, children: [{ type: child.type, children: link.children }] };
+    }
+  }
+
+  // List spread normalization (prosemirror/editor/mdx/serialize.ts)
+  if (node.type === 'list') {
+    node.spread = false;
+  }
+  if (node.type === 'listItem') {
+    node.spread =
+      node.children.length === 2 &&
+      node.children[0].type === 'paragraph' &&
+      node.children[1].type === 'list'
+        ? false
+        : undefined;
+  }
 }
 
 // ── MDX body ─────────────────────────────────────────────────────────────────
 
 function reserializeBody(body) {
   const ast = fromMarkdown(body, parseOptions);
+  normalizeTree(ast);
   return toMarkdown(ast, serializeOptions);
 }
 
 // ── Per-file ─────────────────────────────────────────────────────────────────
 
-function reserializeFile(text) {
+function formatFile(text, filePath) {
   const match = text.match(FRONTMATTER_RE);
   if (!match) return { changed: false, output: text, reason: 'no frontmatter' };
 
@@ -109,7 +202,7 @@ function reserializeFile(text) {
 
   let fmYaml, newBody;
   try {
-    fmYaml = reserializeFrontmatter(fmRaw);
+    fmYaml = reserializeFrontmatter(fmRaw, filePath);
   } catch (err) {
     return { changed: false, output: text, reason: `yaml error: ${err.message}` };
   }
@@ -172,7 +265,7 @@ async function main() {
   for (const filePath of files) {
     scanned++;
     const text = await fs.readFile(filePath, 'utf8');
-    const res = reserializeFile(text);
+    const res = formatFile(text, filePath);
 
     if (res.reason !== 'changed' && res.reason !== 'ok') {
       skipped++;
