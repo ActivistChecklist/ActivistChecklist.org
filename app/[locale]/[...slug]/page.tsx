@@ -58,6 +58,14 @@ export async function generateMetadata({ params }) {
     : 'Digital Security Checklists for Activists';
   const pageDescription =
     frontmatter?.excerpt || frontmatter?.summary || frontmatter?.description || DEFAULT_DESCRIPTION;
+  const rawPageImage = frontmatter?.image || frontmatter?.imageOverride;
+  const pageImage = rawPageImage
+    ? rawPageImage.startsWith('http://') || rawPageImage.startsWith('https://')
+      ? rawPageImage
+      : rawPageImage.startsWith('/')
+        ? `${baseUrl}${rawPageImage}`
+        : `${baseUrl}/${rawPageImage}`
+    : undefined;
 
   const hrefLangLocales = Object.keys(LOCALES);
   const alternates = {};
@@ -80,11 +88,13 @@ export async function generateMetadata({ params }) {
       url: canonical,
       type: 'article',
       siteName: 'Activist Checklist',
+      images: pageImage ? [pageImage] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
       description: pageDescription,
+      images: pageImage ? [pageImage] : undefined,
     },
   };
 }

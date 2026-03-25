@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { config, collection, fields } from '@keystatic/core';
-import { wrapper, block, repeating } from '@keystatic/core/content-components';
+import { wrapper, block, inline, repeating } from '@keystatic/core/content-components';
 import ChecklistItemEditorPreview from '@/components/keystatic/ChecklistItemEditorPreview';
 import AlertEditorPreview from '@/components/keystatic/AlertEditorPreview';
 
@@ -219,6 +219,66 @@ const copyButtonComponent = block({
   },
 });
 
+/** Inline highlight (replaces raw &lt;span className&gt; for Keystatic MDX). */
+const toneComponent = inline({
+  label: 'Text tone',
+  description: 'Short highlighted snippet (danger / success)',
+  schema: {
+    tone: fields.select({
+      label: 'Tone',
+      options: [
+        { label: 'Danger', value: 'danger' },
+        { label: 'Success', value: 'success' },
+        { label: 'Default', value: 'default' },
+      ],
+      defaultValue: 'danger',
+    }),
+    text: fields.text({
+      label: 'Text',
+      description: 'Exact characters to show (URL fragment, label, etc.)',
+      multiline: true,
+    }),
+    code: fields.checkbox({
+      label: 'Show as code',
+      description: 'Monospace & code styling (off for short prose labels)',
+      defaultValue: true,
+    }),
+  },
+  ContentView(props) {
+    const tone = props.value.tone || 'danger';
+    const cls =
+      tone === 'danger'
+        ? 'bg-destructive text-destructive-foreground font-bold'
+        : tone === 'success'
+          ? 'text-success'
+          : '';
+    const text = props.value.text || '…';
+    const asCode = props.value.code !== false;
+    if (asCode) {
+      return (
+        <code
+          contentEditable={false}
+          suppressContentEditableWarning
+          className={cls || undefined}
+          style={{ fontSize: 13, fontFamily: 'ui-monospace, monospace', borderRadius: 4, padding: '1px 4px' }}
+        >
+          {text}
+        </code>
+      );
+    }
+    return (
+      <span
+        contentEditable={false}
+        suppressContentEditableWarning
+        className={cls || undefined}
+        style={{ fontSize: 13 }}
+      >
+        {text}
+      </span>
+    );
+  },
+});
+
 // Shared set used in most collections
 const contentComponents = {
   Alert: alertComponent,
@@ -227,6 +287,7 @@ const contentComponents = {
   ImageEmbed: imageEmbedComponent,
   VideoEmbed: videoEmbedComponent,
   CopyButton: copyButtonComponent,
+  Tone: toneComponent,
 };
 
 // ─── Badge components (checklist items only) ──────────────────────────────────
@@ -518,9 +579,15 @@ export default config({
       path: 'content/en/pages/*',
       entryLayout: 'content',
       format: { contentField: 'body' },
-      columns: ['lastUpdated'],
+      columns: ['title', 'lastUpdated'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
+        image: fields.image({
+          label: 'Open Graph Image (optional)',
+          description: 'Relative path or full URL for OpenGraph/Twitter image (e.g. /images/content/foo.jpg).',
+          directory: 'public/images/content',
+          publicPath: '/images/content/',
+        }),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',
