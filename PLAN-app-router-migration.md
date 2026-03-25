@@ -6,7 +6,7 @@
 - [x] Phase 1a: Flatten news directory structure
 - [x] Phase 1b: Move RelatedGuides to page frontmatter
 - [x] Phase 2: App Router Migration (this document)
-- [ ] Phase 3: Keystatic Integration
+- [x] Phase 3: Keystatic Integration (keystatic.config.tsx + admin routes added)
 
 ---
 

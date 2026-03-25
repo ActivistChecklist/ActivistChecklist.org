@@ -588,7 +588,11 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 
 ---
 
-### Phase 2: App Router Migration (REQUIRED — Keystatic will not work without this)
+### Phase 2: App Router Migration — **COMPLETE** ✓
+
+**Done**: All pages/ Router files removed, App Router route groups `(en)/` and `es/` added, layouts, pages, API routes migrated. Both `yarn build` and `yarn buildstatic` (Next.js phase) pass.
+
+### Phase 2 (original): App Router Migration (REQUIRED — Keystatic will not work without this)
 
 **Keystatic requires App Router.** It uses App Router API route handlers (`app/api/keystatic/[...params]/route.ts`) and the `app/keystatic/[[...params]]/page.tsx` catch-all route for its admin UI. These cannot be implemented in Pages Router. This is the largest phase and a hard blocker for Phase 3. The actual implementation details belong in a dedicated `PLAN-app-router-migration.md`.
 
@@ -661,7 +665,13 @@ Use Next.js's incremental adoption:
 
 ---
 
-### Phase 3: Keystatic Integration
+### Phase 3: Keystatic Integration — **COMPLETE (initial setup)** ✓
+
+**Done**: `keystatic.config.tsx` created with 5 collections (checklistItems, guides, pages, news, changelog). Admin UI at `/keystatic` (dev/editing only). API route handler at `/api/keystatic/[...params]`. Static export compatibility handled.
+
+**Next steps**: Test admin UI in dev mode (`yarn dev` → `/keystatic`), configure GitHub App for editing deployment, test content editing workflow.
+
+### Phase 3 (original): Keystatic Integration
 
 **Prerequisite**: Phase 0 build learnings incorporated (this doc); Phase 1 content refactoring done; Phase 2 App Router migration complete; Phase 3 kickoff should include the **editor UX checklist** under Phase 0 (nesting, relationships, GitHub Mode) if not already done on the integrated app.
 
