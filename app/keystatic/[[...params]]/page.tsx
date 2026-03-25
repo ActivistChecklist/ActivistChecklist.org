@@ -1,19 +1,9 @@
-'use client';
+import PageClient from './PageClient';
 
-import { useEffect } from 'react';
-import { makePage } from '@keystatic/next/ui/app';
-import keystaticConfig from '../../../keystatic.config';
-
-const KeystaticPage = makePage(keystaticConfig);
+export const metadata = {
+  title: 'Keystatic | Activist Checklist',
+};
 
 export default function Page() {
-  // trailingSlash: true adds a trailing slash that breaks Keystatic's internal router.
-  // Strip it on mount so Keystatic sees the correct path.
-  useEffect(() => {
-    if (window.location.pathname !== '/keystatic/' && window.location.pathname.endsWith('/')) {
-      window.history.replaceState(null, '', window.location.pathname.slice(0, -1) + window.location.search);
-    }
-  }, []);
-
-  return <KeystaticPage />;
+  return <PageClient />;
 }

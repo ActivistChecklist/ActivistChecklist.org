@@ -543,7 +543,7 @@ export default config({
       slugField: 'title',
       path: 'content/en/news/*',
       format: { contentField: 'body' },
-      columns: ['source', 'date'],
+      columns: ['title', 'date'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         date: fields.date({ label: 'Date', validation: { isRequired: true } }),
@@ -552,7 +552,7 @@ export default config({
         tags: fields.text({ label: 'Tags', description: 'Comma-separated (e.g. ice, surveillance, phones)' }),
         imageOverride: fields.image({
           label: 'Image Override',
-          description: 'Overrides the auto-fetched OG image',
+          description: 'Overrides the auto-fetched open graph image',
           directory: 'public/images/news',
           publicPath: '/images/news/',
         }),
