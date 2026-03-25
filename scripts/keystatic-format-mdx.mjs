@@ -1,11 +1,11 @@
-// Resave MDX files using the same pipeline as Keystatic.
+// Format MDX files using the same pipeline as Keystatic.
 //
 // Body:  fromMarkdown → toMarkdown  (same extensions/options as Keystatic's ui.tsx)
 // YAML:  load → dump               (same as Keystatic's updating.tsx)
 // Dates: patched toISOString        (same as Keystatic's date field serialize)
 //
 // Usage:
-//   node scripts/keystatic-resave-mdx-v2.mjs <dir-or-file> [--check|--write] [-r]
+//   node scripts/keystatic-format-mdx.mjs <dir-or-file> [--check|--write] [-r]
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -143,7 +143,7 @@ function parseArgs(argv) {
     else if (a === '--write') args.write = true;
     else if (!a.startsWith('-') && !args.target) args.target = a;
   }
-  if (!args.target) die('Usage: node keystatic-resave-mdx-v2.mjs <path> --check|--write [-r]');
+  if (!args.target) die('Usage: node keystatic-format-mdx.mjs <path> --check|--write [-r]');
   if (args.check === args.write) die('Pick exactly one of --check or --write');
   return args;
 }
