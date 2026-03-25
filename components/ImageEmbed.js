@@ -60,7 +60,7 @@ export const ImageEmbed = ({
   );
 
   const wrappedImage = link ? (
-    <Link href={typeof link === 'string' ? link : link?.url || link?.cached_url || '#'} className="block">
+    <Link href={typeof link === 'string' ? link : '#'} className="block">
       {imageElement}
     </Link>
   ) : imageElement;

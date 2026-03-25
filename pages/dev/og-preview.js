@@ -1,8 +1,7 @@
-import { getStoryblokVersion, fetchAllStories } from "../../utils/core";
-import { getStoryblokApi } from "@storyblok/react";
 import Head from "next/head";
+import { getAllGuides, getAllPages } from "@/lib/content";
 
-export default function OgPreview({ stories = [], isDev }) {
+export default function OgPreview({ ogTargets = [], isDev }) {
   if (!isDev) {
     return (
       <>
@@ -27,14 +26,14 @@ export default function OgPreview({ stories = [], isDev }) {
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 300px)', gap: '24px' }}>
-        {stories.map((story) => {
-          const title = story.content?.title || story.name;
-          const type = story.content?.component || 'page';
-          const slug = story.full_slug || '';
+        {ogTargets.map((target) => {
+          const title = target.title;
+          const type = target.pageType || 'page';
+          const slug = target.slug || '';
           const imgSrc = `/api/og-image?title=${encodeURIComponent(title)}&type=${encodeURIComponent(type)}&slug=${encodeURIComponent(slug)}`;
 
           return (
-            <div key={story.uuid} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', background: '#fafafa' }}>
+            <div key={slug} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', background: '#fafafa' }}>
               <img
                 src={imgSrc}
                 alt={`OG image for: ${title}`}
@@ -57,7 +56,7 @@ export default function OgPreview({ stories = [], isDev }) {
                   }}>
                     {type}
                   </span>
-                  <span style={{ marginLeft: '8px', color: '#aaa' }}>/{story.full_slug}</span>
+                  <span style={{ marginLeft: '8px', color: '#aaa' }}>/{slug}</span>
                 </div>
               </div>
             </div>
@@ -69,43 +68,37 @@ export default function OgPreview({ stories = [], isDev }) {
 }
 
 export async function getStaticProps({ locale = 'en' }) {
-  // Exclude this route from non-development builds entirely.
   if (process.env.NODE_ENV !== 'development') {
     return { notFound: true };
   }
 
   const messages = (await import(`../../messages/${locale}.json`)).default;
 
-  try {
-    const storyblokApi = getStoryblokApi();
-
-    const allStories = await fetchAllStories(storyblokApi, {
-      version: getStoryblokVersion(),
-      excluding_fields: 'body,blocks'
-    });
-
-    const stories = allStories
-      .filter(story => {
-        if (story.is_folder) return false;
-        const component = story.content?.component;
-        return component === 'page' || component === 'guide';
-      })
-      .map(story => ({
-        uuid: story.uuid,
-        name: story.name,
-        full_slug: story.full_slug,
-        content: {
-          title: story.content?.title || null,
-          component: story.content?.component || null,
-        }
-      }));
-
+  const guides = getAllGuides('en').map((g) => {
+    const slug = g.frontmatter.slug || g.slug;
+    const title = g.frontmatter.title;
     return {
-      props: { stories, isDev: true, messages },
+      slug,
+      title,
+      pageType: 'guide',
     };
-  } catch (error) {
+  });
+
+  const pages = getAllPages('en').map((p) => {
+    const slug = p.frontmatter.slug || p.slug;
+    const title = p.frontmatter.title;
     return {
-      props: { stories: [], isDev: false, messages },
+      slug,
+      title,
+      pageType: 'page',
     };
-  }
+  });
+
+  const ogTargets = [...guides, ...pages].sort((a, b) =>
+    a.slug.localeCompare(b.slug)
+  );
+
+  return {
+    props: { ogTargets, isDev: true, messages },
+  };
 }

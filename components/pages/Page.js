@@ -6,6 +6,7 @@ import { mdxComponents } from '@/lib/mdx-components';
 import { useLayout } from '@/contexts/LayoutContext';
 import { MetaBar, getDateMetaItem } from '@/components/ui/meta-bar';
 import RelatedGuides from '@/components/RelatedGuides';
+import { LOCALES } from "@/lib/i18n-config";
 
 function parseRelatedGuides(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -26,7 +27,7 @@ function parseRelatedGuides(value) {
 export default function Page({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
   const t = useTranslations();
   const router = useRouter();
-  const dateLocale = router.locale === 'es' ? 'es-MX' : 'en-US';
+  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
   const { setSidebarType } = useLayout();
 
   useEffect(() => {

@@ -16,6 +16,7 @@ import {
   extractChecklistItems,
   serializeFrontmatter,
 } from '@/lib/content';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
 const DEFAULT_DESCRIPTION = "Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.";
 
@@ -31,8 +32,9 @@ export default function SlugPage({
 }) {
   const baseUrl = getBaseUrl();
   const router = useRouter();
-  const locale = router.locale;
-  const defaultLocale = router.defaultLocale;
+  const defaultLocale = router.defaultLocale || DEFAULT_LOCALE || 'en';
+  const locale = router.locale || defaultLocale;
+  const hrefLangLocales = router.locales ?? Object.keys(LOCALES);
   const localePrefix = locale !== defaultLocale ? `${locale}/` : '';
   const canonicalUrl = `${baseUrl}/${localePrefix}${slug}`;
 
@@ -61,9 +63,11 @@ export default function SlugPage({
         <meta name="twitter:description" content={pageDescription} key="twitter:description" />
         <meta name="twitter:image" content={pageImage} key="twitter:image" />
 
-        <link rel="alternate" hreflang="en" href={`${baseUrl}/${slug}`} key="hreflang-en" />
-        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/${slug}`} key="hreflang-es" />
-        <link rel="alternate" hreflang="x-default" href={`${baseUrl}/${slug}`} key="hreflang-default" />
+        {/* Hreflang alternate links */}
+        {hrefLangLocales.map((loc) => (
+          <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/${slug}` : `${baseUrl}/${loc}/${slug}`} key={`hreflang-${loc}`} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/${slug}`} key="hreflang-default" />
       </Head>
 
       <Layout sidebarType={type === 'guide' ? 'toc' : 'navigation'}>
@@ -125,11 +129,11 @@ export async function getStaticProps({ params, locale = 'en' }) {
     // OG image
     let ogImagePath = null;
     try {
-      const { generateOgImageForStory } = require('@/lib/og-image');
-      ogImagePath = await generateOgImageForStory({
-        content: { title: frontmatter.title, component: 'guide' },
-        full_slug: slug,
-        name: frontmatter.title,
+      const { generateOgImageForRoute } = require('@/lib/og-image');
+      ogImagePath = await generateOgImageForRoute({
+        title: frontmatter.title,
+        pageType: 'guide',
+        slug,
       });
     } catch (err) {
       console.warn(`OG image skipped for guide "${slug}":`, err.message);
@@ -174,11 +178,11 @@ export async function getStaticProps({ params, locale = 'en' }) {
 
     let ogImagePath = null;
     try {
-      const { generateOgImageForStory } = require('@/lib/og-image');
-      ogImagePath = await generateOgImageForStory({
-        content: { title: frontmatter.title, component: 'page' },
-        full_slug: slug,
-        name: frontmatter.title,
+      const { generateOgImageForRoute } = require('@/lib/og-image');
+      ogImagePath = await generateOgImageForRoute({
+        title: frontmatter.title,
+        pageType: 'page',
+        slug,
       });
     } catch (err) {
       console.warn(`OG image skipped for page "${slug}":`, err.message);

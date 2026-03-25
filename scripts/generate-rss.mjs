@@ -2,6 +2,7 @@ import { Feed } from 'feed';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { applyPaywallBypassHref } from '../lib/paywall-bypass-url.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -82,19 +83,20 @@ async function generateNewsRSS() {
   for (const item of items) {
     const fm = item.frontmatter;
     const date = new Date(fm.date);
-    const articleUrl = fm.url || `${SITE_URL}/news#${item.slug}`;
+    const canonicalArticleUrl = fm.url || `${SITE_URL}/news#${item.slug}`;
+    const rssArticleUrl = applyPaywallBypassHref(canonicalArticleUrl);
     const source = fm.source || null;
 
     const tags = fm.tags ? String(fm.tags).split(',').map((t) => t.trim()).filter(Boolean) : [];
     let description = '';
     if (tags.length > 0) description += `<strong>Tags:</strong> ${tags.join(', ')}`;
-    description += `<br><br><a href="${articleUrl}">View the article here →</a>`;
+    description += `<br><br><a href="${rssArticleUrl}">View the article here →</a>`;
     if (item.content.trim()) description += `<br><br>${item.content.trim()}`;
 
     feed.addItem({
       title: fm.title || 'News Item',
-      id: articleUrl,
-      link: articleUrl,
+      id: canonicalArticleUrl,
+      link: rssArticleUrl,
       description,
       content: description,
       author: [{ name: source || 'Activist Checklist', email: 'contact@activistchecklist.org', link: SITE_URL }],

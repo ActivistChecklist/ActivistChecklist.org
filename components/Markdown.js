@@ -4,19 +4,23 @@ import remarkGfm from 'remark-gfm'
 import remarkHtml from 'remark-html'
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { applyPaywallBypassHref } from '@/lib/paywall-bypass-url'
 
 function remarkExternalLinksPlugin() {
   return function (tree) {
     const visit = (node) => {
-      if (node.type === 'link') {
+      if (node.type === 'link' || node.type === 'definition') {
         const isExternal = node.url.startsWith('http') || node.url.startsWith('//')
 
         if (isExternal) {
-          node.data = node.data || {}
-          node.data.hProperties = {
-            ...node.data.hProperties,
-            target: '_blank',
-            rel: 'noopener noreferrer'
+          node.url = applyPaywallBypassHref(node.url)
+          if (node.type === 'link') {
+            node.data = node.data || {}
+            node.data.hProperties = {
+              ...node.data.hProperties,
+              target: '_blank',
+              rel: 'noopener noreferrer'
+            }
           }
         }
       }

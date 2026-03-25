@@ -13,10 +13,11 @@
  * Output: public/images/news/{slug}.jpg  (720px wide, metadata-stripped JPEG)
  *
  * Usage:
- *   node scripts/fetch-news-images.js           # process only missing images
- *   node scripts/fetch-news-images.js --force   # re-download all images
- *   node scripts/fetch-news-images.js --test    # process first missing image only
- *   node scripts/fetch-news-images.js --quiet   # suppress non-error output
+ *   node scripts/fetch-news-images.js              # process only missing images
+ *   node scripts/fetch-news-images.js --force      # re-download all images
+ *   node scripts/fetch-news-images.js --test       # process first missing image only
+ *   node scripts/fetch-news-images.js --quiet      # suppress non-error output
+ *   node scripts/fetch-news-images.js --slug=SLUG  # process one item by filename slug
  */
 
 const fs = require('fs');
@@ -256,11 +257,20 @@ function log(message, quietMode = false) {
 
 // ─── Main ─────────────────────────────────────────────────────
 
+function parseSlugArg(args) {
+  const eq = args.find((a) => a.startsWith('--slug='));
+  if (eq) return eq.slice('--slug='.length);
+  const idx = args.indexOf('--slug');
+  if (idx >= 0 && args[idx + 1]) return args[idx + 1];
+  return null;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const testMode = args.includes('--test') || args.includes('-t');
   const forceMode = args.includes('--force') || args.includes('-f');
   const quietMode = args.includes('--quiet') || args.includes('-q');
+  const slugOnly = parseSlugArg(args);
 
   process.on('SIGINT', () => { log('🛑 Interrupted, exiting...', quietMode); process.exit(0); });
 
@@ -270,8 +280,17 @@ async function main() {
   }
 
   log('🔍 Loading news items from MDX files...', quietMode);
-  const items = loadNewsItems();
-  log(`📰 Found ${items.length} news items`, quietMode);
+  let items = loadNewsItems();
+  if (slugOnly) {
+    items = items.filter((i) => i.slug === slugOnly);
+    if (items.length === 0) {
+      console.error(`❌ No news item with slug "${slugOnly}" (expected an MDX under content/en/news/).`);
+      process.exit(1);
+    }
+    log(`📰 Single-slug mode: ${slugOnly}`, quietMode);
+  } else {
+    log(`📰 Found ${items.length} news items`, quietMode);
+  }
 
   if (forceMode) log('🔄 Force mode — will re-process all images', quietMode);
 
@@ -361,4 +380,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main };
+module.exports = { main, loadNewsItems };

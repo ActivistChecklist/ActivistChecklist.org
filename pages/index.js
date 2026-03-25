@@ -11,10 +11,10 @@ import { ROUTES } from '../config/routes'
 import { SECURITY_CHECKLISTS } from '../config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
-import NewsBlock from '@/components/NewsBlock';
-import { RichText } from '@/components/RichText';
+import NewsBlock, { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
 import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
 const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
 
@@ -41,21 +41,24 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = null }) => {
+const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorBodyText = null }) => {
   const t = useTranslations();
   const router = useRouter();
   const baseUrl = getBaseUrl();
-  const locale = router.locale;
-  const defaultLocale = router.defaultLocale;
+  // Static export disables next.config i18n; router.locale/defaultLocale are often missing — never interpolate raw undefined into URLs.
+  const defaultLocale = router.defaultLocale || DEFAULT_LOCALE || 'en';
+  const locale = router.locale || defaultLocale;
+  const hrefLangLocales = router.locales ?? Object.keys(LOCALES);
 
   return (
     <div>
       <Head>
         <title>{t('site.title')}</title>
         <link rel="canonical" href={locale === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${locale}/`} key="canonical" />
-        <link rel="alternate" hreflang="en" href={`${baseUrl}/`} key="hreflang-en" />
-        <link rel="alternate" hreflang="es" href={`${baseUrl}/es/`} key="hreflang-es" />
-        <link rel="alternate" hreflang="x-default" href={`${baseUrl}/`} key="hreflang-default" />
+        {hrefLangLocales.map((loc) => (
+          <link rel="alternate" hrefLang={loc} href={loc === defaultLocale ? `${baseUrl}/` : `${baseUrl}/${loc}/`} key={`hrefLang-${loc}`} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/`} key="hrefLang-default" />
       </Head>
       <Layout sidebarType={null} searchable={false} fullWidthMain={true}>
         <div className="max-w-6xl mx-auto px-4 py-8 -my-6 container">
@@ -92,12 +95,10 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
                     </Link>
                   </Button>
                 </div>
-                {latestMajorUpdate && (
+                {latestMajorBodyText && (
                   <div className="mt-8 text-muted-foreground">
                     <Sparkles className="h-4 w-4 inline mr-1" />
-                    {latestMajorUpdate.body
-                      ? <RichText document={latestMajorUpdate.body} noWrapper={true} />
-                      : <Markdown content={latestMajorUpdate.bodyText} isProse={false} inlineOnly={true} />}
+                    <Markdown content={latestMajorBodyText} isProse={false} inlineOnly={true} />
                   </div>
                 )}
               </div>
@@ -186,25 +187,22 @@ const HomePage = ({ changelogEntries = [], newsItems = [], latestMajorUpdate = n
 };
 
 export async function getStaticProps({ locale = 'en' }) {
-  const { getAllChangelogEntries, getAllNewsItems, toChangelogWireEntry, toNewsWireItem, getAllNewsSourcesMap } = await import('@/lib/content');
+  const { getAllChangelogEntries, getAllNewsItems, toChangelogListEntry, toNewsListItem } = await import('@/lib/content');
   const messages = (await import(`../messages/${locale}.json`)).default;
 
-  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogWireEntry);
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogListEntry);
 
   // Latest major update for hero section
-  const latestMajor = changelogEntries.find((e) => e.content.type === 'major');
-  const latestMajorUpdate = latestMajor
-    ? { body: null, bodyText: latestMajor.content.bodyText }
-    : null;
+  const latestMajor = changelogEntries.find((e) => e.type === 'major');
+  const latestMajorBodyText = latestMajor?.bodyText ?? null;
 
-  const sourcesMap = getAllNewsSourcesMap(locale);
-  const newsItems = getAllNewsItems(locale).map(item => toNewsWireItem(item, sourcesMap));
+  const newsItems = getAllNewsItems(locale).map((item) => toNewsListItem(item));
 
   return {
     props: {
       changelogEntries: changelogEntries.slice(0, 5),
-      newsItems,
-      latestMajorUpdate,
+      newsItems: newsItems.slice(0, NEWS_BLOCK_DEFAULT_LIMIT),
+      latestMajorBodyText,
       messages,
     },
   };
