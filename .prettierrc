@@ -1,0 +1,16 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "semi": true,
+  "overrides": [
+    {
+      "files": "*.mdx",
+      "options": {
+        "tabWidth": 2,
+        "useTabs": false,
+        "proseWrap": "never"
+      }
+    }
+  ]
+}

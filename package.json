@@ -14,6 +14,8 @@
     "ssl-check": "bash scripts/check-ssl.sh",
     "rss": "node scripts/generate-rss.mjs",
     "index": "NODE_ENV=${NODE_ENV} bash scripts/build-search-index.sh",
+    "keystatic:resave-mdx": "node scripts/keystatic-resave-mdx.mjs",
+    "keystatic:resave-ui": "node scripts/keystatic-resave-ui.mjs",
     "buildstatic": "BUILD_MODE=static yarn build && yarn checkbuild && yarn check-links",
     "checkbuild": "node scripts/check-build.mjs",
     "serve": "npx serve out",
@@ -96,6 +98,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "add": "^2.0.6",

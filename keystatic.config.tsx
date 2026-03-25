@@ -255,6 +255,7 @@ export default config({
       label: 'Checklist Items',
       slugField: 'title',
       path: 'content/en/checklist-items/*',
+      entryLayout: 'content',
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
@@ -290,6 +291,7 @@ export default config({
       label: 'Guides',
       slugField: 'title',
       path: 'content/en/guides/*',
+      entryLayout: 'content',
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
@@ -323,6 +325,7 @@ export default config({
       label: 'Pages',
       slugField: 'title',
       path: 'content/en/pages/*',
+      entryLayout: 'content',
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
