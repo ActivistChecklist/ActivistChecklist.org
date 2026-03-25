@@ -1,8 +1,9 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { MDXRemote } from 'next-mdx-remote';
 import { Clock, Calendar } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/router';
+import { useTranslations, useLocale } from 'next-intl';
 import { mdxComponents } from '@/lib/mdx-components';
 import { ChecklistItemsContext } from '@/contexts/ChecklistItemsContext';
 import { FeedbackCTA } from '@/components/guides/FeedbackCTA';
@@ -27,11 +28,13 @@ function parseRelatedGuides(value) {
  *   - frontmatter: title, lastUpdated, estimatedTime
  *   - serializedBody: next-mdx-remote compiled MDX (contains <Section> + <ChecklistItem> tags)
  *   - checklistItems: { [slug]: { frontmatter, serializedBody } } map for ChecklistItemsContext
+ *   - locale: BCP 47 locale string for date formatting (provided by parent Server Component)
  */
-export default function Guide({ frontmatter, serializedBody, checklistItems = {}, slug }) {
+export default function Guide({ frontmatter, serializedBody, checklistItems = {}, slug, locale }) {
   const t = useTranslations();
-  const router = useRouter();
-  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
+  // Prefer locale from NextIntlClientProvider (set by the locale layout), fall back to prop
+  const intlLocale = useLocale() || locale || 'en';
+  const dateLocale = LOCALES[intlLocale]?.intlLocale || 'en-US';
   const { setSidebarType } = useLayout();
 
   useEffect(() => {
@@ -65,7 +68,7 @@ export default function Guide({ frontmatter, serializedBody, checklistItems = {}
 
   return (
     <ChecklistItemsContext.Provider value={checklistItems}>
-      {/* Header — matches Guide.js styling */}
+      {/* Header */}
       <div className="relative bg-gradient-to-r from-primary/15 via-primary/10 to-transparent rounded-lg px-6 py-6 mb-6 overflow-hidden print:bg-transparent print:p-0 print:mb-2">
         <div className="absolute top-1.5 bottom-1.5 right-3 aspect-square flex items-center justify-center pointer-events-none print:hidden">
           <GuideIcon className="h-5/6 w-5/6 text-primary/[0.15]" />

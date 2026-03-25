@@ -43,6 +43,8 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/rate-limit": "^10.3.0",
     "@hookform/resolvers": "^5.2.2",
+    "@keystatic/core": "^0.5.49",
+    "@keystatic/next": "^5.0.4",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
