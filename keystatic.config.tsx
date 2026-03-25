@@ -4,6 +4,8 @@ import { wrapper, block } from '@keystatic/core/content-components';
 
 // ─── Shared content components ────────────────────────────────────────────────
 
+const alertColors = { warning: '#f59e0b', info: '#3b82f6', success: '#22c55e', error: '#ef4444' };
+
 const alertComponent = wrapper({
   label: 'Alert',
   description: 'Warning, info, or success callout box',
@@ -19,6 +21,15 @@ const alertComponent = wrapper({
       defaultValue: 'warning',
     }),
     title: fields.text({ label: 'Title' }),
+  },
+  ContentView(props) {
+    const color = alertColors[props.value.type] || '#888';
+    return (
+      <div style={{ borderLeft: `3px solid ${color}`, paddingLeft: 12 }}>
+        {props.value.title && <div style={{ fontWeight: 600, color }}>{props.value.title}</div>}
+        {props.children}
+      </div>
+    );
   },
 });
 
@@ -75,6 +86,14 @@ const buttonComponent = block({
     }),
     download: fields.checkbox({ label: 'Download link?', defaultValue: false }),
   },
+  ContentView(props) {
+    return (
+      <div style={{ display: 'inline-block', padding: '4px 12px', background: '#e2e8f0', borderRadius: 6, fontSize: 13 }}>
+        {props.value.title || 'Button'}
+        {props.value.url && <span style={{ color: '#64748b', marginLeft: 6 }}>→ {props.value.url}</span>}
+      </div>
+    );
+  },
 });
 
 const howToComponent = wrapper({
@@ -82,6 +101,16 @@ const howToComponent = wrapper({
   description: 'Step-by-step instructions (can contain Alerts and Buttons)',
   schema: {
     title: fields.text({ label: 'Title', validation: { isRequired: true } }),
+  },
+  ContentView(props) {
+    return (
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>
+          {props.value.title || 'How To'}
+        </div>
+        {props.children}
+      </div>
+    );
   },
 });
 
@@ -112,6 +141,18 @@ const imageEmbedComponent = wrapper({
       defaultValue: 'left',
     }),
   },
+  ContentView(props) {
+    return (
+      <div>
+        <div style={{ fontSize: 12, color: '#64748b' }}>
+          {props.value.src || 'No image path'}
+          {props.value.alt && <span> — {props.value.alt}</span>}
+          <span> ({props.value.size})</span>
+        </div>
+        {props.children}
+      </div>
+    );
+  },
 });
 
 const videoEmbedComponent = wrapper({
@@ -120,6 +161,16 @@ const videoEmbedComponent = wrapper({
   schema: {
     src: fields.text({ label: 'Video path', validation: { isRequired: true } }),
   },
+  ContentView(props) {
+    return (
+      <div>
+        <div style={{ fontSize: 12, color: '#64748b' }}>
+          🎬 {props.value.src || 'No video path'}
+        </div>
+        {props.children}
+      </div>
+    );
+  },
 });
 
 const copyButtonComponent = block({
@@ -127,6 +178,13 @@ const copyButtonComponent = block({
   description: 'Text with a copy-to-clipboard button',
   schema: {
     text: fields.text({ label: 'Text to copy' }),
+  },
+  ContentView(props) {
+    return (
+      <div style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '4px 8px', borderRadius: 4 }}>
+        {props.value.text || 'Empty'}
+      </div>
+    );
   },
 });
 
@@ -148,6 +206,14 @@ const badgeComponent = block({
     variant: fields.text({ label: 'Variant' }),
     children: fields.text({ label: 'Text' }),
   },
+  ContentView(props) {
+    return (
+      <span style={{ display: 'inline-block', padding: '2px 8px', background: '#e2e8f0', borderRadius: 10, fontSize: 12 }}>
+        {props.value.children || 'Badge'}
+        {props.value.variant && <span style={{ color: '#64748b' }}> ({props.value.variant})</span>}
+      </span>
+    );
+  },
 });
 
 const protectionBadgeComponent = block({
@@ -162,6 +228,18 @@ const protectionBadgeComponent = block({
       defaultValue: 'basic',
     }),
   },
+  ContentView(props) {
+    const isEnhanced = props.value.type === 'enhanced';
+    return (
+      <span style={{
+        display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 12,
+        background: isEnhanced ? '#dbeafe' : '#f0fdf4',
+        color: isEnhanced ? '#1d4ed8' : '#15803d',
+      }}>
+        {isEnhanced ? '🛡️ Enhanced' : '🔒 Basic'} Protection
+      </span>
+    );
+  },
 });
 
 // ─── Guide-specific components ────────────────────────────────────────────────
@@ -172,6 +250,17 @@ const sectionComponent = wrapper({
   schema: {
     title: fields.text({ label: 'Section Title', validation: { isRequired: true } }),
     slug: fields.text({ label: 'Section Slug (used for URL anchors)', validation: { isRequired: true } }),
+  },
+  ContentView(props) {
+    return (
+      <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: 8, marginTop: 12 }}>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>
+          {props.value.title || 'Untitled Section'}
+          {props.value.slug && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>#{props.value.slug}</span>}
+        </div>
+        {props.children}
+      </div>
+    );
   },
 });
 
@@ -186,7 +275,16 @@ const checklistItemComponent = block({
       collection: 'checklistItems',
     }),
   },
+  ContentView(props) {
+    return (
+      <div style={{ padding: '4px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }}>
+        ☑️ {props.value.slug || <span style={{ color: '#94a3b8' }}>Select a checklist item…</span>}
+      </div>
+    );
+  },
 });
+
+const riskLevelLabels = { everyone: '🟢 Everyone', medium: '🟡 Medium Risk', high: '🔴 High Risk' };
 
 const riskLevelComponent = wrapper({
   label: 'Risk Level',
@@ -212,6 +310,16 @@ const riskLevelComponent = wrapper({
       defaultValue: 'default',
     }),
   },
+  ContentView(props) {
+    return (
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+          {riskLevelLabels[props.value.level] || props.value.level}
+        </div>
+        {props.children}
+      </div>
+    );
+  },
 });
 
 const relatedGuidesComponent = wrapper({
@@ -228,6 +336,13 @@ const relatedGuideComponent = block({
       label: 'Guide',
       collection: 'guides',
     }),
+  },
+  ContentView(props) {
+    return (
+      <div style={{ padding: '4px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }}>
+        📖 {props.value.slug || <span style={{ color: '#94a3b8' }}>Select a guide…</span>}
+      </div>
+    );
   },
 });
 
@@ -257,6 +372,7 @@ export default config({
       path: 'content/en/checklist-items/*',
       entryLayout: 'content',
       format: { contentField: 'body' },
+      columns: ['titleBadges', 'lastUpdated'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         preview: fields.markdoc.inline({ label: 'Preview text', multiline: true }),
@@ -280,6 +396,16 @@ export default config({
               schema: {
                 storageKey: fields.text({ label: 'Storage key (for localStorage)' }),
               },
+              ContentView(props) {
+                return (
+                  <div>
+                    {props.value.storageKey && (
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>key: {props.value.storageKey}</div>
+                    )}
+                    {props.children}
+                  </div>
+                );
+              },
             }),
           },
         }),
@@ -293,6 +419,7 @@ export default config({
       path: 'content/en/guides/*',
       entryLayout: 'content',
       format: { contentField: 'body' },
+      columns: ['lastUpdated'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         estimatedTime: fields.text({ label: 'Estimated Time' }),
@@ -327,6 +454,7 @@ export default config({
       path: 'content/en/pages/*',
       entryLayout: 'content',
       format: { contentField: 'body' },
+      columns: ['lastUpdated'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         relatedGuides: fields.array(
@@ -351,15 +479,21 @@ export default config({
       slugField: 'title',
       path: 'content/en/news/*',
       format: { contentField: 'body' },
+      columns: ['source', 'date'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         date: fields.date({ label: 'Date', validation: { isRequired: true } }),
         url: fields.url({ label: 'Article URL' }),
         source: fields.text({ label: 'Source Publication' }),
-        tags: fields.array(fields.text({ label: 'Tag' }), { label: 'Tags' }),
-        imageOverride: fields.text({ label: 'Image Override Path' }),
-        firstPublished: fields.date({ label: 'First Published' }),
-        lastUpdated: fields.date({ label: 'Last Updated' }),
+        tags: fields.text({ label: 'Tags', description: 'Comma-separated (e.g. ice, surveillance, phones)' }),
+        imageOverride: fields.image({
+          label: 'Image Override',
+          description: 'Overrides the auto-fetched OG image',
+          directory: 'public/images/news',
+          publicPath: '/images/news/',
+        }),
+        firstPublished: fields.ignore(),
+        lastUpdated: fields.ignore(),
         body: fields.mdx({
           label: 'Comment (optional)',
           components: {},
@@ -373,6 +507,7 @@ export default config({
       slugField: 'slug',
       path: 'content/en/changelog/*',
       format: { contentField: 'body' },
+      columns: ['type', 'date'],
       schema: {
         slug: fields.slug({ name: { label: 'Slug' } }),
         date: fields.date({ label: 'Date', validation: { isRequired: true } }),

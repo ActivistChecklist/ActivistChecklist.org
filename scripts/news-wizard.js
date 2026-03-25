@@ -144,7 +144,7 @@ async function fetchOg(url) {
 
 function formatTagsForFrontmatter(tags) {
   if (!tags.length) return null;
-  return tags;
+  return tags.join(', ');
 }
 
 /**
