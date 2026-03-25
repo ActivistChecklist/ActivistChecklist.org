@@ -91,7 +91,7 @@ const COLLECTION_SCHEMAS = [
   },
   {
     match: '/changelog/',
-    order: ['slug', 'date', 'type', 'firstPublished', 'lastUpdated'],
+    order: ['slug', 'date', 'type'],
     defaults: {},
   },
 ];

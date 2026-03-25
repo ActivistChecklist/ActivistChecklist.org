@@ -620,8 +620,6 @@ export default config({
           ],
           defaultValue: 'minor',
         }),
-        firstPublished: fields.date({ label: 'First Published' }),
-        lastUpdated: fields.date({ label: 'Last Updated' }),
         body: fields.mdx({
           label: 'Body',
           options: mdxEditorOptionsContent,

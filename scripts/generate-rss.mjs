@@ -43,7 +43,7 @@ async function generateChangelogRSS() {
 
   for (const entry of entries) {
     const slug = entry.slug;
-    const date = new Date(entry.frontmatter.firstPublished || entry.frontmatter.date);
+    const date = new Date(entry.frontmatter.date);
     feed.addItem({
       title: slug,
       id: `${SITE_URL}/changelog#${slug}`,
