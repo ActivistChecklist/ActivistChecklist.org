@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { setRequestLocale } from 'next-intl/server';
 import Layout from '@/components/layout/Layout';
 import { getAllGuides } from '@/lib/content';
 import { SECURITY_CHECKLISTS, NAV_ITEMS } from '@/config/navigation';
@@ -24,8 +25,11 @@ function buildSlugToNavItem() {
 // Get the top 8 slugs for categorization
 const TOP_8_SLUGS = SECURITY_CHECKLISTS.items.map(item => item.href.replace(/^\//, ''));
 
-export default async function ChecklistsPage() {
-  const allGuides = getAllGuides('en');
+export default async function ChecklistsPage({ params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const allGuides = getAllGuides(locale);
   const guides = allGuides.map((guide) => ({
     slug: guide.frontmatter.slug || guide.slug,
     content: { slug: guide.frontmatter.slug || guide.slug },

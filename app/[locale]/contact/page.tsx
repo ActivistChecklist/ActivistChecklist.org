@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { setRequestLocale } from 'next-intl/server';
 import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { IoLogoGithub, IoKeyOutline } from "react-icons/io5";
@@ -9,7 +10,10 @@ export const metadata = {
   title: 'Contact Us | Activist Checklist',
 };
 
-export default function ContactPage() {
+export default async function ContactPage({ params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <Layout>
       <div>

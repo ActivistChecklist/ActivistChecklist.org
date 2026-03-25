@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { notFound } from 'next/navigation';
+import { setRequestLocale } from 'next-intl/server';
 import { serialize } from 'next-mdx-remote/serialize';
 import Layout from '@/components/layout/Layout';
 import Guide from '@/components/guides/Guide';
@@ -18,30 +19,37 @@ import {
 import { getBaseUrl } from '@/lib/utils';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
-const LOCALE = 'es';
-
 const DEFAULT_DESCRIPTION =
   'Plain language steps for digital security, because protecting yourself helps keep your whole community safer. Built by activists, for activists with field-tested, community-verified guides.';
 
 export async function generateStaticParams() {
-  // getAllGuides('es') uses English fallback, so returns all guide slugs
-  const guides = getAllGuides(LOCALE);
-  const pages = getAllPages(LOCALE);
-  return [
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...guides.map((g: any) => ({ slug: [g.frontmatter.slug || g.slug] })),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...pages.map((p: any) => ({ slug: [p.frontmatter.slug || p.slug] })),
-  ];
+  // Return slugs for all locales — the parent [locale] layout handles the locale segment
+  const allParams = [];
+  for (const loc of Object.keys(LOCALES)) {
+    const guides = getAllGuides(loc);
+    const pages = getAllPages(loc);
+    allParams.push(
+      ...guides.map((g) => ({ slug: [g.frontmatter.slug || g.slug] })),
+      ...pages.map((p) => ({ slug: [p.frontmatter.slug || p.slug] })),
+    );
+  }
+  // Deduplicate by slug
+  const seen = new Set();
+  return allParams.filter((p) => {
+    const key = p.slug.join('/');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function generateMetadata({ params }) {
-  const { slug: slugParts } = await params;
+  const { locale, slug: slugParts } = await params;
   const slug = slugParts?.join('/') || '';
   const baseUrl = getBaseUrl();
 
-  const guide = getGuide(slug, LOCALE);
-  const content = guide || getPage(slug, LOCALE);
+  const guide = getGuide(slug, locale);
+  const content = guide || getPage(slug, locale);
   if (!content) return {};
 
   const { frontmatter } = content;
@@ -56,17 +64,19 @@ export async function generateMetadata({ params }) {
     alternates[loc] = loc === DEFAULT_LOCALE ? `${baseUrl}/${slug}/` : `${baseUrl}/${loc}/${slug}/`;
   });
 
+  const canonical = locale === DEFAULT_LOCALE ? `${baseUrl}/${slug}/` : `${baseUrl}/${locale}/${slug}/`;
+
   return {
     title: pageTitle,
     description: pageDescription,
     alternates: {
-      canonical: `${baseUrl}/${LOCALE}/${slug}/`,
+      canonical,
       languages: alternates,
     },
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: `${baseUrl}/${LOCALE}/${slug}/`,
+      url: canonical,
       type: 'article',
       siteName: 'Activist Checklist',
     },
@@ -78,22 +88,24 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function SpanishSlugPage({ params }) {
-  const { slug: slugParts } = await params;
+export default async function SlugPage({ params }) {
+  const { locale, slug: slugParts } = await params;
+  setRequestLocale(locale);
   const slug = slugParts?.join('/') || '';
 
   // ── Try guide ──────────────────────────────────────────────
-  const guide = getGuide(slug, LOCALE);
+  const guide = getGuide(slug, locale);
   if (guide) {
     const { frontmatter, content, isFallback } = guide;
 
     const serializedBody = await serialize(content, mdxOptions);
 
+    // Resolve all referenced checklist items
     const itemSlugs = extractChecklistItems(content);
     const checklistItems = {};
     await Promise.all(
       itemSlugs.map(async (itemSlug) => {
-        const item = getChecklistItem(itemSlug, LOCALE);
+        const item = getChecklistItem(itemSlug, locale);
         if (item) {
           try {
             const serializedItemBody = await serialize(item.content, mdxOptions);
@@ -110,6 +122,15 @@ export default async function SpanishSlugPage({ params }) {
       })
     );
 
+    // Generate OG image at build time
+    let ogImagePath = null;
+    try {
+      const { generateOgImageForRoute } = await import('@/lib/og-image');
+      ogImagePath = await generateOgImageForRoute({ title: frontmatter.title, pageType: 'guide', slug });
+    } catch (err) {
+      console.warn(`OG image skipped for guide "${slug}":`, err.message);
+    }
+
     return (
       <Layout sidebarType="toc">
         {isFallback && <TranslationFallbackBanner />}
@@ -118,18 +139,26 @@ export default async function SpanishSlugPage({ params }) {
           serializedBody={serializedBody}
           checklistItems={checklistItems}
           slug={slug}
-          locale={LOCALE}
+          locale={locale}
         />
       </Layout>
     );
   }
 
   // ── Try page ───────────────────────────────────────────────
-  const page = getPage(slug, LOCALE);
+  const page = getPage(slug, locale);
   if (page) {
     const { frontmatter, content, isFallback } = page;
 
     const serializedBody = await serialize(content, mdxOptions);
+
+    // Generate OG image at build time
+    try {
+      const { generateOgImageForRoute } = await import('@/lib/og-image');
+      await generateOgImageForRoute({ title: frontmatter.title, pageType: 'page', slug });
+    } catch (err) {
+      console.warn(`OG image skipped for page "${slug}":`, err.message);
+    }
 
     return (
       <Layout sidebarType="navigation">
@@ -137,7 +166,7 @@ export default async function SpanishSlugPage({ params }) {
         <ContentPage
           frontmatter={serializeFrontmatter(frontmatter)}
           serializedBody={serializedBody}
-          locale={LOCALE}
+          locale={locale}
         />
       </Layout>
     );

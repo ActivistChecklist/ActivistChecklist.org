@@ -1,11 +1,14 @@
-'use client';
-import Link from 'next/link';
+// @ts-nocheck
+import NotFoundContent from '@/components/pages/NotFoundContent';
 
-export default function NotFound() {
+export default async function NotFound() {
+  const messages = (await import('@/messages/en.json')).default;
+
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>404 - Page Not Found</h1>
-      <p><Link href="/">Return Home</Link></p>
-    </div>
+    <html lang="en">
+      <body className="min-h-screen bg-background font-body antialiased">
+        <NotFoundContent messages={messages} />
+      </body>
+    </html>
   );
 }

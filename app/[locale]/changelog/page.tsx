@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { setRequestLocale } from 'next-intl/server';
 import { getAllChangelogEntries, toChangelogListEntry } from '@/lib/content';
 import Layout from '@/components/layout/Layout';
 import ChangeLogEntry from '@/components/ChangeLogEntry';
@@ -71,8 +72,11 @@ function TimelineSection({ title, entries, isFirst = false }) {
   );
 }
 
-export default async function ChangelogPage() {
-  const changelogEntries = getAllChangelogEntries('en').map(toChangelogListEntry);
+export default async function ChangelogPage({ params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const changelogEntries = getAllChangelogEntries(locale).map(toChangelogListEntry);
   const grouped = groupEntriesByTime(changelogEntries);
   const sortedYears = Object.keys(grouped.previousYears)
     .map(year => parseInt(year))

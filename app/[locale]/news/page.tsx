@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { setRequestLocale } from 'next-intl/server';
 import { getAllNewsItems, toNewsListItem } from '@/lib/content';
 import Layout from '@/components/layout/Layout';
 import NewsItem from '@/components/NewsItem';
@@ -45,8 +46,11 @@ function YearSection({ year, items }) {
   );
 }
 
-export default async function NewsPage() {
-  const newsItems = getAllNewsItems('en').map((item) => toNewsListItem(item));
+export default async function NewsPage({ params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const newsItems = getAllNewsItems(locale).map((item) => toNewsListItem(item));
   const grouped = groupNewsByYear(newsItems);
   const sortedYears = Object.keys(grouped)
     .map(year => parseInt(year))
@@ -67,6 +71,7 @@ export default async function NewsPage() {
               href="/rss/news.xml"
               variant="outline"
               size="sm"
+              className="self-end sm:self-center"
             />
           </div>
         </header>
