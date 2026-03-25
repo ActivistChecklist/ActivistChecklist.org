@@ -32,8 +32,8 @@ if (process.env.BUILD_MODE === 'static') {
   baseConfig.images.loaderFile = './utils/imageLoader.js';
 }
 
-// i18n is handled by App Router route structure ((en)/ and es/ route groups),
-// not by next.config.js i18n block (which is Pages Router only).
+// i18n is handled by App Router [locale] dynamic segment + next-intl.
+// Static export generates /en/ and /es/ directories; .htaccess rewrites bare URLs to /en/.
 
 const nextConfig = process.env.NODE_ENV === 'development'
   ? {

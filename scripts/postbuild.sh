@@ -12,6 +12,10 @@ yarn index
 # Static build tasks
 if [ "$BUILD_MODE" = "static" ]; then
   cp public/.htaccess out/.htaccess
+
+  # Copy English content to root so bare URLs (e.g. /about/) work on any static server.
+  # Spanish stays at /es/. The .htaccess rewrite is a fallback for Apache.
+  cp -a out/en/* out/
 fi
 
 # Clean up .DS_Store files from output
