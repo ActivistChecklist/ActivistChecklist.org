@@ -205,6 +205,7 @@ const riskLevelComponent = wrapper({
       label: 'Mode',
       options: [
         { label: 'Default', value: 'default' },
+        { label: 'Single Line', value: 'single_line' },
         { label: 'For You', value: 'for_you' },
         { label: 'For You If', value: 'for_you_if' },
       ],
@@ -257,7 +258,10 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        slug: fields.text({ label: 'Legacy Slug (keep in sync with filename)' }),
+        // Preserve existing frontmatter `slug:` without showing it in the UI.
+        // This lets us keep your current filenames as implicit slugs while avoiding
+        // repeated schema migrations.
+        slug: fields.ignored(),
         type: fields.select({
           label: 'Type',
           options: [
@@ -337,7 +341,8 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        slug: fields.text({ label: 'Legacy Slug (keep in sync with filename)' }),
+        // Preserve existing frontmatter `slug:` without showing it in the UI.
+        slug: fields.ignored(),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',
