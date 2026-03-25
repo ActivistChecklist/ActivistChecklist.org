@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { config, collection, fields } from '@keystatic/core';
 import { wrapper, block } from '@keystatic/core/content-components';
+import ChecklistItemEditorPreview from '@/components/keystatic/ChecklistItemEditorPreview';
 
 // ─── Shared content components ────────────────────────────────────────────────
 
@@ -266,39 +267,6 @@ const badgeComponent = block({
   },
 });
 
-const protectionBadgeComponent = block({
-  label: 'Protection Badge',
-  schema: {
-    type: fields.select({
-      label: 'Type',
-      options: [
-        { label: 'Basic', value: 'basic' },
-        { label: 'Enhanced', value: 'enhanced' },
-      ],
-      defaultValue: 'basic',
-    }),
-  },
-  ContentView(props) {
-    const isEnhanced = props.value.type === 'enhanced';
-    return (
-      <span
-        contentEditable={false}
-        suppressContentEditableWarning
-        style={{
-          display: 'inline-block',
-          padding: '2px 8px',
-          borderRadius: 10,
-          fontSize: 12,
-          background: isEnhanced ? '#dbeafe' : '#f0fdf4',
-          color: isEnhanced ? '#1d4ed8' : '#15803d',
-        }}
-      >
-        {isEnhanced ? '🛡️ Enhanced' : '🔒 Basic'} Protection
-      </span>
-    );
-  },
-});
-
 // ─── Guide-specific components ────────────────────────────────────────────────
 
 const sectionComponent = wrapper({
@@ -310,11 +278,11 @@ const sectionComponent = wrapper({
   },
   ContentView(props) {
     return (
-      <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: 8, marginTop: 12 }}>
+      <div style={{ marginTop: 12 }}>
         <div
           contentEditable={false}
           suppressContentEditableWarning
-          style={{ fontWeight: 700, fontSize: 16 }}
+          style={{ fontWeight: 800, fontSize: 18 }}
         >
           {props.value.title || 'Untitled Section'}
           {props.value.slug && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>#{props.value.slug}</span>}
@@ -342,14 +310,15 @@ const checklistItemComponent = block({
         contentEditable={false}
         suppressContentEditableWarning
         style={{
-          padding: '4px 10px',
-          background: '#f8fafc',
+          maxHeight: 560,
+          overflow: 'auto',
           border: '1px solid #e2e8f0',
-          borderRadius: 6,
-          fontSize: 13,
+          borderRadius: 8,
+          padding: 8,
+          background: '#fff',
         }}
       >
-        ☑️ {props.value.slug || <span style={{ color: '#94a3b8' }}>Select a checklist item…</span>}
+        <ChecklistItemEditorPreview slug={props.value.slug} />
       </div>
     );
   },
@@ -450,6 +419,42 @@ export default config({
   },
 
   collections: {
+    // ── Guides ──────────────────────────────────────────────────────────────
+    guides: collection({
+      label: 'Guides',
+      slugField: 'title',
+      path: 'content/en/guides/*',
+      entryLayout: 'content',
+      format: { contentField: 'body' },
+      columns: ['title', 'lastUpdated'],
+      schema: {
+        title: fields.slug({ name: { label: 'Title' } }),
+        estimatedTime: fields.text({ label: 'Estimated Time' }),
+        summary: fields.text({ label: 'Summary', multiline: true }),
+        relatedGuides: fields.array(
+          fields.relationship({
+            label: 'Related Guide',
+            collection: 'guides',
+          }),
+          { label: 'Related Guides', itemLabel: (props) => props.value || 'Select guide...' }
+        ),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        body: fields.mdx({
+          label: 'Guide Content',
+          components: {
+            ...contentComponents,
+            Section: sectionComponent,
+            ChecklistItem: checklistItemComponent,
+            RiskLevel: riskLevelComponent,
+            RelatedGuides: relatedGuidesComponent,
+            RelatedGuide: relatedGuideComponent,
+          },
+        }),
+      },
+    }),
+
+
     // ── Checklist Items ─────────────────────────────────────────────────────
     checklistItems: collection({
       label: 'Checklist Items',
@@ -457,7 +462,7 @@ export default config({
       path: 'content/en/checklist-items/*',
       entryLayout: 'content',
       format: { contentField: 'body' },
-      columns: ['titleBadges', 'lastUpdated'],
+      columns: ['title'],
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         preview: fields.markdoc.inline({ label: 'Preview text', multiline: true }),
@@ -474,7 +479,6 @@ export default config({
           components: {
             ...contentComponents,
             Badge: badgeComponent,
-            ProtectionBadge: protectionBadgeComponent,
             InlineChecklist: wrapper({
               label: 'Inline Checklist',
               description: 'Converts bullet list into interactive checklist',
@@ -503,40 +507,6 @@ export default config({
       },
     }),
 
-    // ── Guides ──────────────────────────────────────────────────────────────
-    guides: collection({
-      label: 'Guides',
-      slugField: 'title',
-      path: 'content/en/guides/*',
-      entryLayout: 'content',
-      format: { contentField: 'body' },
-      columns: ['lastUpdated'],
-      schema: {
-        title: fields.slug({ name: { label: 'Title' } }),
-        estimatedTime: fields.text({ label: 'Estimated Time' }),
-        summary: fields.text({ label: 'Summary', multiline: true }),
-        relatedGuides: fields.array(
-          fields.relationship({
-            label: 'Related Guide',
-            collection: 'guides',
-          }),
-          { label: 'Related Guides', itemLabel: (props) => props.value || 'Select guide...' }
-        ),
-        firstPublished: fields.date({ label: 'First Published' }),
-        lastUpdated: fields.date({ label: 'Last Updated' }),
-        body: fields.mdx({
-          label: 'Guide Content',
-          components: {
-            ...contentComponents,
-            Section: sectionComponent,
-            ChecklistItem: checklistItemComponent,
-            RiskLevel: riskLevelComponent,
-            RelatedGuides: relatedGuidesComponent,
-            RelatedGuide: relatedGuideComponent,
-          },
-        }),
-      },
-    }),
 
     // ── Pages ───────────────────────────────────────────────────────────────
     pages: collection({
