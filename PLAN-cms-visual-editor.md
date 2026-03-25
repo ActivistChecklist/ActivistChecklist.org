@@ -523,6 +523,14 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 
 #### Phase 1a: Flatten news directory structure
 
+**Status: done** (feature branch — `git mv` all English news files to flat layout; no basename collisions; `content/es/news/` had no MDX).
+
+- [x] Move all `content/en/news/*/*.mdx` → `content/en/news/*.mdx` (preserve history with `git mv`)
+- [x] `lib/content.js`: `getAllNewsItems` uses `readCollection('news', locale)` only; `getNewsItem` uses `readMdxFileWithFallback('news/${slug}.mdx')`
+- [x] Remove `listMdxFilesRecursive` and `readCollection` `recursive` option
+- [x] `scripts/news-wizard.js` writes new items to `content/en/news/{slug}.mdx` (no year subfolders)
+- [x] Vitest: `__tests__/content-news.test.js` smoke-tests flat news loading
+
 **Change**: Move `content/en/news/2024/*.mdx`, `content/en/news/2025/*.mdx`, etc. → `content/en/news/*.mdx`
 
 **Files to modify**:
@@ -536,6 +544,11 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 - **Spanish translations**: Also flatten `content/es/news/` if it exists.
 
 #### Phase 1b: Move RelatedGuides to page frontmatter
+
+**Status: done** — No page MDX contained `<RelatedGuides>`; `links.mdx` already used `relatedGuides` in frontmatter. Code path now uses frontmatter only.
+
+- [x] `pages/[...slug].js`: removed trailing `RelatedGuides` regex split; full page body serialized once
+- [x] `components/pages/Page.js`: removed `serializedRelatedGuides` / second `MDXRemote`; `RelatedGuides` from `frontmatter.relatedGuides` only
 
 **Change**: Pages currently embed `<RelatedGuides><RelatedGuide slug="..." /></RelatedGuides>` in MDX body. Move to frontmatter `relatedGuides: [slug1, slug2]` (same format guides already use).
 
@@ -1335,6 +1348,17 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 5. **News tag normalization**: During Phase 1a, need to audit and normalize all news item tags from comma-separated strings to YAML arrays.
 
+---
+
+## Maintainer review queue (from implementation pass)
+
+Please confirm or answer when convenient:
+
+1. **Phase 2 scope**: App Router migration is intentionally **not started** in this pass (large, needs `PLAN-app-router-migration.md` per this doc). OK to proceed route-by-route next?
+2. **News tags**: Plan still calls for auditing comma-separated `tags:` vs YAML arrays in news frontmatter — optional follow-up PR?
+3. **Related guides on pages**: Only `links.mdx` had `relatedGuides` in frontmatter. Confirm no other English pages should show related guide cards (previously none used body MDX for this).
+4. **Keystatic Phase 0 UX checks**: Nesting (`HowTo` → `Alert`), relationship dropdown, GitHub Mode — still outstanding until Phase 3 (see Phase 0 section).
+
 ## Resolved Questions
 
 - **~~MDX format compatibility~~**: Confirmed — Keystatic's `fields.mdx()` reads and writes standard JSX tags (`<Component>`) to `.mdx` files. The `{% %}` syntax is only for `fields.markdoc()` which we don't use. **Our migration plan's MDX format works with Keystatic as-is. No changes needed.**
@@ -1347,4 +1371,4 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 - **~~GitHub App vs OAuth App~~**: GitHub App is required by Keystatic for fine-grained permissions, repo-scoped access, and short-lived tokens. OAuth Apps grant too-broad access.
 
-- **~~Keystatic + static export~~**: Known issue with documented workaround. Admin routes return `notFound()` when `showAdminUI` flag is false. Static export skips them.
+- **~~Keystatic + static export~~**: Static export cannot include `app/api` Route Handlers; `notFound()` on `/keystatic` is not sufficient (see Phase 0). Production static build must omit API routes for that build; editing deployment uses non-export `next build`.

@@ -24,7 +24,7 @@ function parseRelatedGuides(value) {
  *   - frontmatter: title, lastUpdated (date)
  *   - serializedBody: next-mdx-remote compiled MDX
  */
-export default function Page({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
+export default function Page({ frontmatter, serializedBody }) {
   const t = useTranslations();
   const router = useRouter();
   const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
@@ -48,9 +48,6 @@ export default function Page({ frontmatter, serializedBody, serializedRelatedGui
       </div>
       {relatedGuideSlugs.length > 0 && (
         <RelatedGuides isBlock guideSlugs={relatedGuideSlugs} />
-      )}
-      {serializedRelatedGuides && (
-        <MDXRemote {...serializedRelatedGuides} components={mdxComponents} />
       )}
     </>
   );

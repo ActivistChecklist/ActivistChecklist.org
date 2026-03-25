@@ -25,7 +25,6 @@ export default function SlugPage({
   slug,
   frontmatter,
   serializedBody,
-  serializedRelatedGuides = null,
   checklistItems,
   ogImagePath,
   isFallbackContent,
@@ -84,7 +83,6 @@ export default function SlugPage({
           <ContentPage
             frontmatter={frontmatter}
             serializedBody={serializedBody}
-            serializedRelatedGuides={serializedRelatedGuides}
           />
         )}
       </Layout>
@@ -163,18 +161,7 @@ export async function getStaticProps({ params, locale = 'en' }) {
   if (page) {
     const { frontmatter, content, isFallback } = page;
 
-    // Render trailing RelatedGuides outside of prose wrapper in Page.
-    // This keeps card layouts from inheriting prose typography styles.
-    const relatedGuidesMatch = content.match(/<RelatedGuides[\s\S]*?<\/RelatedGuides>\s*$/);
-    const relatedGuidesMdx = relatedGuidesMatch ? relatedGuidesMatch[0] : null;
-    const mainContent = relatedGuidesMatch
-      ? content.slice(0, relatedGuidesMatch.index).trimEnd()
-      : content;
-
-    const serializedBody = await serialize(mainContent, mdxOptions);
-    const serializedRelatedGuides = relatedGuidesMdx
-      ? await serialize(relatedGuidesMdx, mdxOptions)
-      : null;
+    const serializedBody = await serialize(content, mdxOptions);
 
     let ogImagePath = null;
     try {
@@ -194,7 +181,6 @@ export async function getStaticProps({ params, locale = 'en' }) {
         slug,
         frontmatter: serializeFrontmatter(frontmatter),
         serializedBody,
-        serializedRelatedGuides,
         checklistItems: {},
         ogImagePath,
         isFallbackContent: isFallback,
