@@ -1,11 +1,10 @@
 // @ts-nocheck
 import { config, collection, fields } from '@keystatic/core';
-import { wrapper, block } from '@keystatic/core/content-components';
+import { wrapper, block, repeating } from '@keystatic/core/content-components';
 import ChecklistItemEditorPreview from '@/components/keystatic/ChecklistItemEditorPreview';
+import AlertEditorPreview from '@/components/keystatic/AlertEditorPreview';
 
 // ─── Shared content components ────────────────────────────────────────────────
-
-const alertColors = { warning: '#f59e0b', info: '#3b82f6', success: '#22c55e', error: '#ef4444' };
 
 const alertComponent = wrapper({
   label: 'Alert',
@@ -14,6 +13,7 @@ const alertComponent = wrapper({
     type: fields.select({
       label: 'Type',
       options: [
+        { label: 'Default', value: 'default' },
         { label: 'Warning', value: 'warning' },
         { label: 'Info', value: 'info' },
         { label: 'Success', value: 'success' },
@@ -24,20 +24,10 @@ const alertComponent = wrapper({
     title: fields.text({ label: 'Title' }),
   },
   ContentView(props) {
-    const color = alertColors[props.value.type] || '#888';
     return (
-      <div style={{ borderLeft: `3px solid ${color}`, paddingLeft: 12 }}>
-        {props.value.title && (
-          <div
-            contentEditable={false}
-            suppressContentEditableWarning
-            style={{ fontWeight: 600, color }}
-          >
-            {props.value.title}
-          </div>
-        )}
+      <AlertEditorPreview type={props.value.type} title={props.value.title}>
         {props.children}
-      </div>
+      </AlertEditorPreview>
     );
   },
 });
@@ -324,6 +314,18 @@ const checklistItemComponent = block({
   },
 });
 
+/**
+ * Keystatic `repeating` group: editor UI to add/remove `<ChecklistItem />` siblings.
+ * @see https://keystatic.com/docs/content-components#repeating
+ */
+const checklistItemGroupComponent = repeating({
+  label: 'Checklist item list',
+  description:
+    'List of checklist items. Select this block and use Insert in the bar to add another item.',
+  children: ['ChecklistItem'],
+  schema: {},
+});
+
 const riskLevelLabels = { everyone: '🟢 Everyone', medium: '🟡 Medium Risk', high: '🔴 High Risk' };
 
 const riskLevelComponent = wrapper({
@@ -446,6 +448,7 @@ export default config({
             ...contentComponents,
             Section: sectionComponent,
             ChecklistItem: checklistItemComponent,
+            ChecklistItemGroup: checklistItemGroupComponent,
             RiskLevel: riskLevelComponent,
             RelatedGuides: relatedGuidesComponent,
             RelatedGuide: relatedGuideComponent,

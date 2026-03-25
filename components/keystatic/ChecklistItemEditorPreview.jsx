@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import ChecklistItemComponent from '@/components/guides/ChecklistItem';
+import KeystaticOpenEntryLink, {
+  KEYSTATIC_OPEN_ENTRY_PRESET,
+} from '@/components/keystatic/KeystaticOpenEntryLink';
+import { KEYSTATIC_COLLECTION_CHECKLIST_ITEMS } from '@/lib/keystatic-admin-urls';
+import { useKeystaticCollectionItemEditHref } from '@/hooks/use-keystatic-collection-item-edit-href';
 import { checklistItemBodyComponents } from '@/lib/mdx-components';
 import { SectionContext } from '@/contexts/SectionContext';
 
@@ -24,6 +29,7 @@ function normalizeSlug(value) {
 export default function ChecklistItemEditorPreview({ slug: slugProp }) {
   const slug = normalizeSlug(slugProp);
   const [state, setState] = useState({ status: 'idle', data: null, error: null });
+  const editHref = useKeystaticCollectionItemEditHref(KEYSTATIC_COLLECTION_CHECKLIST_ITEMS, slug);
 
   useEffect(() => {
     if (!slug) {
@@ -43,7 +49,16 @@ export default function ChecklistItemEditorPreview({ slug: slugProp }) {
         return json;
       })
       .then((data) => {
-        if (!cancelled) setState({ status: 'ready', data, error: null });
+        if (cancelled) return;
+        if (data && typeof data === 'object' && data.serializedBody != null) {
+          setState({ status: 'ready', data, error: null });
+        } else {
+          setState({
+            status: 'error',
+            data: null,
+            error: 'Invalid preview response',
+          });
+        }
       })
       .catch((err) => {
         if (!cancelled) setState({ status: 'error', data: null, error: err.message || String(err) });
@@ -72,12 +87,22 @@ export default function ChecklistItemEditorPreview({ slug: slugProp }) {
     );
   }
 
-  const fm = state.data.frontmatter;
+  // Ready but no payload (e.g. race while Keystatic saves, or non-JSON 200)
+  if (!state.data) {
+    return (
+      <span style={{ color: '#64748b', fontSize: 12 }}>Loading preview…</span>
+    );
+  }
+
+  const fm = state.data.frontmatter ?? {};
   const serializedBody = state.data.serializedBody;
 
   return (
     <SectionContext.Provider value={sectionContextValue}>
       <div className="keystatic-checklist-preview text-[13px] leading-snug [&_.prose]:max-w-none">
+        <div className="mb-1 flex justify-end">
+          <KeystaticOpenEntryLink href={editHref} preset={KEYSTATIC_OPEN_ENTRY_PRESET.checklistItem} />
+        </div>
         <ChecklistItemComponent
           slug={slug}
           title={fm.title}
