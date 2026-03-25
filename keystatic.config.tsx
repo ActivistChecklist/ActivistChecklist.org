@@ -26,7 +26,15 @@ const alertComponent = wrapper({
     const color = alertColors[props.value.type] || '#888';
     return (
       <div style={{ borderLeft: `3px solid ${color}`, paddingLeft: 12 }}>
-        {props.value.title && <div style={{ fontWeight: 600, color }}>{props.value.title}</div>}
+        {props.value.title && (
+          <div
+            contentEditable={false}
+            suppressContentEditableWarning
+            style={{ fontWeight: 600, color }}
+          >
+            {props.value.title}
+          </div>
+        )}
         {props.children}
       </div>
     );
@@ -88,7 +96,17 @@ const buttonComponent = block({
   },
   ContentView(props) {
     return (
-      <div style={{ display: 'inline-block', padding: '4px 12px', background: '#e2e8f0', borderRadius: 6, fontSize: 13 }}>
+      <div
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          display: 'inline-block',
+          padding: '4px 12px',
+          background: '#e2e8f0',
+          borderRadius: 6,
+          fontSize: 13,
+        }}
+      >
         {props.value.title || 'Button'}
         {props.value.url && <span style={{ color: '#64748b', marginLeft: 6 }}>→ {props.value.url}</span>}
       </div>
@@ -105,7 +123,11 @@ const howToComponent = wrapper({
   ContentView(props) {
     return (
       <div>
-        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>
+        <div
+          contentEditable={false}
+          suppressContentEditableWarning
+          style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}
+        >
           {props.value.title || 'How To'}
         </div>
         {props.children}
@@ -144,7 +166,11 @@ const imageEmbedComponent = wrapper({
   ContentView(props) {
     return (
       <div>
-        <div style={{ fontSize: 12, color: '#64748b' }}>
+        <div
+          contentEditable={false}
+          suppressContentEditableWarning
+          style={{ fontSize: 12, color: '#64748b' }}
+        >
           {props.value.src || 'No image path'}
           {props.value.alt && <span> — {props.value.alt}</span>}
           <span> ({props.value.size})</span>
@@ -164,7 +190,11 @@ const videoEmbedComponent = wrapper({
   ContentView(props) {
     return (
       <div>
-        <div style={{ fontSize: 12, color: '#64748b' }}>
+        <div
+          contentEditable={false}
+          suppressContentEditableWarning
+          style={{ fontSize: 12, color: '#64748b' }}
+        >
           🎬 {props.value.src || 'No video path'}
         </div>
         {props.children}
@@ -181,7 +211,17 @@ const copyButtonComponent = block({
   },
   ContentView(props) {
     return (
-      <div style={{ fontFamily: 'monospace', fontSize: 12, background: '#f1f5f9', padding: '4px 8px', borderRadius: 4 }}>
+      <div
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          fontFamily: 'monospace',
+          fontSize: 12,
+          background: '#f1f5f9',
+          padding: '4px 8px',
+          borderRadius: 4,
+        }}
+      >
         {props.value.text || 'Empty'}
       </div>
     );
@@ -208,7 +248,17 @@ const badgeComponent = block({
   },
   ContentView(props) {
     return (
-      <span style={{ display: 'inline-block', padding: '2px 8px', background: '#e2e8f0', borderRadius: 10, fontSize: 12 }}>
+      <span
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          display: 'inline-block',
+          padding: '2px 8px',
+          background: '#e2e8f0',
+          borderRadius: 10,
+          fontSize: 12,
+        }}
+      >
         {props.value.children || 'Badge'}
         {props.value.variant && <span style={{ color: '#64748b' }}> ({props.value.variant})</span>}
       </span>
@@ -231,11 +281,18 @@ const protectionBadgeComponent = block({
   ContentView(props) {
     const isEnhanced = props.value.type === 'enhanced';
     return (
-      <span style={{
-        display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 12,
-        background: isEnhanced ? '#dbeafe' : '#f0fdf4',
-        color: isEnhanced ? '#1d4ed8' : '#15803d',
-      }}>
+      <span
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          display: 'inline-block',
+          padding: '2px 8px',
+          borderRadius: 10,
+          fontSize: 12,
+          background: isEnhanced ? '#dbeafe' : '#f0fdf4',
+          color: isEnhanced ? '#1d4ed8' : '#15803d',
+        }}
+      >
         {isEnhanced ? '🛡️ Enhanced' : '🔒 Basic'} Protection
       </span>
     );
@@ -254,7 +311,11 @@ const sectionComponent = wrapper({
   ContentView(props) {
     return (
       <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: 8, marginTop: 12 }}>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>
+        <div
+          contentEditable={false}
+          suppressContentEditableWarning
+          style={{ fontWeight: 700, fontSize: 16 }}
+        >
           {props.value.title || 'Untitled Section'}
           {props.value.slug && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>#{props.value.slug}</span>}
         </div>
@@ -277,7 +338,17 @@ const checklistItemComponent = block({
   },
   ContentView(props) {
     return (
-      <div style={{ padding: '4px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }}>
+      <div
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          padding: '4px 10px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 6,
+          fontSize: 13,
+        }}
+      >
         ☑️ {props.value.slug || <span style={{ color: '#94a3b8' }}>Select a checklist item…</span>}
       </div>
     );
@@ -313,7 +384,11 @@ const riskLevelComponent = wrapper({
   ContentView(props) {
     return (
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+        <div
+          contentEditable={false}
+          suppressContentEditableWarning
+          style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}
+        >
           {riskLevelLabels[props.value.level] || props.value.level}
         </div>
         {props.children}
@@ -339,7 +414,17 @@ const relatedGuideComponent = block({
   },
   ContentView(props) {
     return (
-      <div style={{ padding: '4px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 13 }}>
+      <div
+        contentEditable={false}
+        suppressContentEditableWarning
+        style={{
+          padding: '4px 10px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 6,
+          fontSize: 13,
+        }}
+      >
         📖 {props.value.slug || <span style={{ color: '#94a3b8' }}>Select a guide…</span>}
       </div>
     );
@@ -400,7 +485,13 @@ export default config({
                 return (
                   <div>
                     {props.value.storageKey && (
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>key: {props.value.storageKey}</div>
+                      <div
+                        contentEditable={false}
+                        suppressContentEditableWarning
+                        style={{ fontSize: 11, color: '#94a3b8' }}
+                      >
+                        key: {props.value.storageKey}
+                      </div>
                     )}
                     {props.children}
                   </div>
@@ -492,8 +583,8 @@ export default config({
           directory: 'public/images/news',
           publicPath: '/images/news/',
         }),
-        firstPublished: fields.ignore(),
-        lastUpdated: fields.ignore(),
+        firstPublished: fields.ignored(),
+        lastUpdated: fields.ignored(),
         body: fields.mdx({
           label: 'Comment (optional)',
           components: {},
