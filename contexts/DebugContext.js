@@ -1,3 +1,4 @@
+'use client';
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 let globalDebugUpdate = () => {}; // Initialize with no-op function

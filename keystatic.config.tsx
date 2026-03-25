@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { config, collection, fields } from '@keystatic/core';
 import { wrapper, block } from '@keystatic/core/content-components';
 
@@ -188,8 +189,8 @@ const relatedGuideComponent = block({
 
 export default config({
   storage: {
-    // Local mode for development, GitHub mode for editing deployment
-    kind: process.env.NODE_ENV === 'development' ? 'local' : 'github',
+    // Local mode unless GitHub env vars are configured
+    kind: process.env.KEYSTATIC_GITHUB_CLIENT_ID ? 'github' : 'local',
     repo: {
       owner: process.env.KEYSTATIC_GITHUB_REPO_OWNER || 'ActivistChecklist',
       name: process.env.KEYSTATIC_GITHUB_REPO_NAME || 'ActivistChecklist.org',

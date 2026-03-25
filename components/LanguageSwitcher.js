@@ -1,5 +1,7 @@
-import { useRouter } from 'next/router';
-import { useTranslations } from 'next-intl';
+'use client';
+
+import { useRouter, usePathname } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import {
   DropdownMenu,
@@ -8,19 +10,35 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { LOCALES } from '@/lib/i18n-config';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
+
+/**
+ * Build the URL for switching to a different locale.
+ * English (default) = no prefix. Other locales = /locale/... prefix.
+ */
+function getLocaleUrl(pathname, newLocale) {
+  const currentIsDefault = !pathname.startsWith('/es');
+
+  if (newLocale === DEFAULT_LOCALE) {
+    return pathname.replace(/^\/[a-z]{2}(\/|$)/, (_, slash) => slash || '/') || '/';
+  }
+  if (currentIsDefault) {
+    return `/${newLocale}${pathname}`;
+  }
+  return pathname.replace(/^\/[a-z]{2}(\/|$)/, `/${newLocale}$1`);
+}
 
 export default function LanguageSwitcher() {
   const router = useRouter();
-  const { locale, locales, asPath } = router;
+  const pathname = usePathname();
+  const locale = useLocale();
   const t = useTranslations();
 
-  const availableLocales = locales || [];
-
+  const availableLocales = Object.keys(LOCALES);
   if (availableLocales.length <= 1) return null;
 
   const switchLocale = (newLocale) => {
-    router.push(asPath, asPath, { locale: newLocale });
+    router.push(getLocaleUrl(pathname, newLocale));
   };
 
   return (

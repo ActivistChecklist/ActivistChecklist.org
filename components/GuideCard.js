@@ -1,16 +1,20 @@
+'use client';
 import React from 'react';
 import Link from '@/components/Link';
 import { ArrowRight } from 'lucide-react';
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { getGuideIcon } from '@/config/icons';
 
-const GuideCard = ({ 
-  guideItem, 
-  size = "medium" 
+const GuideCard = ({
+  guideItem,
+  size = "medium"
 }) => {
   const t = useTranslations();
-  const { href, icon: Icon, title, description } = guideItem;
+  const { href, icon, iconKey, title, description } = guideItem;
+  // Accept either a React component (icon) or a string key (iconKey) for server→client boundary
+  const Icon = icon || getGuideIcon(iconKey);
 
   if (size === "large") {
     return (

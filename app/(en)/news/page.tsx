@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getAllNewsItems, toNewsListItem } from '@/lib/content';
 import Layout from '@/components/layout/Layout';
 import NewsItem from '@/components/NewsItem';

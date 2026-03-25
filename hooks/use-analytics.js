@@ -1,3 +1,4 @@
+'use client';
 import { debugLog } from '@/contexts/DebugContext';
 import { isProd } from '@/utils/core';
 

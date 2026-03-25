@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import Markdown from '@/components/Markdown';
 import Link from '@/components/Link';

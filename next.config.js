@@ -1,6 +1,8 @@
 const path = require('path');
+const createNextIntlPlugin = require('next-intl/plugin');
 
 const baseConfig = {
+  transpilePackages: ['next-mdx-remote'],
   trailingSlash: true,
   images: {
     unoptimized: true,
@@ -45,4 +47,5 @@ const nextConfig = process.env.NODE_ENV === 'development'
   }
   : baseConfig;
 
-module.exports = nextConfig
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+module.exports = withNextIntl(nextConfig);

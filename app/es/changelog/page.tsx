@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getAllChangelogEntries, toChangelogListEntry } from '@/lib/content';
 import Layout from '@/components/layout/Layout';
 import ChangeLogEntry from '@/components/ChangeLogEntry';

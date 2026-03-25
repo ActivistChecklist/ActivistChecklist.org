@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Pages that should use the default OG image
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to generate image' }, { status: 500 });
     }
 
-    return new NextResponse(buffer, {
+    return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'no-cache',
@@ -34,8 +36,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('OG image generation error:', error);
-    const message =
-      process.env.NODE_ENV === 'production' ? 'Failed to generate image' : (error as Error).message;
+    const message = (error as Error).message;
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

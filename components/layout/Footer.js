@@ -1,3 +1,4 @@
+'use client';
 import Link from '@/components/Link'
 import { DarkModeToggle } from "@/components/layout/DarkModeToggle"
 import { CompactNewsletterSubscribe } from "@/components/NewsletterSubscribe"

@@ -14,7 +14,8 @@ export default function KeystaticLayout() {
   return <KeystaticApp />;
 }
 
-// Don't pre-render keystatic routes in the static export
-export async function generateStaticParams() {
+// Required for output: 'export' — return [] to exclude all Keystatic paths from static build
+export function generateStaticParams() {
   return [];
 }
+

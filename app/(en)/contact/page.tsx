@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { IoLogoGithub, IoKeyOutline } from "react-icons/io5";

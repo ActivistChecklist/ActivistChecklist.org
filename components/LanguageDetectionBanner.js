@@ -1,41 +1,54 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useTranslations } from 'next-intl';
+import { useRouter, usePathname } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from '@/components/Link';
-import { LOCALES } from '@/lib/i18n-config';
+import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 import {
   LANGUAGE_BANNER_STORAGE_KEY,
   getDetectedLocaleFromNavigatorLanguage,
   shouldShowLanguageBanner,
 } from '@/lib/language-detection';
 
+function getLocaleUrl(pathname, newLocale) {
+  const currentIsDefault = !pathname.startsWith('/es');
+  if (newLocale === DEFAULT_LOCALE) {
+    return pathname.replace(/^\/[a-z]{2}(\/|$)/, (_, slash) => slash || '/') || '/';
+  }
+  if (currentIsDefault) {
+    return `/${newLocale}${pathname}`;
+  }
+  return pathname.replace(/^\/[a-z]{2}(\/|$)/, `/${newLocale}$1`);
+}
+
 export default function LanguageDetectionBanner() {
-  const router = useRouter();
-  const { locale, locales, asPath } = router;
+  const locale = useLocale();
+  const pathname = usePathname();
   const t = useTranslations('languageDetection');
   const [detectedLocale, setDetectedLocale] = useState(null);
   const [dismissed, setDismissed] = useState(true); // default true to prevent flash
 
-  const availableLocales = locales || [];
+  const availableLocales = Object.keys(LOCALES);
 
   useEffect(() => {
     if (availableLocales.length <= 1) return;
-    if (locale !== router.defaultLocale) return;
+    if (locale !== DEFAULT_LOCALE) return;
 
     if (localStorage.getItem(LANGUAGE_BANNER_STORAGE_KEY)) return;
 
     const detected = getDetectedLocaleFromNavigatorLanguage(
       navigator.language,
-      router.defaultLocale,
+      DEFAULT_LOCALE,
       availableLocales
     );
     if (detected) {
       setDetectedLocale(detected);
       setDismissed(false);
     }
-  }, [locale, availableLocales, router.defaultLocale]);
+  }, [locale, availableLocales]);
 
   const handleDismiss = () => {
     localStorage.setItem(LANGUAGE_BANNER_STORAGE_KEY, 'true');
@@ -44,12 +57,13 @@ export default function LanguageDetectionBanner() {
 
   if (!shouldShowLanguageBanner({
     currentLocale: locale,
-    defaultLocale: router.defaultLocale,
+    defaultLocale: DEFAULT_LOCALE,
     dismissed,
     detectedLocale,
   })) return null;
 
   const languageName = LOCALES[detectedLocale]?.name || detectedLocale;
+  const switchUrl = getLocaleUrl(pathname, detectedLocale);
 
   return (
     <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
@@ -59,7 +73,7 @@ export default function LanguageDetectionBanner() {
         </p>
         <div className="flex items-center gap-2 flex-shrink-0">
           <Button asChild variant="outline" size="sm">
-            <Link href={asPath} locale={detectedLocale}>
+            <Link href={switchUrl}>
               {t('switchButton', { language: languageName })}
             </Link>
           </Button>

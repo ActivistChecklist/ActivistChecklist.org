@@ -26,8 +26,10 @@ export async function generateStaticParams() {
   const guides = getAllGuides(LOCALE);
   const pages = getAllPages(LOCALE);
   return [
-    ...guides.map((g) => ({ slug: [g.frontmatter.slug || g.slug] })),
-    ...pages.map((p) => ({ slug: [p.frontmatter.slug || p.slug] })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...guides.map((g: any) => ({ slug: [g.frontmatter.slug || g.slug] })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...pages.map((p: any) => ({ slug: [p.frontmatter.slug || p.slug] })),
   ];
 }
 
@@ -108,11 +110,11 @@ export default async function SlugPage({ params }) {
     );
 
     // Generate OG image at build time
-    let ogImagePath = null;
+    let ogImagePath: string | null = null;
     try {
       const { generateOgImageForRoute } = await import('@/lib/og-image');
-      ogImagePath = await generateOgImageForRoute({ title: frontmatter.title, pageType: 'guide', slug });
-    } catch (err) {
+      ogImagePath = (await generateOgImageForRoute({ title: frontmatter.title, pageType: 'guide', slug })) as string | null;
+    } catch (err: any) {
       console.warn(`OG image skipped for guide "${slug}":`, err.message);
     }
 

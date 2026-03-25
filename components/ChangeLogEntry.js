@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import Markdown from '@/components/Markdown';
 import { cn, formatRelativeDate } from "@/lib/utils";
