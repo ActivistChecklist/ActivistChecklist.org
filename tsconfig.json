@@ -13,8 +13,7 @@
     "incremental": true,
     "module": "esnext",
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -24,7 +23,6 @@
       }
     ],
     "strictNullChecks": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
