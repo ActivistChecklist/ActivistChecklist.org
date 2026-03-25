@@ -28,34 +28,37 @@ After migrating off Storyblok to file-based MDX content (see `PLAN-storyblok-mig
 
 ### Our MDX component inventory
 
-| Component | Props | Children | Where Used |
-|-----------|-------|----------|------------|
-| **Section** | title, slug | RiskLevel, Alert, ChecklistItem, markdown | Guide bodies |
-| **ChecklistItem** | ref (slug string) | none (self-closing) | Inside Section |
-| **RiskLevel** | level (enum) | markdown text (up to ~156 chars) | Inside Section |
-| **Alert** | type (enum), title | markdown text (up to ~549 chars) | Inside Section, HowTo, checklist item bodies |
-| **HowTo** | title | markdown text + Alert + Button | Checklist item bodies, guide bodies |
-| **Button** | title, url, variant, download, icon | none (self-closing) | Inside HowTo, pages, checklist items |
-| **ImageEmbed** | src, alt, size, className | caption text | Pages |
-| **VideoEmbed** | src, className | caption text | Pages |
-| **Table** | className | table data | Checklist items |
-| **RelatedGuides** | none | RelatedGuide children | End of guides |
-| **RelatedGuide** | slug (string) | none (self-closing) | Inside RelatedGuides |
+| Component         | Props                               | Children                                  | Where Used                                   |
+| ----------------- | ----------------------------------- | ----------------------------------------- | -------------------------------------------- |
+| **Section**       | title, slug                         | RiskLevel, Alert, ChecklistItem, markdown | Guide bodies                                 |
+| **ChecklistItem** | ref (slug string)                   | none (self-closing)                       | Inside Section                               |
+| **RiskLevel**     | level (enum)                        | markdown text (up to ~156 chars)          | Inside Section                               |
+| **Alert**         | type (enum), title                  | markdown text (up to ~549 chars)          | Inside Section, HowTo, checklist item bodies |
+| **HowTo**         | title                               | markdown text + Alert + Button            | Checklist item bodies, guide bodies          |
+| **Button**        | title, url, variant, download, icon | none (self-closing)                       | Inside HowTo, pages, checklist items         |
+| **ImageEmbed**    | src, alt, size, className           | caption text                              | Pages                                        |
+| **VideoEmbed**    | src, className                      | caption text                              | Pages                                        |
+| **Table**         | className                           | table data                                | Checklist items                              |
+| **RelatedGuides** | none                                | RelatedGuide children                     | End of guides                                |
+| **RelatedGuide**  | slug (string)                       | none (self-closing)                       | Inside RelatedGuides                         |
 
 ### Nesting patterns we must support
 
 **Depth 1** (very common — 185 instances):
+
 ```
 body → Alert | HowTo | Button | RiskLevel | ImageEmbed | VideoEmbed | Table
 ```
 
 **Depth 2** (12 instances across 12 stories):
+
 ```
 body → HowTo → Alert        (7 instances)
 body → HowTo → Button       (5 instances)
 ```
 
 **Guide Section pattern** (all 13 guides):
+
 ```
 Section → RiskLevel (with body text)
 Section → Alert (with body text)
@@ -108,6 +111,7 @@ These are **string slug references resolved at build time**, not live database j
 **5. Self-hosted limitations**
 
 Without TinaCloud (paid), you lose:
+
 - **Editorial workflow** (branch-based drafts/review/publish) — must manage branches manually via Git
 - **Media manager** (repo-based) — must use Cloudinary, S3, or similar
 - **Search** — no search endpoints in self-hosted backend
@@ -128,16 +132,16 @@ Editors visit the Vercel deployment, authenticate via GitHub, edit content. Chan
 
 ### TinaCMS verdict
 
-| Requirement | Support | Assessment |
-|-------------|---------|------------|
-| Free | Yes (self-hosted, Apache 2.0) | **Pass** |
-| Nested components | Crashes (issues #5496, #2581) | **Fail** |
-| Cross-refs in rich-text | Not supported (wontfix) | **Fail** |
-| Real-time preview | Yes (`useTina` hook) | **Pass** |
-| Remote editing | Yes (deployed `/admin/`) | **Pass** |
-| Static production build | Yes (with separate CMS deployment) | **Pass** |
-| Translation control | Manual directory-based only | **Weak** |
-| React 19 | Not supported | **Fail** |
+| Requirement             | Support                            | Assessment |
+| ----------------------- | ---------------------------------- | ---------- |
+| Free                    | Yes (self-hosted, Apache 2.0)      | **Pass**   |
+| Nested components       | Crashes (issues #5496, #2581)      | **Fail**   |
+| Cross-refs in rich-text | Not supported (wontfix)            | **Fail**   |
+| Real-time preview       | Yes (`useTina` hook)               | **Pass**   |
+| Remote editing          | Yes (deployed `/admin/`)           | **Pass**   |
+| Static production build | Yes (with separate CMS deployment) | **Pass**   |
+| Translation control     | Manual directory-based only        | **Weak**   |
+| React 19                | Not supported                      | **Fail**   |
 
 **TinaCMS cannot handle our core content.** Nested editing crashes. References in rich-text are wontfix. React 19 unsupported. Could work for simple content types (news, changelog) but not guides or checklist items.
 
@@ -148,7 +152,7 @@ Editors visit the Vercel deployment, authenticate via GitHub, edit content. Chan
 ### What works
 
 - **Free and open source** (core is fully free, optional Keystatic Cloud free tier for up to 3 users)
-- **`fields.mdx()` writes standard JSX tags to `.mdx` files** — the exact same `<Component>` format our migration plan already uses. No format conversion needed. (Keystatic also has `fields.markdoc()` which writes `{% %}` Markdoc syntax to `.mdoc` files — we don't use that.)
+- `**fields.mdx()` writes standard JSX tags to `.mdx` files** — the exact same `<Component>` format our migration plan already uses. No format conversion needed. (Keystatic also has `fields.markdoc()` which writes `{% %}` Markdoc syntax to `.mdoc` files — we don't use that.)
 - **Best-in-class MDX content component model**: 5 component types:
   - **Wrapper** — contains freeform rich text AND other components. Exactly right for `HowTo` wrapping `Alert` + `Button`, `Section` wrapping `RiskLevel` + `ChecklistItem`
   - **Block** — self-closing components like `Button`, `ChecklistItem`
@@ -166,11 +170,11 @@ Editors visit the Vercel deployment, authenticate via GitHub, edit content. Chan
 
 Keystatic has **two completely separate field types** with different on-disk formats:
 
-| | `fields.mdx()` | `fields.markdoc()` |
-|---|---|---|
-| **File extension** | `.mdx` | `.mdoc` |
+|                        | `fields.mdx()`                       | `fields.markdoc()`                           |
+| ---------------------- | ------------------------------------ | -------------------------------------------- |
+| **File extension**     | `.mdx`                               | `.mdoc`                                      |
 | **Tag syntax on disk** | `<Alert type="warning">text</Alert>` | `{% alert type="warning" %}text{% /alert %}` |
-| **What we use** | **Yes** | No |
+| **What we use**        | **Yes**                              | No                                           |
 
 Both field types use the same editor UI and the same content component configuration API (`wrapper()`, `block()`, etc.). The only difference is serialization format. Since we use `fields.mdx()`, Keystatic reads and writes the exact same JSX-style MDX tags our migration plan already produces. **No format changes to the migration plan are needed.**
 
@@ -236,12 +240,14 @@ The `<Alert>` inside `<HowTo>` is a wrapper inside a wrapper — Keystatic handl
 Keystatic runs in **GitHub Mode** (not Keystatic Cloud) with a self-managed GitHub App for OAuth. This is the right choice — free, fully self-controlled, no paid tiers.
 
 **How editors get access:**
+
 1. Editor creates a GitHub account (Proton email or any email is fine)
 2. Repo owner adds them as a collaborator on the public repo (write access — the only permission level available on personal repos)
 3. Editor visits `edit.activistchecklist.org/keystatic`, authenticates via GitHub OAuth
 4. They can now edit content in the CMS UI
 
 **GitHub App setup:**
+
 - Keystatic has an automated setup flow — run the project locally, visit `/keystatic`, follow the prompts to create a GitHub App
 - It generates 4 env vars: `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` (random 64-char string), and app slug
 - These get added to the Vercel editing deployment only
@@ -252,6 +258,7 @@ Keystatic runs in **GitHub Mode** (not Keystatic Cloud) with a self-managed GitH
 We'll use **Next.js Draft Mode** on the editing deployment to let editors preview unsaved/in-progress content without waiting for a full Vercel branch build.
 
 **How it works:**
+
 1. Editor makes changes in Keystatic's sidebar UI
 2. Keystatic saves the change to a branch
 3. Editor clicks "Preview" → hits a `/api/draft` route that enables Draft Mode (sets a cookie)
@@ -259,6 +266,7 @@ We'll use **Next.js Draft Mode** on the editing deployment to let editors previe
 5. Editor sees their changes immediately on the editing site — no waiting for a Vercel rebuild
 
 **Implementation:**
+
 - `app/api/draft/route.ts` — enables Draft Mode by calling `draftMode().enable()` and redirecting to the requested page
 - `app/api/exit-draft/route.ts` — disables Draft Mode
 - In `getStaticProps` (or the App Router equivalent), check `draftMode().isEnabled` — if true, read content from the current branch HEAD instead of the cached static build
@@ -266,11 +274,11 @@ We'll use **Next.js Draft Mode** on the editing deployment to let editors previe
 
 **Workflow comparison:**
 
-| | Without Draft Mode | With Draft Mode |
-|---|---|---|
-| Editor saves in Keystatic | Wait for Vercel branch build (~1-2 min) | Click preview link, see changes immediately |
-| How preview works | Vercel rebuilds the branch, editor visits preview URL | Draft Mode cookie tells the editing site to read latest branch content |
-| Where it runs | Vercel branch preview deployment | Editing deployment (`edit.activistchecklist.org`) |
+|                           | Without Draft Mode                                    | With Draft Mode                                                        |
+| ------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
+| Editor saves in Keystatic | Wait for Vercel branch build (~1-2 min)               | Click preview link, see changes immediately                            |
+| How preview works         | Vercel rebuilds the branch, editor visits preview URL | Draft Mode cookie tells the editing site to read latest branch content |
+| Where it runs             | Vercel branch preview deployment                      | Editing deployment (`edit.activistchecklist.org`)                      |
 
 This is not real-time preview (changes don't appear as you type), but it's much faster than waiting for a full branch rebuild. Save → click preview → see result in seconds.
 
@@ -279,6 +287,7 @@ This is not real-time preview (changes don't appear as you type), but it's much 
 **No built-in i18n support.** Open feature request ([issue #1080](https://github.com/Thinkmill/keystatic/issues/1080), 23+ upvotes, not implemented).
 
 Workarounds:
+
 - Separate collections per locale (e.g., `posts-en`, `posts-es`)
 - Locale prefix in directory structure — matches our planned `content/{locale}/...` layout
 - Community members have shared config-based workarounds
@@ -297,12 +306,14 @@ This is exactly the dual-deployment pattern we need.
 ### Security & access control model
 
 **Authentication:**
+
 - `/keystatic` on a public URL shows only a GitHub login prompt to unauthenticated users
 - Only repo collaborators with write access can authenticate
 - Admin is completely excluded from production builds (production uses `output: 'export'`)
 - Production site has zero server-side attack surface (fully static)
 
 **Branch protection via GitHub Rulesets:**
+
 - Use the newer **rulesets** feature (Settings → Rules → Rulesets), NOT legacy branch protection rules — legacy branch protection doesn't support bypass actor lists on personal repos
 - Ruleset on `main` branch: **require a pull request before merging** + **require 1 approving review**
 - Add the **"Repository admin" bypass actor role** to the ruleset — since the repo owner is the only admin on this personal account repo, only they can bypass the approval requirement and self-merge their own PRs
@@ -313,17 +324,17 @@ This is exactly the dual-deployment pattern we need.
 
 ### Keystatic verdict
 
-| Requirement | Support | Assessment |
-|-------------|---------|------------|
-| Free | Yes (GitHub Mode is free) | **Pass** |
-| Nested components | Excellent (wrapper type) | **Pass** |
-| Cross-refs in rich-text | Yes (relationship field) | **Pass** |
-| Real-time preview | No (Draft Mode: save → preview in seconds) | **Acceptable** |
-| Remote editing | Yes (GitHub Mode on deployed site) | **Pass** |
-| Static production build | Yes (Reader API + `output: 'export'`) | **Pass** |
-| Translation control | Full control (file-based, no lock-in) | **Pass** |
-| React 19 | Supported | **Pass** |
-| App Router required | Yes | **Requires migration** |
+| Requirement             | Support                                    | Assessment             |
+| ----------------------- | ------------------------------------------ | ---------------------- |
+| Free                    | Yes (GitHub Mode is free)                  | **Pass**               |
+| Nested components       | Excellent (wrapper type)                   | **Pass**               |
+| Cross-refs in rich-text | Yes (relationship field)                   | **Pass**               |
+| Real-time preview       | No (Draft Mode: save → preview in seconds) | **Acceptable**         |
+| Remote editing          | Yes (GitHub Mode on deployed site)         | **Pass**               |
+| Static production build | Yes (Reader API + `output: 'export'`)      | **Pass**               |
+| Translation control     | Full control (file-based, no lock-in)      | **Pass**               |
+| React 19                | Supported                                  | **Pass**               |
+| App Router required     | Yes                                        | **Requires migration** |
 
 **Keystatic passes every requirement except it needs App Router.** Since App Router migration is acceptable, this is the clear winner.
 
@@ -332,21 +343,27 @@ This is exactly the dual-deployment pattern we need.
 ## Other Options Evaluated (and eliminated)
 
 ### CloudCannon
+
 **Eliminated: costs $49+/month.** Violates the "free" constraint. Also not self-hostable and nesting support is unverified.
 
 ### Decap CMS / Sveltia CMS
+
 **Eliminated: no MDX support.** Feature request open since 2018, unimplemented. Sveltia CMS has MDX on its roadmap but unclear if shipped.
 
 ### Sanity Studio
+
 **Eliminated: database-backed, not git-based.** Uses Portable Text, not MDX. No production-ready bidirectional conversion. Would abandon our file-based architecture.
 
 ### Builder.io
+
 **Eliminated: no MDX file editing.** Visual page builder with its own content format. Also has paid tiers.
 
 ### Payload CMS
+
 **Eliminated: database-backed, not git-based.** Has interesting MDX ↔ Lexical conversion but requires custom work and App Router. Adding a database is unnecessary complexity for 231 content items.
 
 ### Plate.js (custom editor)
+
 **Not eliminated but deferred.** Genuine MDX round-trip editing capability. Would give maximum control but requires weeks-months of development. Could be considered if Keystatic proves insufficient, but Keystatic should be tried first.
 
 ---
@@ -387,10 +404,12 @@ This is exactly the dual-deployment pattern we need.
 ### How it works for a content editor
 
 **First time setup (one-time):**
+
 1. Editor creates a GitHub account (any email, Proton is fine)
 2. Repo owner adds them as a collaborator on the public repo
 
 **Editing workflow:**
+
 1. Editor visits `edit.activistchecklist.org/keystatic`
 2. Authenticates with GitHub OAuth (must have repo write access)
 3. Edits content in Keystatic's sidebar UI — forms for frontmatter, rich-text for body with embedded components
@@ -400,6 +419,7 @@ This is exactly the dual-deployment pattern we need.
 7. Production site rebuilds as a static export
 
 **Key points for non-technical editors:**
+
 - No cloning the repo, no local dev server, no command line
 - Everything happens in the browser — Keystatic UI for editing, GitHub for PR review, Vercel for preview
 - Editors cannot accidentally break the live site — all changes are PR-gated
@@ -434,16 +454,17 @@ module.exports = {
 
 ### Security analysis
 
-| Layer | Protection |
-|-------|-----------|
-| **Production site** | Fully static — zero server-side attack surface. No admin UI, no API routes, no CMS code. Just HTML/CSS/JS on a LAMP host. |
-| **Editing deployment** | Behind GitHub OAuth — only repo collaborators with write access. Keystatic env vars are server-side only. |
-| **Branch protection** | GitHub rulesets on `main`: require PR + 1 approving review. Only repo admin can bypass (self-merge). Editors cannot push to main or merge without approval. Free on public repos. |
-| **Content changes** | All changes go through GitHub PRs — reviewable, auditable, revertible. CODEOWNERS requires maintainer approval for `content/` changes. |
-| **MDX security** | 4-layer defense in depth (CI validation, compilation-time, rendering-time, human review) catches any malicious content regardless of how it was authored. |
-| **Vercel access** | Optional: add password protection via Vercel Pro ($20/mo) or free Passfort for extra layer. GitHub OAuth alone is likely sufficient. |
+| Layer                  | Protection                                                                                                                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Production site**    | Fully static — zero server-side attack surface. No admin UI, no API routes, no CMS code. Just HTML/CSS/JS on a LAMP host.                                                         |
+| **Editing deployment** | Behind GitHub OAuth — only repo collaborators with write access. Keystatic env vars are server-side only.                                                                         |
+| **Branch protection**  | GitHub rulesets on `main`: require PR + 1 approving review. Only repo admin can bypass (self-merge). Editors cannot push to main or merge without approval. Free on public repos. |
+| **Content changes**    | All changes go through GitHub PRs — reviewable, auditable, revertible. CODEOWNERS requires maintainer approval for `content/` changes.                                            |
+| **MDX security**       | 4-layer defense in depth (CI validation, compilation-time, rendering-time, human review) catches any malicious content regardless of how it was authored.                         |
+| **Vercel access**      | Optional: add password protection via Vercel Pro ($20/mo) or free Passfort for extra layer. GitHub OAuth alone is likely sufficient.                                              |
 
 The CMS admin code being in the repo is fine because:
+
 1. It only runs on the Vercel editing deployment, not production
 2. Production builds with `output: 'export'` physically exclude all API routes and server code
 3. Even if someone found the Vercel URL, GitHub OAuth blocks unauthenticated access
@@ -466,7 +487,7 @@ Keystatic's Reader API provides type-safe content access and schema validation, 
 
 Two content patterns need cleanup before they can map cleanly to Keystatic schemas:
 
-**2a. Flatten news items** — Move from `content/en/news/2024/*.mdx` year subdirectories to flat `content/en/news/*.mdx`. Keystatic's nested path support (`**`) requires editors to manually type year prefixes in slugs, which is error-prone. Flat structure is simpler. News date is already in frontmatter, so year subdirs are redundant.
+**2a. Flatten news items** — Move from `content/en/news/2024/*.mdx` year subdirectories to flat `content/en/news/*.mdx`. Keystatic's nested path support (`*`*) requires editors to manually type year prefixes in slugs, which is error-prone. Flat structure is simpler. News date is already in frontmatter, so year subdirs are redundant.
 
 **2b. Move RelatedGuides to frontmatter for pages** — Guides already use `relatedGuides: [slug1, slug2]` in frontmatter. Pages use `<RelatedGuides><RelatedGuide slug="..." /></RelatedGuides>` in the MDX body, which is then regex-extracted in `getStaticProps` (lines 168-176 of `[...slug].js`). Unify by moving pages to the same frontmatter pattern. Eliminates fragile regex extraction and makes it editable via Keystatic's relationship field.
 
@@ -494,22 +515,22 @@ Editing deployment (Vercel SSR):
 
 **What was verified (engineering / build)**:
 
-1. **Keystatic + Next.js App Router (yarn)** — `@keystatic/core`, `@keystatic/next`, and **`@markdoc/markdoc`** (per [installation docs](https://keystatic.com/docs/installation-next-js)) install and compile; `keystatic.config.ts`, `makePage` + `makeRouteHandler`, and local storage mode are wired correctly for `yarn dev` / `yarn build`.
-2. **Static export vs Route Handlers** — With `output: 'export'`, Next.js **still analyzes `app/api/**/route.ts` files**. The **`showAdminUI` + `notFound()` pattern on `/keystatic` does not remove those handlers from the filesystem**, so the static export build **fails** unless the API routes are not present during that build. Practical options for the **production static export** (LAMP deploy): (a) a small build script that **moves `app/api` entirely outside `app/`** (e.g. project-root `.poc-api-backup`) for the export build only, then restores it; (b) conditional packaging / separate entry; or (c) any approach that guarantees **no Route Handlers under `app/`** when `output: 'export'` runs. **Important**: renaming `app/api` to something **still under `app/`** (e.g. `app/api.__backup`) does **not** work — Next treats arbitrary folders under `app/` as routes and will still fail. The **editing deployment** (Vercel) uses a normal `next build` **without** `output: 'export'`, so Keystatic API routes are fine there.
-3. **`/keystatic/[[...params]]` + static export** — The optional catch-all admin route needs **`generateStaticParams()`** (e.g. return `[{ params: [] }]` so `/keystatic` prerenders) or the export build errors; this is in addition to hiding/disabling the admin UI for production UX.
-4. **Monorepo / nested app** — If this repo keeps a nested Next app or a second `yarn.lock` under a subfolder, Next 16 may infer the wrong Turbopack workspace root when the parent directory also has a lockfile. Set **`turbopack.root`** to the Next app directory (e.g. `process.cwd()` when builds always run from that folder) to avoid the warning and mis-resolution.
+1. **Keystatic + Next.js App Router (yarn)** — `@keystatic/core`, `@keystatic/next`, and `**@markdoc/markdoc`** (per [installation docs](https://keystatic.com/docs/installation-next-js)) install and compile; `keystatic.config.ts`, `makePage` + `makeRouteHandler`, and local storage mode are wired correctly for `yarn dev` / `yarn build`.
+2. **Static export vs Route Handlers** — With `output: 'export'`, Next.js **still analyzes `app/api/**/route.ts` files**. The `**showAdminUI` + `notFound()` pattern on `/keystatic` does not remove those handlers from the filesystem**, so the static export build **fails** unless the API routes are not present during that build. Practical options for the **production static export** (LAMP deploy): (a) a small build script that **moves `app/api` entirely outside `app/`** (e.g. project-root `.poc-api-backup`) for the export build only, then restores it; (b) conditional packaging / separate entry; or (c) any approach that guarantees **no Route Handlers under `app/`** when `output: 'export'` runs. **Important**: renaming `app/api` to something **still under `app/`** (e.g. `app/api.__backup`) does **not** work — Next treats arbitrary folders under `app/` as routes and will still fail. The **editing deployment** (Vercel) uses a normal `next build` **without** `output: 'export'`, so Keystatic API routes are fine there.
+3. `**/keystatic/[[...params]]` + static export**— The optional catch-all admin route needs `**generateStaticParams()`** (e.g. return `[{ params: [] }]` so `/keystatic` prerenders) or the export build errors; this is in addition to hiding/disabling the admin UI for production UX.
+4. **Monorepo / nested app** — If this repo keeps a nested Next app or a second `yarn.lock` under a subfolder, Next 16 may infer the wrong Turbopack workspace root when the parent directory also has a lockfile. Set `**turbopack.root`** to the Next app directory (e.g. `process.cwd()` when builds always run from that folder) to avoid the warning and mis-resolution.
 
 **Scaffolding reference** (for anyone reproducing a minimal app):
 
-- Greenfield: **`yarn create @keystatic@latest`** (or `npm create @keystatic@latest`) is the official CLI; alternatively `create-next-app` in a subfolder then **`yarn add @keystatic/core @keystatic/next @markdoc/markdoc`**.
-- POC schema sketch: collections analogous to **`testItems`** / **`testGuides`** with `fields.mdx()` and content components **`HowTo` → `Alert` / `Button`**, **`Section` → `ChecklistItem` (relationship) / `RiskLevel`**.
+- Greenfield: `**yarn create @keystatic@latest`** (or `npm create @keystatic@latest`) is the official CLI; alternatively `create-next-app` in a subfolder then `**yarn add @keystatic/core @keystatic/next @markdoc/markdoc**`.
+- POC schema sketch: collections analogous to `**testItems**` / `**testGuides**` with `fields.mdx()` and content components `**HowTo` → `Alert` / `Button**`, `**Section` → `ChecklistItem` (relationship) / `RiskLevel**`.
 
 **Still to validate in the real product (Phase 3 or first editor session)** — not covered by build-only POC:
 
-- [ ] **Editor UX**: Insert `HowTo` → nested `Alert`; confirm save and MDX shape: `<HowTo title="..."><Alert type="...">...</Alert></HowTo>`.
-- [ ] **Edge depth**: e.g. `HowTo` → `Alert` → inner `HowTo` (document if the UI allows or blocks it).
-- [ ] **Relationship in MDX**: `ChecklistItem` with `fields.relationship()` shows a dropdown and persists `<ChecklistItem slug="..." />` (or equivalent) in the file.
-- [ ] **GitHub Mode** with this repo (or a fork): OAuth, branch, PR flow — remains Phase 3 setup.
+- **Editor UX**: Insert `HowTo` → nested `Alert`; confirm save and MDX shape: `<HowTo title="..."><Alert type="...">...</Alert></HowTo>`.
+- **Edge depth**: e.g. `HowTo` → `Alert` → inner `HowTo` (document if the UI allows or blocks it).
+- **Relationship in MDX**: `ChecklistItem` with `fields.relationship()` shows a dropdown and persists `<ChecklistItem slug="..." />` (or equivalent) in the file.
+- **GitHub Mode** with this repo (or a fork): OAuth, branch, PR flow — remains Phase 3 setup.
 
 **If relationship fields fail in content components**: Fall back to `fields.text()` for the slug; same MDX contract, worse UX (see Risk Register).
 
@@ -525,20 +546,22 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 
 **Status: done** (feature branch — `git mv` all English news files to flat layout; no basename collisions; `content/es/news/` had no MDX).
 
-- [x] Move all `content/en/news/*/*.mdx` → `content/en/news/*.mdx` (preserve history with `git mv`)
-- [x] `lib/content.js`: `getAllNewsItems` uses `readCollection('news', locale)` only; `getNewsItem` uses `readMdxFileWithFallback('news/${slug}.mdx')`
-- [x] Remove `listMdxFilesRecursive` and `readCollection` `recursive` option
-- [x] `scripts/news-wizard.js` writes new items to `content/en/news/{slug}.mdx` (no year subfolders)
-- [x] Vitest: `__tests__/content-news.test.js` smoke-tests flat news loading
+- Move all `content/en/news/*/*.mdx` → `content/en/news/*.mdx` (preserve history with `git mv`)
+- `lib/content.js`: `getAllNewsItems` uses `readCollection('news', locale)` only; `getNewsItem` uses `readMdxFileWithFallback('news/${slug}.mdx')`
+- Remove `listMdxFilesRecursive` and `readCollection` `recursive` option
+- `scripts/news-wizard.js` writes new items to `content/en/news/{slug}.mdx` (no year subfolders)
+- Vitest: `__tests__/content-news.test.js` smoke-tests flat news loading
 
 **Change**: Move `content/en/news/2024/*.mdx`, `content/en/news/2025/*.mdx`, etc. → `content/en/news/*.mdx`
 
 **Files to modify**:
+
 - Move all MDX files to `content/en/news/` (flat)
 - `lib/content.js`: Change `getAllNewsItems` to use `readCollection('news', locale)` (non-recursive). Change `getNewsItem` to use `readMdxFileWithFallback` directly.
 - Remove `listMdxFilesRecursive` if no longer used anywhere.
 
 **Edge cases**:
+
 - **Slug collisions**: Two news items in different year dirs could have the same filename. Audit first: `find content/en/news -name "*.mdx" -exec basename {} \; | sort | uniq -d`. If collisions exist, rename the files (prepend date or add suffix).
 - **Git history**: `git mv` preserves history. Move files one directory at a time.
 - **Spanish translations**: Also flatten `content/es/news/` if it exists.
@@ -547,17 +570,19 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 
 **Status: done** — No page MDX contained `<RelatedGuides>`; `links.mdx` already used `relatedGuides` in frontmatter. Code path now uses frontmatter only.
 
-- [x] `pages/[...slug].js`: removed trailing `RelatedGuides` regex split; full page body serialized once
-- [x] `components/pages/Page.js`: removed `serializedRelatedGuides` / second `MDXRemote`; `RelatedGuides` from `frontmatter.relatedGuides` only
+- `pages/[...slug].js`: removed trailing `RelatedGuides` regex split; full page body serialized once
+- `components/pages/Page.js`: removed `serializedRelatedGuides` / second `MDXRemote`; `RelatedGuides` from `frontmatter.relatedGuides` only
 
 **Change**: Pages currently embed `<RelatedGuides><RelatedGuide slug="..." /></RelatedGuides>` in MDX body. Move to frontmatter `relatedGuides: [slug1, slug2]` (same format guides already use).
 
 **Files to modify**:
+
 - Each page MDX that has `<RelatedGuides>` — extract slugs, add to frontmatter, remove from body
 - `pages/[...slug].js`: Remove the regex extraction logic (lines 168-176). Instead, pass `frontmatter.relatedGuides` to the Page component.
 - `components/pages/Page.js`: Render RelatedGuides from frontmatter array prop instead of serialized MDX.
 
 **Edge cases**:
+
 - **Pages with no RelatedGuides**: Already handled — `relatedGuides` field is optional.
 - **Pages with RelatedGuides in the middle of content** (not at the end): Audit all pages. If any have RelatedGuides mid-content, those need special handling (keep as MDX component for those pages, or restructure content).
 
@@ -570,6 +595,7 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 #### What must change
 
 **Routing**:
+
 - `pages/[...slug].js` → `app/[...slug]/page.tsx`
 - `pages/index.js` → `app/page.tsx`
 - `pages/checklists.js` → `app/checklists/page.tsx`
@@ -578,47 +604,54 @@ These changes happen **before** App Router or Keystatic. They simplify the conte
 - `pages/contact.js` → `app/contact/page.tsx`
 - `pages/_app.js` → `app/layout.tsx`
 - `pages/_document.js` → `app/layout.tsx` (merged)
-- `pages/dev/*` → `app/dev/*/page.tsx`
+- `pages/dev/`* → `app/dev/*/page.tsx`
 
 **Data loading**:
+
 - `getStaticProps` → async Server Components (data fetched directly in the component)
 - `getStaticPaths` → `generateStaticParams`
 - `serialize()` from next-mdx-remote → `compileMDX()` or `MDXRemote` with RSC support (next-mdx-remote v5+ has App Router support via `next-mdx-remote/rsc`)
 
 **i18n** (account for, but separate implementation):
+
 - Next.js built-in `i18n` config in `next.config.js` is **Pages Router only**. App Router doesn't support it.
 - Must migrate to middleware-based i18n routing: `middleware.ts` detects locale and redirects to `app/[locale]/...` route segments.
 - `next-intl` has an App Router integration that handles this, but it's a different API than the Pages Router version.
 - **Important**: This is a significant sub-project. The plan should account for it but it can be implemented as part of the App Router migration or as a follow-up.
 
 **Client/Server component boundaries**:
+
 - All interactive components (checkbox state, accordion expand/collapse, theme toggle, search, localStorage access) must be `'use client'` components.
 - Layout, data fetching, and MDX rendering can stay as Server Components.
 - Context providers (`ChecklistItemsContext`, `SectionContext`, `TableOfContentsContext`, `LayoutContext`) must be in `'use client'` wrapper components.
 - `useRouter` from `next/router` → `useRouter` from `next/navigation` (different API: no `locale`, no `defaultLocale`, etc.)
 
 **Head/Metadata**:
+
 - `<Head>` from `next/head` → `export const metadata` or `generateMetadata()` in page files
 - OG image generation via `satori` can use Next.js App Router's built-in `opengraph-image.tsx` convention
 
 **Static export**:
+
 - `BUILD_MODE=static` with `output: 'export'` should still work in App Router
 - But `i18n` middleware won't run in static export — need to use route groups `app/(en)/...` and `app/(es)/...` or `app/[locale]/...` with `generateStaticParams` returning all locales
 - API rewrites for Fastify dev proxy → need different approach (env-based fetch URLs)
 
 **Things that stay the same**:
+
 - `lib/content.js` — unchanged, still reads files with `fs`
 - `lib/mdx-options.js` — remark plugins work the same
 - `lib/mdx-components.js` — component map unchanged
 - All component files — unchanged (except adding `'use client'` where needed)
 - `styles/globals.css`, `tailwind.config.js` — unchanged
-- `scripts/*` — unchanged
+- `scripts/`* — unchanged
 - Fastify API server — unchanged
 - Content files — unchanged
 
 #### Migration strategy
 
 Use Next.js's incremental adoption:
+
 1. Create `app/layout.tsx` alongside `pages/_app.js`
 2. Migrate one route at a time (start with simplest: `contact`, then `changelog`, then `news`, then `checklists`, then pages, then guides)
 3. Both routers work simultaneously during migration
@@ -983,10 +1016,10 @@ export default config({
 
 **Edge cases in schema design**:
 
-- **`fields.slug` vs manual slug**: Keystatic's `fields.slug` auto-generates a slug from the title. Our existing slugs are manually curated and don't always match titles. Existing content should retain its slugs — Keystatic respects existing filenames when editing (it only generates slugs for new items).
-- **`fields.text` multiline**: Some frontmatter fields (`preview`, `why`) contain multi-line text. Use `multiline: true` for these.
-- **`fields.date`**: Keystatic writes dates as `YYYY-MM-DD` strings. Our `gray-matter` parses these as Date objects, then `serializeFrontmatter` converts back to `YYYY-MM-DD`. This round-trip should be clean.
-- **`fields.array` for tags**: News tags are currently sometimes stored as comma-separated strings (`tags: "tag1, tag2"`) and sometimes as YAML arrays (`tags: [tag1, tag2]`). Keystatic will write them as YAML arrays. The `toNewsListItem` function in `lib/content.js` handles both formats via `String(fm.tags).split(',')`, but we should normalize all existing news items to YAML arrays during Phase 1a.
+- `**fields.slug` vs manual slug**: Keystatic's `fields.slug` auto-generates a slug from the title. Our existing slugs are manually curated and don't always match titles. Existing content should retain its slugs — Keystatic respects existing filenames when editing (it only generates slugs for new items).
+- `**fields.text` multiline**: Some frontmatter fields (`preview`, `why`) contain multi-line text. Use `multiline: true` for these.
+- `**fields.date`**: Keystatic writes dates as `YYYY-MM-DD` strings. Our `gray-matter` parses these as Date objects, then `serializeFrontmatter` converts back to `YYYY-MM-DD`. This round-trip should be clean.
+- `**fields.array` for tags**: News tags are currently sometimes stored as comma-separated strings (`tags: "tag1, tag2"`) and sometimes as YAML arrays (`tags: [tag1, tag2]`). Keystatic will write them as YAML arrays. The `toNewsListItem` function in `lib/content.js` handles both formats via `String(fm.tags).split(',')`, but we should normalize all existing news items to YAML arrays during Phase 1a.
 - **MDX body with no components**: News and changelog `body` fields use `fields.mdx()` but don't need any content components. Passing empty `components: {}` tells Keystatic not to show the component insertion toolbar for these collections.
 
 #### Step 3.2: Add Keystatic routes
@@ -1084,8 +1117,9 @@ module.exports = baseConfig
 ```
 
 **Edge cases**:
+
 - **Static export + Keystatic API routes**: `output: 'export'` is incompatible with **any** `app/api/**/route.ts` during that build. `showAdminUI` + `notFound()` on `/keystatic` only affects the admin **page**; it does **not** stop Next from bundling Route Handlers. Production static builds must omit those handlers from under `app/` for the export run (see Phase 0: move `app/api` out of `app/` for the static build, or equivalent). The editing deployment does not use static export, so Keystatic API routes are unproblematic there.
-- **Static export + `/keystatic/[[...params]]`**: Define **`generateStaticParams()`** on that segment (e.g. `[{ params: [] }]`) so export can prerender `/keystatic`; combine with `showAdminUI` / env so the shipped static site does not expose a usable admin (404 or empty shell is acceptable).
+- **Static export + `/keystatic/[[...params]]`**: Define `**generateStaticParams()**` on that segment (e.g. `[{ params: [] }]`) so export can prerender `/keystatic`; combine with `showAdminUI` / env so the shipped static site does not expose a usable admin (404 or empty shell is acceptable).
 - **Keystatic env vars on production**: Production builds (static export) must NOT have `KEYSTATIC_GITHUB_CLIENT_ID` set, or the `showAdminUI` flag would be true. Ensure Vercel env vars are scoped: Keystatic vars only on the editing deployment, `BUILD_MODE=static` only on production.
 
 #### Step 3.3: Configure draft-mode-aware content loading
@@ -1131,6 +1165,7 @@ export default async function SlugPage({ params }) {
 ```
 
 **Edge cases**:
+
 - **Draft mode on static export**: Draft mode requires a server to set cookies. It will NOT work on the static production site. This is fine — previews only happen on the editing deployment.
 - **GitHub token for preview**: The `createGitHubReader` needs a GitHub token to read branch content. This can be the GitHub App's installation token (which Keystatic's auth flow provides) or a separate fine-grained PAT with read-only repo access. The token goes in the editing deployment's env vars only.
 - **Preview of new (not yet committed) content**: Keystatic's preview flow requires saving to a branch first. Unsaved editor changes are not previewable — they only exist in the browser's localStorage.
@@ -1141,24 +1176,31 @@ export default async function SlugPage({ params }) {
 1. Run the project locally in dev mode
 2. Visit `http://localhost:3000/keystatic`
 3. Follow Keystatic's automated GitHub App creation flow:
-   - It prompts you to create a GitHub App on github.com
-   - Sets the correct permissions (contents: read/write)
-   - Generates the callback URL
-4. Collect the 4 env vars:
-   - `KEYSTATIC_GITHUB_CLIENT_ID`
-   - `KEYSTATIC_GITHUB_CLIENT_SECRET`
-   - `KEYSTATIC_SECRET` (random 64-char string for session encryption)
-   - GitHub App slug (used in the config)
-5. Add the editing deployment's callback URL to the GitHub App settings:
-   - `https://edit.activistchecklist.org/api/keystatic/github/oauth/callback`
+
+- It prompts you to create a GitHub App on github.com
+- Sets the correct permissions (contents: read/write)
+- Generates the callback URL
+
+1. Collect the 4 env vars:
+
+- `KEYSTATIC_GITHUB_CLIENT_ID`
+- `KEYSTATIC_GITHUB_CLIENT_SECRET`
+- `KEYSTATIC_SECRET` (random 64-char string for session encryption)
+- GitHub App slug (used in the config)
+
+1. Add the editing deployment's callback URL to the GitHub App settings:
+
+- `https://edit.activistchecklist.org/api/keystatic/github/oauth/callback`
 
 **Why GitHub App (not OAuth App)**:
+
 - Fine-grained permissions: only `contents: read/write` on specific repos (OAuth App's `repo` scope gives full access to ALL repos)
 - Repository-scoped installation: repo owner controls which repos the App can access
 - Short-lived tokens (1 hour expiry vs permanent OAuth tokens)
 - Independent identity for commits/API calls
 
 **Edge cases**:
+
 - **GitHub App rate limits**: GitHub Apps get 5,000 requests/hour per installation. With 2-5 editors, this is more than enough.
 - **GitHub App permissions change**: If we later need to read issues or PRs, the App permissions must be updated and re-approved by the repo owner.
 - **Personal repo limitations**: GitHub Apps on personal repos (not orgs) have some restrictions. Keystatic's setup flow handles this — it creates the App on the user's account, not an org.
@@ -1167,24 +1209,29 @@ export default async function SlugPage({ params }) {
 
 1. Go to repo Settings → Rules → Rulesets (NOT the legacy "Branch protection rules")
 2. Create a new ruleset:
-   - **Name**: "Protect main"
-   - **Enforcement**: Active
-   - **Target**: Include `main` branch
-   - **Rules**:
-     - Require a pull request before merging
-     - Require 1 approving review
-   - **Bypass actors**: Add "Repository admin" role
-3. Verify:
-   - Collaborators cannot push directly to `main`
-   - Collaborators cannot merge PRs without owner approval
-   - Repo owner CAN self-merge their own PRs (bypass actor)
+
+- **Name**: "Protect main"
+- **Enforcement**: Active
+- **Target**: Include `main` branch
+- **Rules**:
+  - Require a pull request before merging
+  - Require 1 approving review
+- **Bypass actors**: Add "Repository admin" role
+
+1. Verify:
+
+- Collaborators cannot push directly to `main`
+- Collaborators cannot merge PRs without owner approval
+- Repo owner CAN self-merge their own PRs (bypass actor)
 
 **Why rulesets (not legacy branch protection)**:
+
 - Legacy branch protection on personal repos doesn't support bypass actor lists
 - Rulesets are the newer feature and are free on public repos
 - Rulesets support the "Repository admin" bypass role, which is how the repo owner can self-merge
 
 **Edge cases**:
+
 - **Keystatic branch creation**: Keystatic creates branches named like `keystatic-{timestamp}` or based on editor input. These are not protected by the ruleset (it only protects `main`).
 - **Force push protection**: Consider also adding "Block force pushes" to the ruleset for extra safety.
 - **Collaborator removal**: If an editor leaves, remove them as a collaborator. Their existing branches/PRs remain but they can no longer create new ones.
@@ -1192,6 +1239,7 @@ export default async function SlugPage({ params }) {
 #### Step 3.6: Vercel deployment configuration
 
 **Editing deployment** (`edit.activistchecklist.org`):
+
 - Domain: `edit.activistchecklist.org` (or any subdomain)
 - Build command: `yarn build` (standard, NOT static export)
 - Env vars:
@@ -1203,17 +1251,20 @@ export default async function SlugPage({ params }) {
 - Branch: `main` (auto-deploys on push to main)
 
 **Production deployment** (activistchecklist.org):
+
 - Remains on the LAMP static host (not Vercel)
 - Built via `BUILD_MODE=static yarn build`
 - No Keystatic env vars
 - Deployed via existing FTP/rsync process
 
 **Vercel branch previews**:
+
 - Already configured for PR previews
 - Editors can see their content changes rendered on Vercel preview deployments
 - These are full static builds of the branch, not draft mode previews
 
 **Edge cases**:
+
 - **Vercel Hobby plan limits**: 6,000 build minutes/month, 100 GB bandwidth, 12 serverless functions per deployment. With 2-5 editors making occasional edits, this is well within limits. Monitor usage.
 - **Vercel serverless function cold starts**: The Keystatic admin API route is a serverless function. First load after inactivity may take 1-2 seconds. Not a problem for an editing tool.
 - **CORS**: The editing deployment needs to make API calls to GitHub. Keystatic handles this server-side (route handlers), so no CORS issues.
@@ -1275,19 +1326,19 @@ Full end-to-end test with a test collaborator account:
 
 ## Comparison: TinaCMS vs Keystatic (Final)
 
-| | TinaCMS | Keystatic |
-|---|---|---|
-| **Cost** | Free (self-hosted) | Free (GitHub Mode) |
-| **Nested components** | Crashes / data loss | Works (wrapper type) |
-| **Cross-refs in rich-text** | Not supported (wontfix) | Works (relationship field) |
-| **Preview** | Real-time (`useTina`) | Draft Mode (save → preview in seconds) |
-| **Remote editing** | Deployed `/admin/` | Deployed `/keystatic` |
-| **Static build** | Yes (separate backend) | Yes (`output: 'export'`) |
-| **Translation** | Manual directory-based | File-based (full control) |
-| **React 19** | No | Yes |
-| **Auth** | Auth.js + database | GitHub OAuth (no database) |
-| **Infrastructure** | Needs database (Vercel KV/MongoDB) | No database needed |
-| **App Router** | Not required | Required |
+|                             | TinaCMS                            | Keystatic                              |
+| --------------------------- | ---------------------------------- | -------------------------------------- |
+| **Cost**                    | Free (self-hosted)                 | Free (GitHub Mode)                     |
+| **Nested components**       | Crashes / data loss                | Works (wrapper type)                   |
+| **Cross-refs in rich-text** | Not supported (wontfix)            | Works (relationship field)             |
+| **Preview**                 | Real-time (`useTina`)              | Draft Mode (save → preview in seconds) |
+| **Remote editing**          | Deployed `/admin/`                 | Deployed `/keystatic`                  |
+| **Static build**            | Yes (separate backend)             | Yes (`output: 'export'`)               |
+| **Translation**             | Manual directory-based             | File-based (full control)              |
+| **React 19**                | No                                 | Yes                                    |
+| **Auth**                    | Auth.js + database                 | GitHub OAuth (no database)             |
+| **Infrastructure**          | Needs database (Vercel KV/MongoDB) | No database needed                     |
+| **App Router**              | Not required                       | Required                               |
 
 ### Why Keystatic wins
 
@@ -1311,41 +1362,37 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 ### High risk
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Keystatic wrapper nesting doesn't work | Blocks entire plan | Verify in Phase 3 Keystatic UI (Phase 0 checklist); if broken, reassess Keystatic |
-| Relationship fields don't work inside content component schemas | Degraded UX (manual slug typing) | Verify in Phase 3; fallback to `fields.text()` is viable |
-| App Router migration breaks existing functionality | Site downtime | Incremental migration, full test coverage, feature branch |
+| Risk                                                            | Impact                           | Mitigation                                                                        |
+| --------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------- |
+| Keystatic wrapper nesting doesn't work                          | Blocks entire plan               | Verify in Phase 3 Keystatic UI (Phase 0 checklist); if broken, reassess Keystatic |
+| Relationship fields don't work inside content component schemas | Degraded UX (manual slug typing) | Verify in Phase 3; fallback to `fields.text()` is viable                          |
+| App Router migration breaks existing functionality              | Site downtime                    | Incremental migration, full test coverage, feature branch                         |
 
 ### Medium risk
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Keystatic + static export has issues | Need alternative admin hosting | Omit `app/api` Route Handlers during static export build (Phase 0); editing site stays non-export |
-| next-intl App Router migration is painful | Delays project | Can be deferred — Keystatic doesn't depend on i18n working |
-| GitHub App setup is confusing | Delays editor onboarding | Follow Keystatic's automated flow, document steps |
-| Vercel Hobby plan limits exceeded | Editing site goes down temporarily | Monitor usage, upgrade if needed ($20/mo) |
+| Risk                                      | Impact                             | Mitigation                                                                                        |
+| ----------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Keystatic + static export has issues      | Need alternative admin hosting     | Omit `app/api` Route Handlers during static export build (Phase 0); editing site stays non-export |
+| next-intl App Router migration is painful | Delays project                     | Can be deferred — Keystatic doesn't depend on i18n working                                        |
+| GitHub App setup is confusing             | Delays editor onboarding           | Follow Keystatic's automated flow, document steps                                                 |
+| Vercel Hobby plan limits exceeded         | Editing site goes down temporarily | Monitor usage, upgrade if needed ($20/mo)                                                         |
 
 ### Low risk
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Content validation rejects Keystatic-generated MDX | Editor saves fail CI | Keystatic's MDX output is clean by design; validate in Phase 4 |
-| Keystatic relationship field doesn't work in content components | Must use text field for slugs | Acceptable fallback — editors type slugs manually |
-| Editor accidentally creates duplicate content | Confusion | Keystatic shows existing items; slug uniqueness enforced by filesystem |
+| Risk                                                            | Impact                        | Mitigation                                                             |
+| --------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| Content validation rejects Keystatic-generated MDX              | Editor saves fail CI          | Keystatic's MDX output is clean by design; validate in Phase 4         |
+| Keystatic relationship field doesn't work in content components | Must use text field for slugs | Acceptable fallback — editors type slugs manually                      |
+| Editor accidentally creates duplicate content                   | Confusion                     | Keystatic shows existing items; slug uniqueness enforced by filesystem |
 
 ---
 
 ## Open Questions
 
 1. ~~**App Router migration scope**~~: Accounted for in Phase 2. Detailed implementation plan in separate `PLAN-app-router-migration.md`.
-
 2. **Keystatic wrapper nesting depth**: Docs show it works; **hands-on testing** is listed under Phase 0 (Phase 3 acceptance) — not proven by the deleted build-only POC.
-
-3. ~~**Keystatic + `output: 'export'`**~~: Confirmed: admin UI can be disabled via env, but **Route Handlers must be absent from `app/api` during the static export build** — not solved by `notFound()` alone. Use a build-step move/rename **outside `app/`**, or equivalent (Phase 0 notes).
-
+3. ~~**Keystatic + `output: 'export'**~~`: Confirmed: admin UI can be disabled via env, but **Route Handlers must be absent from `app/api` during the static export build** — not solved by `notFound()` alone. Use a build-step move/rename **outside `app/`**, or equivalent (Phase 0 notes).
 4. **Vercel free tier limits**: Should be fine for 2-5 editors. Monitor after launch.
-
 5. **News tag normalization**: During Phase 1a, need to audit and normalize all news item tags from comma-separated strings to YAML arrays.
 
 ---
@@ -1354,21 +1401,16 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 Please confirm or answer when convenient:
 
-1. **Phase 2 scope**: App Router migration is intentionally **not started** in this pass (large, needs `PLAN-app-router-migration.md` per this doc). OK to proceed route-by-route next?
-2. **News tags**: Plan still calls for auditing comma-separated `tags:` vs YAML arrays in news frontmatter — optional follow-up PR?
-3. **Related guides on pages**: Only `links.mdx` had `relatedGuides` in frontmatter. Confirm no other English pages should show related guide cards (previously none used body MDX for this).
-4. **Keystatic Phase 0 UX checks**: Nesting (`HowTo` → `Alert`), relationship dropdown, GitHub Mode — still outstanding until Phase 3 (see Phase 0 section).
+1. **Phase 2 scope**: App Router migration is the prerequisite for Keystatic (Phase 3). OK to proceed **route-by-route**, using `PLAN-app-router-migration.md` as the detailed checklist?
+2. **News tags**: Audit **comma-separated `tags:`** vs **YAML arrays** in news frontmatter — optional follow-up PR?
+3. **Related guides on pages**: Only **`links.mdx`** had `relatedGuides` in frontmatter after Phase 1b. Confirm no other English pages should show related guide cards (or add `relatedGuides` in frontmatter where you want them).
+4. **Keystatic Phase 0 UX checks**: Editor checks for nesting (`HowTo` → `Alert`), **relationship** dropdown in MDX blocks, and **GitHub Mode** — still outstanding until Phase 3 (see Phase 0 in this doc).
 
 ## Resolved Questions
 
-- **~~MDX format compatibility~~**: Confirmed — Keystatic's `fields.mdx()` reads and writes standard JSX tags (`<Component>`) to `.mdx` files. The `{% %}` syntax is only for `fields.markdoc()` which we don't use. **Our migration plan's MDX format works with Keystatic as-is. No changes needed.**
-
-- **~~Content pipeline approach~~**: Keep existing `lib/content.js` for production builds. Use Keystatic Reader API only for draft mode previews on the editing deployment. Keystatic is an editing UI only — it writes files, our pipeline reads them.
-
-- **~~News directory structure~~**: Flatten to `content/en/news/*.mdx`. Year subdirs are redundant (date is in frontmatter).
-
-- **~~RelatedGuides in pages~~**: Move to frontmatter `relatedGuides: [slug1, slug2]` to match guides. Eliminates fragile regex extraction.
-
-- **~~GitHub App vs OAuth App~~**: GitHub App is required by Keystatic for fine-grained permissions, repo-scoped access, and short-lived tokens. OAuth Apps grant too-broad access.
-
-- **~~Keystatic + static export~~**: Static export cannot include `app/api` Route Handlers; `notFound()` on `/keystatic` is not sufficient (see Phase 0). Production static build must omit API routes for that build; editing deployment uses non-export `next build`.
+- ~~**MDX format compatibility**~~: Confirmed — Keystatic's `fields.mdx()` reads and writes standard JSX tags (`<Component>`) to `.mdx` files. The `{% %}` syntax is only for `fields.markdoc()` which we don't use. **Our migration plan's MDX format works with Keystatic as-is. No changes needed.**
+- ~~**Content pipeline approach**~~: Keep existing `lib/content.js` for production builds. Use Keystatic Reader API only for draft mode previews on the editing deployment. Keystatic is an editing UI only — it writes files, our pipeline reads them.
+- ~~**News directory structure**~~: Flatten to `content/en/news/*.mdx`. Year subdirs are redundant (date is in frontmatter).
+- ~~**RelatedGuides in pages**~~: Move to frontmatter `relatedGuides: [slug1, slug2]` to match guides. Eliminates fragile regex extraction.
+- ~~**GitHub App vs OAuth App**~~: GitHub App is required by Keystatic for fine-grained permissions, repo-scoped access, and short-lived tokens. OAuth Apps grant too-broad access.
+- ~~**Keystatic + static export**~~: Static export cannot include `app/api` Route Handlers; `notFound()` on `/keystatic` is not sufficient (see Phase 0). Production static build must omit API routes for that build; editing deployment uses non-export `next build`.
