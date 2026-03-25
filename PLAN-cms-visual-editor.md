@@ -488,70 +488,32 @@ Editing deployment (Vercel SSR):
 
 ## Implementation Sequence
 
-### Phase 0: Proof of Concept (DO THIS FIRST)
+### Phase 0: Proof of Concept
 
-**Goal**: Verify three critical unknowns before committing to the full migration:
-1. Keystatic wrapper nesting works (HowTo → Alert)
-2. Keystatic + `output: 'export'` works
-3. Keystatic GitHub Mode works with our repo
+**Status**: A throwaway App Router app was maintained in `keystatic-poc/` at the repo root only for tooling experiments. **That directory has been deleted** — it is not required for production, Phase 1, or Phase 2. There is no remaining proof that must happen inside a separate POC folder.
 
-**Approach**: Create a minimal Next.js App Router app in `keystatic-poc/` at the project root. This is a throwaway — it gets deleted after verification. It does NOT need to replicate the full site, just test the three unknowns.
+**What was verified (engineering / build)**:
 
-**Steps**:
+1. **Keystatic + Next.js App Router (yarn)** — `@keystatic/core`, `@keystatic/next`, and **`@markdoc/markdoc`** (per [installation docs](https://keystatic.com/docs/installation-next-js)) install and compile; `keystatic.config.ts`, `makePage` + `makeRouteHandler`, and local storage mode are wired correctly for `yarn dev` / `yarn build`.
+2. **Static export vs Route Handlers** — With `output: 'export'`, Next.js **still analyzes `app/api/**/route.ts` files**. The **`showAdminUI` + `notFound()` pattern on `/keystatic` does not remove those handlers from the filesystem**, so the static export build **fails** unless the API routes are not present during that build. Practical options for the **production static export** (LAMP deploy): (a) a small build script that **moves `app/api` entirely outside `app/`** (e.g. project-root `.poc-api-backup`) for the export build only, then restores it; (b) conditional packaging / separate entry; or (c) any approach that guarantees **no Route Handlers under `app/`** when `output: 'export'` runs. **Important**: renaming `app/api` to something **still under `app/`** (e.g. `app/api.__backup`) does **not** work — Next treats arbitrary folders under `app/` as routes and will still fail. The **editing deployment** (Vercel) uses a normal `next build` **without** `output: 'export'`, so Keystatic API routes are fine there.
+3. **`/keystatic/[[...params]]` + static export** — The optional catch-all admin route needs **`generateStaticParams()`** (e.g. return `[{ params: [] }]` so `/keystatic` prerenders) or the export build errors; this is in addition to hiding/disabling the admin UI for production UX.
+4. **Monorepo / nested app** — If this repo keeps a nested Next app or a second `yarn.lock` under a subfolder, Next 16 may infer the wrong Turbopack workspace root when the parent directory also has a lockfile. Set **`turbopack.root`** to the Next app directory (e.g. `process.cwd()` when builds always run from that folder) to avoid the warning and mis-resolution.
 
-1. **Scaffold minimal app**:
-   ```bash
-   mkdir keystatic-poc && cd keystatic-poc
-   npx create-next-app@latest . --app --typescript --tailwind --no-src-dir
-   yarn add @keystatic/core @keystatic/next
-   ```
+**Scaffolding reference** (for anyone reproducing a minimal app):
 
-2. **Create minimal keystatic.config.ts** with two collections:
-   - **`test-items`** (models checklist items): `fields.mdx()` body with:
-     - `Alert` wrapper component (type enum + title text + markdown children)
-     - `HowTo` wrapper component (title text + markdown children including Alert and Button)
-     - `Button` block component (title + url)
-   - **`test-guides`** (models guides): `fields.mdx()` body with:
-     - `Section` wrapper component (title + slug props, wraps children)
-     - `ChecklistItem` block component with a `fields.relationship()` pointing to `test-items`
-     - `RiskLevel` wrapper component (level enum)
-   - This tests the exact guide editing pattern: can an editor insert a Section, then inside it add ChecklistItem blocks that reference items from the other collection via a dropdown?
+- Greenfield: **`yarn create @keystatic@latest`** (or `npm create @keystatic@latest`) is the official CLI; alternatively `create-next-app` in a subfolder then **`yarn add @keystatic/core @keystatic/next @markdoc/markdoc`**.
+- POC schema sketch: collections analogous to **`testItems`** / **`testGuides`** with `fields.mdx()` and content components **`HowTo` → `Alert` / `Button`**, **`Section` → `ChecklistItem` (relationship) / `RiskLevel`**.
 
-3. **Test wrapper nesting**:
-   - Create a test item in the Keystatic admin UI
-   - Insert a `HowTo` wrapper, then inside it insert an `Alert` wrapper
-   - Verify: Does the editor UI allow this? Does it save correctly? Does the MDX output look right?
-   - Test edge case: What happens if you try to nest 3 levels deep (HowTo → Alert → HowTo)?
+**Still to validate in the real product (Phase 3 or first editor session)** — not covered by build-only POC:
 
-4. **Test relationship fields inside content components**:
-   - Create a test guide, insert a `Section` wrapper, insert a `ChecklistItem` block inside it
-   - Verify: Does the `ChecklistItem` block show a dropdown of items from the `test-items` collection?
-   - Verify: Does the saved MDX contain `<ChecklistItem slug="the-selected-slug" />`?
-   - **This is critical** — if `fields.relationship()` doesn't work inside content component schemas, we'd need to fall back to `fields.text()` (editors type slugs manually, no dropdown). Functional but worse UX.
+- [ ] **Editor UX**: Insert `HowTo` → nested `Alert`; confirm save and MDX shape: `<HowTo title="..."><Alert type="...">...</Alert></HowTo>`.
+- [ ] **Edge depth**: e.g. `HowTo` → `Alert` → inner `HowTo` (document if the UI allows or blocks it).
+- [ ] **Relationship in MDX**: `ChecklistItem` with `fields.relationship()` shows a dropdown and persists `<ChecklistItem slug="..." />` (or equivalent) in the file.
+- [ ] **GitHub Mode** with this repo (or a fork): OAuth, branch, PR flow — remains Phase 3 setup.
 
-5. **Test static export**:
-   - Add `output: 'export'` to next.config (conditionally, using the documented recipe)
-   - Add the `showAdminUI` flag pattern to disable admin routes in production
-   - Run `next build` with static export enabled
-   - Verify: Does it build without errors? Are admin routes excluded?
+**If relationship fields fail in content components**: Fall back to `fields.text()` for the slug; same MDX contract, worse UX (see Risk Register).
 
-6. **Test GitHub Mode** (optional — can defer to Phase 3):
-   - Point Keystatic at the main repo (or a test fork)
-   - Follow the GitHub App setup flow
-   - Verify: Can you authenticate, edit, and commit to a branch?
-
-**Success criteria**:
-- [ ] HowTo wrapper containing Alert wrapper saves correct MDX: `<HowTo title="..."><Alert type="...">text</Alert></HowTo>`
-- [ ] Section wrapper containing ChecklistItem blocks saves correct MDX: `<Section title="..." slug="..."><ChecklistItem slug="item-slug" /></Section>`
-- [ ] Relationship field inside a content component block (ChecklistItem) shows a dropdown of items from another collection
-- [ ] Static export builds successfully with admin routes excluded
-- [ ] Generated MDX matches the format our existing pipeline expects (JSX tags, not Markdoc)
-
-**If relationship fields don't work in content components**: This is a degraded but viable outcome. Fall back to `fields.text()` for the slug prop — editors type slugs manually instead of selecting from a dropdown. The MDX output is the same either way. Document this in the POC results.
-
-**If any of these fail**: Stop and reassess. Document what broke and explore workarounds before proceeding. If wrapper nesting is broken, Keystatic is not viable and we'd need to evaluate Plate.js or a custom solution.
-
-**Cleanup**: Delete `keystatic-poc/` directory and add it to `.gitignore` during testing. The POC lives on a feature branch, not main.
+**If wrapper nesting fails in the editor**: Stop and reassess Keystatic vs Plate.js / custom (see Risk Register).
 
 ---
 
@@ -655,7 +617,7 @@ Use Next.js's incremental adoption:
 
 ### Phase 3: Keystatic Integration
 
-**Prerequisite**: Phase 0 POC verified, Phase 1 content refactoring done, Phase 2 App Router migration complete.
+**Prerequisite**: Phase 0 build learnings incorporated (this doc); Phase 1 content refactoring done; Phase 2 App Router migration complete; Phase 3 kickoff should include the **editor UX checklist** under Phase 0 (nesting, relationships, GitHub Mode) if not already done on the integrated app.
 
 #### Step 3.1: Install and configure Keystatic
 
@@ -1109,7 +1071,8 @@ module.exports = baseConfig
 ```
 
 **Edge cases**:
-- **Static export + Keystatic routes**: When `output: 'export'` is set, the `[[...params]]` dynamic route fails because `generateStaticParams` isn't defined. The `showAdminUI` pattern returns `notFound()` which avoids this — Next.js skips the route in static export mode.
+- **Static export + Keystatic API routes**: `output: 'export'` is incompatible with **any** `app/api/**/route.ts` during that build. `showAdminUI` + `notFound()` on `/keystatic` only affects the admin **page**; it does **not** stop Next from bundling Route Handlers. Production static builds must omit those handlers from under `app/` for the export run (see Phase 0: move `app/api` out of `app/` for the static build, or equivalent). The editing deployment does not use static export, so Keystatic API routes are unproblematic there.
+- **Static export + `/keystatic/[[...params]]`**: Define **`generateStaticParams()`** on that segment (e.g. `[{ params: [] }]`) so export can prerender `/keystatic`; combine with `showAdminUI` / env so the shipped static site does not expose a usable admin (404 or empty shell is acceptable).
 - **Keystatic env vars on production**: Production builds (static export) must NOT have `KEYSTATIC_GITHUB_CLIENT_ID` set, or the `showAdminUI` flag would be true. Ensure Vercel env vars are scoped: Keystatic vars only on the editing deployment, `BUILD_MODE=static` only on production.
 
 #### Step 3.3: Configure draft-mode-aware content loading
@@ -1337,15 +1300,15 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Keystatic wrapper nesting doesn't work | Blocks entire plan | Phase 0 POC verifies this first |
-| Relationship fields don't work inside content component schemas | Degraded UX (manual slug typing) | POC tests this; fallback to `fields.text()` is viable |
+| Keystatic wrapper nesting doesn't work | Blocks entire plan | Verify in Phase 3 Keystatic UI (Phase 0 checklist); if broken, reassess Keystatic |
+| Relationship fields don't work inside content component schemas | Degraded UX (manual slug typing) | Verify in Phase 3; fallback to `fields.text()` is viable |
 | App Router migration breaks existing functionality | Site downtime | Incremental migration, full test coverage, feature branch |
 
 ### Medium risk
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Keystatic + static export has issues | Need alternative admin hosting | POC verifies this; fallback: disable admin via env var |
+| Keystatic + static export has issues | Need alternative admin hosting | Omit `app/api` Route Handlers during static export build (Phase 0); editing site stays non-export |
 | next-intl App Router migration is painful | Delays project | Can be deferred — Keystatic doesn't depend on i18n working |
 | GitHub App setup is confusing | Delays editor onboarding | Follow Keystatic's automated flow, document steps |
 | Vercel Hobby plan limits exceeded | Editing site goes down temporarily | Monitor usage, upgrade if needed ($20/mo) |
@@ -1354,7 +1317,7 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Content validation rejects Keystatic-generated MDX | Editor saves fail CI | Keystatic's MDX output is clean by design; test in POC |
+| Content validation rejects Keystatic-generated MDX | Editor saves fail CI | Keystatic's MDX output is clean by design; validate in Phase 4 |
 | Keystatic relationship field doesn't work in content components | Must use text field for slugs | Acceptable fallback — editors type slugs manually |
 | Editor accidentally creates duplicate content | Confusion | Keystatic shows existing items; slug uniqueness enforced by filesystem |
 
@@ -1364,9 +1327,9 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 1. ~~**App Router migration scope**~~: Accounted for in Phase 2. Detailed implementation plan in separate `PLAN-app-router-migration.md`.
 
-2. **Keystatic wrapper nesting depth**: Phase 0 POC will verify. Docs show it works, but hands-on testing is required.
+2. **Keystatic wrapper nesting depth**: Docs show it works; **hands-on testing** is listed under Phase 0 (Phase 3 acceptance) — not proven by the deleted build-only POC.
 
-3. ~~**Keystatic + `output: 'export'`**~~: Documented workaround exists (disable admin UI via env flag). Phase 0 POC will verify.
+3. ~~**Keystatic + `output: 'export'`**~~: Confirmed: admin UI can be disabled via env, but **Route Handlers must be absent from `app/api` during the static export build** — not solved by `notFound()` alone. Use a build-step move/rename **outside `app/`**, or equivalent (Phase 0 notes).
 
 4. **Vercel free tier limits**: Should be fine for 2-5 editors. Monitor after launch.
 
