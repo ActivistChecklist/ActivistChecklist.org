@@ -16,6 +16,9 @@
 /out
 /out-dev
 
+# local Storyblok CDN JSON dumps (see yarn export-storyblok-json)
+/storyblok-api-export
+
 # misc
 .DS_Store
 *.pem

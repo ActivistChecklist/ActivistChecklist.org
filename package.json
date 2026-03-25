@@ -8,6 +8,7 @@
     "dev": "concurrently -n \"API,PROXY,NEXT\" -c \"blue,yellow,green\" \"NODE_NO_WARNINGS=1 yarn api:dev\" \"NODE_NO_WARNINGS=1 local-ssl-proxy --source 3001 --target 3000\" \"yarn next dev\"",
     "next:dev": "next dev",
     "migrate": "NODE_OPTIONS='--experimental-vm-modules' node scripts/migrate-from-storyblok.mjs",
+    "export-storyblok-json": "node scripts/export-storyblok-json.mjs",
     "prebuild": "yarn audit --level high || true",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "postbuild": "bash scripts/postbuild.sh",
