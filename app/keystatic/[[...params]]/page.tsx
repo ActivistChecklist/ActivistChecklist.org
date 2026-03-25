@@ -1,14 +1,19 @@
-import { notFound } from 'next/navigation';
+'use client';
 
-// Provide a placeholder path so Next.js static export is satisfied.
-// The layout's notFound() call ensures this route returns 404 in static builds.
-export function generateStaticParams() {
-  return [{ params: ['_placeholder'] }];
-}
+import { useEffect } from 'react';
+import { makePage } from '@keystatic/next/ui/app';
+import keystaticConfig from '../../../keystatic.config';
 
-// Page component: the layout handles rendering (or notFound in static builds).
-export default function KeystaticPage() {
-  // In static export mode, the layout calls notFound() before reaching here.
-  // In dev/editing mode, KeystaticApp in the layout renders the UI.
-  notFound();
+const KeystaticPage = makePage(keystaticConfig);
+
+export default function Page() {
+  // trailingSlash: true adds a trailing slash that breaks Keystatic's internal router.
+  // Strip it on mount so Keystatic sees the correct path.
+  useEffect(() => {
+    if (window.location.pathname !== '/keystatic/' && window.location.pathname.endsWith('/')) {
+      window.history.replaceState(null, '', window.location.pathname.slice(0, -1) + window.location.search);
+    }
+  }, []);
+
+  return <KeystaticPage />;
 }

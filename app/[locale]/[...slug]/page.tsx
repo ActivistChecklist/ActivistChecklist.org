@@ -97,8 +97,14 @@ export default async function SlugPage({ params }) {
   const guide = getGuide(slug, locale);
   if (guide) {
     const { frontmatter, content, isFallback } = guide;
+    const firstSectionIndex = content.indexOf('<Section');
+    const introContent =
+      firstSectionIndex === -1 ? content : content.slice(0, firstSectionIndex).trim();
+    const sectionContent =
+      firstSectionIndex === -1 ? '' : content.slice(firstSectionIndex).trim();
 
-    const serializedBody = await serialize(content, mdxOptions);
+    const serializedIntro = introContent ? await serialize(introContent, mdxOptions) : null;
+    const serializedBody = sectionContent ? await serialize(sectionContent, mdxOptions) : null;
 
     // Resolve all referenced checklist items
     const itemSlugs = extractChecklistItems(content);
@@ -136,6 +142,7 @@ export default async function SlugPage({ params }) {
         {isFallback && <TranslationFallbackBanner />}
         <Guide
           frontmatter={serializeFrontmatter(frontmatter)}
+          serializedIntro={serializedIntro}
           serializedBody={serializedBody}
           checklistItems={checklistItems}
           slug={slug}

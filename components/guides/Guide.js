@@ -30,7 +30,7 @@ function parseRelatedGuides(value) {
  *   - checklistItems: { [slug]: { frontmatter, serializedBody } } map for ChecklistItemsContext
  *   - locale: BCP 47 locale string for date formatting (provided by parent Server Component)
  */
-export default function Guide({ frontmatter, serializedBody, checklistItems = {}, slug, locale }) {
+export default function Guide({ frontmatter, serializedIntro, serializedBody, checklistItems = {}, slug, locale }) {
   const t = useTranslations();
   // Prefer locale from NextIntlClientProvider (set by the locale layout), fall back to prop
   const intlLocale = useLocale() || locale || 'en';
@@ -94,7 +94,12 @@ export default function Guide({ frontmatter, serializedBody, checklistItems = {}
       {/* Body */}
       <div className="mx-auto">
         <div className="relative">
-          <MDXRemote {...serializedBody} components={mdxComponents} />
+          {serializedIntro && (
+            <div className="prose prose-slate max-w-none">
+              <MDXRemote {...serializedIntro} components={mdxComponents} />
+            </div>
+          )}
+          {serializedBody && <MDXRemote {...serializedBody} components={mdxComponents} />}
           {relatedGuideSlugs.length > 0 && (
             <RelatedGuides isBlock guideSlugs={relatedGuideSlugs} />
           )}
