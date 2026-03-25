@@ -37,7 +37,42 @@ const buttonComponent = block({
       ],
       defaultValue: 'default',
     }),
+    size: fields.select({
+      label: 'Size',
+      options: [
+        { label: 'Small', value: 'sm' },
+        { label: 'Default', value: 'default' },
+        { label: 'Large', value: 'lg' },
+        { label: 'Extra Large', value: 'xl' },
+      ],
+      defaultValue: 'default',
+    }),
+    target: fields.select({
+      label: 'Target',
+      options: [
+        { label: 'Same tab', value: '_self' },
+        { label: 'New tab', value: '_blank' },
+      ],
+      defaultValue: '_self',
+    }),
+    alignment: fields.select({
+      label: 'Alignment',
+      options: [
+        { label: 'Left', value: 'left' },
+        { label: 'Center', value: 'center' },
+        { label: 'Right', value: 'right' },
+      ],
+      defaultValue: 'left',
+    }),
     icon: fields.text({ label: 'Icon name (optional)' }),
+    iconPosition: fields.select({
+      label: 'Icon Position',
+      options: [
+        { label: 'Left', value: 'left' },
+        { label: 'Right', value: 'right' },
+      ],
+      defaultValue: 'left',
+    }),
     download: fields.checkbox({ label: 'Download link?', defaultValue: false }),
   },
 });
@@ -59,12 +94,22 @@ const imageEmbedComponent = wrapper({
     size: fields.select({
       label: 'Size',
       options: [
+        { label: 'Extra Small', value: 'xs' },
         { label: 'Small', value: 'small' },
         { label: 'Medium', value: 'medium' },
         { label: 'Large', value: 'large' },
         { label: 'Full', value: 'full' },
       ],
       defaultValue: 'medium',
+    }),
+    alignment: fields.select({
+      label: 'Alignment',
+      options: [
+        { label: 'Left', value: 'left' },
+        { label: 'Center', value: 'center' },
+        { label: 'Right', value: 'right' },
+      ],
+      defaultValue: 'left',
     }),
   },
 });
@@ -212,6 +257,7 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
+        slug: fields.text({ label: 'Legacy Slug (keep in sync with filename)' }),
         type: fields.select({
           label: 'Type',
           options: [
@@ -291,6 +337,7 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
+        slug: fields.text({ label: 'Legacy Slug (keep in sync with filename)' }),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',
