@@ -432,7 +432,7 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         estimatedTime: fields.text({ label: 'Estimated Time' }),
-        summary: fields.text({ label: 'Summary', multiline: true }),
+        excerpt: fields.mdx.inline({ label: 'Summary' }),
         relatedGuides: fields.array(
           fields.relationship({
             label: 'Related Guide',

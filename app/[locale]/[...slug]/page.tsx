@@ -56,7 +56,8 @@ export async function generateMetadata({ params }) {
   const pageTitle = frontmatter?.title
     ? `${frontmatter.title} | Digital Security Checklists for Activists`
     : 'Digital Security Checklists for Activists';
-  const pageDescription = frontmatter?.summary || frontmatter?.description || DEFAULT_DESCRIPTION;
+  const pageDescription =
+    frontmatter?.excerpt || frontmatter?.summary || frontmatter?.description || DEFAULT_DESCRIPTION;
 
   const hrefLangLocales = Object.keys(LOCALES);
   const alternates = {};

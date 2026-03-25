@@ -1,6 +1,6 @@
 // Format MDX files using the same pipeline as Keystatic.
 //
-// YAML:  load → patch dates → add trailing \n to inline fields → dump
+// YAML:  load → patch dates → add trailing \n to inline MDX fields → dump
 // Body:  fromMarkdown → normalize MDAST → toMarkdown
 //
 // The MDAST normalization replicates ProseMirror behaviours:
@@ -64,7 +64,8 @@ const serializeOptions = {
 const FRONTMATTER_RE = /^---(?:\r?\n([^]*?))?\r?\n---\r?\n?/;
 
 // markdoc.inline / mdx.inline fields whose serialize adds trailing \n
-const INLINE_FIELDS = new Set(['preview', 'do', 'dont']);
+// (guides: excerpt is fields.mdx.inline — same trailing newline behavior as checklist markdoc inline fields)
+const INLINE_FIELDS = new Set(['preview', 'do', 'dont', 'excerpt']);
 
 // Schema-ordered field keys + defaults per collection path pattern
 const COLLECTION_SCHEMAS = [
@@ -75,7 +76,7 @@ const COLLECTION_SCHEMAS = [
   },
   {
     match: '/guides/',
-    order: ['title', 'estimatedTime', 'summary', 'relatedGuides', 'firstPublished', 'lastUpdated'],
+    order: ['title', 'estimatedTime', 'excerpt', 'relatedGuides', 'firstPublished', 'lastUpdated'],
     defaults: {},
   },
   {
@@ -176,8 +177,8 @@ function normalizeTree(node) {
   if (node.type === 'listItem') {
     node.spread =
       node.children.length === 2 &&
-      node.children[0].type === 'paragraph' &&
-      node.children[1].type === 'list'
+        node.children[0].type === 'paragraph' &&
+        node.children[1].type === 'list'
         ? false
         : undefined;
   }
