@@ -452,84 +452,553 @@ The CMS admin code being in the repo is fine because:
 
 ---
 
+## Key Architecture Decisions
+
+### Decision 1: Keep existing content pipeline for production builds
+
+Keystatic's Reader API provides type-safe content access and schema validation, but **no preview magic**. Previews work through a separate draft mode mechanism. Our existing `lib/content.js` is already well-tailored to our needs (locale fallback, cross-reference resolution, news item handling, etc.).
+
+**Approach**: Keystatic writes standard MDX files → our existing `lib/content.js` pipeline reads them at build time. On the editing deployment, we additionally use Keystatic's `createGitHubReader` for draft mode previews (reading from preview branches). Production builds never touch the Keystatic Reader API.
+
+**Why**: Avoids migrating working, battle-tested code. Keystatic's Reader API would need custom extensions to match our locale fallback logic, cross-reference resolution, and special content type handling. Using Keystatic only as an editing UI keeps the integration surface small.
+
+### Decision 2: Content refactoring before Keystatic integration
+
+Two content patterns need cleanup before they can map cleanly to Keystatic schemas:
+
+**2a. Flatten news items** — Move from `content/en/news/2024/*.mdx` year subdirectories to flat `content/en/news/*.mdx`. Keystatic's nested path support (`**`) requires editors to manually type year prefixes in slugs, which is error-prone. Flat structure is simpler. News date is already in frontmatter, so year subdirs are redundant.
+
+**2b. Move RelatedGuides to frontmatter for pages** — Guides already use `relatedGuides: [slug1, slug2]` in frontmatter. Pages use `<RelatedGuides><RelatedGuide slug="..." /></RelatedGuides>` in the MDX body, which is then regex-extracted in `getStaticProps` (lines 168-176 of `[...slug].js`). Unify by moving pages to the same frontmatter pattern. Eliminates fragile regex extraction and makes it editable via Keystatic's relationship field.
+
+**Guide structure stays in MDX** — Section, ChecklistItem, RiskLevel, and other guide components remain as inline MDX content components. This is exactly what Keystatic's wrapper/block content component model is designed for. Editors compose guide structure visually in the rich-text editor: insert a Section wrapper, drop ChecklistItem blocks inside it (selecting items from a dropdown via relationship field), add RiskLevel indicators, etc. No need to move this to frontmatter — the whole point of Keystatic is editing this kind of structured MDX.
+
+### Decision 3: Dual content pipeline (production vs editing)
+
+```
+Production build (static export):
+  lib/content.js reads MDX files from disk → next-mdx-remote serializes → static HTML
+
+Editing deployment (Vercel SSR):
+  Normal page loads: same as production (lib/content.js reads from disk)
+  Draft mode active: createGitHubReader reads from preview branch → renders preview
+  /keystatic admin: Keystatic UI for editing → commits to branches → opens PRs
+```
+
+---
+
 ## Implementation Sequence
 
-### Phase 1: Storyblok → MDX migration (from migration plan)
-No CMS involvement. Just get off Storyblok onto file-based MDX.
+### Phase 0: Proof of Concept (DO THIS FIRST)
 
-### Phase 2: Pages Router → App Router migration
-Separate project. Required for Keystatic. Can be done incrementally using Next.js's [incremental adoption strategy](https://nextjs.org/docs/app/building-your-application/upgrading/app-router-migration).
+**Goal**: Verify three critical unknowns before committing to the full migration:
+1. Keystatic wrapper nesting works (HowTo → Alert)
+2. Keystatic + `output: 'export'` works
+3. Keystatic GitHub Mode works with our repo
 
-### Phase 3: Add Keystatic
+**Approach**: Create a minimal Next.js App Router app in `keystatic-poc/` at the project root. This is a throwaway — it gets deleted after verification. It does NOT need to replicate the full site, just test the three unknowns.
 
-**Code setup:**
-1. Install `@keystatic/core` and `@keystatic/next`
-2. Create `keystatic.config.js` defining collections and content component schemas
-3. Add Keystatic API route (`app/keystatic/[[...params]]/route.js`)
-4. Add Keystatic admin page (`app/keystatic/[[...params]]/page.js`)
-5. Set up `STATIC_EXPORT` conditional in `next.config.js`
-6. Add Draft Mode API routes (`app/api/draft/route.js`, `app/api/exit-draft/route.js`)
-7. Update content loading to check `draftMode().isEnabled` and read from branch HEAD when active
+**Steps**:
 
-**GitHub App setup:**
-6. Run project locally, visit `/keystatic`, follow automated setup prompts to create a GitHub App
-7. Collect the 4 env vars: `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`, app slug
-8. Add the editing deployment's callback URL to the GitHub App settings
+1. **Scaffold minimal app**:
+   ```bash
+   mkdir keystatic-poc && cd keystatic-poc
+   npx create-next-app@latest . --app --typescript --tailwind --no-src-dir
+   yarn add @keystatic/core @keystatic/next
+   ```
 
-**GitHub rulesets:**
-9. Go to repo Settings → Rules → Rulesets
-10. Create ruleset for `main` branch: require pull request + require 1 approving review
-11. Add "Repository admin" as a bypass actor (allows repo owner to self-merge)
+2. **Create minimal keystatic.config.ts** with two collections:
+   - **`test-items`** (models checklist items): `fields.mdx()` body with:
+     - `Alert` wrapper component (type enum + title text + markdown children)
+     - `HowTo` wrapper component (title text + markdown children including Alert and Button)
+     - `Button` block component (title + url)
+   - **`test-guides`** (models guides): `fields.mdx()` body with:
+     - `Section` wrapper component (title + slug props, wraps children)
+     - `ChecklistItem` block component with a `fields.relationship()` pointing to `test-items`
+     - `RiskLevel` wrapper component (level enum)
+   - This tests the exact guide editing pattern: can an editor insert a Section, then inside it add ChecklistItem blocks that reference items from the other collection via a dropdown?
 
-**Vercel deployment:**
-12. Configure Vercel editing deployment (`edit.activistchecklist.org`) with the 4 Keystatic env vars
-13. Configure Vercel production deployment with `STATIC_EXPORT=true` (no Keystatic routes)
-14. Test full flow: editor visits `/keystatic` → authenticates → edits → saves → PR created → Vercel preview → repo owner merges → static rebuild
+3. **Test wrapper nesting**:
+   - Create a test item in the Keystatic admin UI
+   - Insert a `HowTo` wrapper, then inside it insert an `Alert` wrapper
+   - Verify: Does the editor UI allow this? Does it save correctly? Does the MDX output look right?
+   - Test edge case: What happens if you try to nest 3 levels deep (HowTo → Alert → HowTo)?
 
-### Phase 4: Configure content component schemas
+4. **Test relationship fields inside content components**:
+   - Create a test guide, insert a `Section` wrapper, insert a `ChecklistItem` block inside it
+   - Verify: Does the `ChecklistItem` block show a dropdown of items from the `test-items` collection?
+   - Verify: Does the saved MDX contain `<ChecklistItem slug="the-selected-slug" />`?
+   - **This is critical** — if `fields.relationship()` doesn't work inside content component schemas, we'd need to fall back to `fields.text()` (editors type slugs manually, no dropdown). Functional but worse UX.
 
-Define Keystatic schemas for each MDX component:
+5. **Test static export**:
+   - Add `output: 'export'` to next.config (conditionally, using the documented recipe)
+   - Add the `showAdminUI` flag pattern to disable admin routes in production
+   - Run `next build` with static export enabled
+   - Verify: Does it build without errors? Are admin routes excluded?
+
+6. **Test GitHub Mode** (optional — can defer to Phase 3):
+   - Point Keystatic at the main repo (or a test fork)
+   - Follow the GitHub App setup flow
+   - Verify: Can you authenticate, edit, and commit to a branch?
+
+**Success criteria**:
+- [ ] HowTo wrapper containing Alert wrapper saves correct MDX: `<HowTo title="..."><Alert type="...">text</Alert></HowTo>`
+- [ ] Section wrapper containing ChecklistItem blocks saves correct MDX: `<Section title="..." slug="..."><ChecklistItem slug="item-slug" /></Section>`
+- [ ] Relationship field inside a content component block (ChecklistItem) shows a dropdown of items from another collection
+- [ ] Static export builds successfully with admin routes excluded
+- [ ] Generated MDX matches the format our existing pipeline expects (JSX tags, not Markdoc)
+
+**If relationship fields don't work in content components**: This is a degraded but viable outcome. Fall back to `fields.text()` for the slug prop — editors type slugs manually instead of selecting from a dropdown. The MDX output is the same either way. Document this in the POC results.
+
+**If any of these fail**: Stop and reassess. Document what broke and explore workarounds before proceeding. If wrapper nesting is broken, Keystatic is not viable and we'd need to evaluate Plate.js or a custom solution.
+
+**Cleanup**: Delete `keystatic-poc/` directory and add it to `.gitignore` during testing. The POC lives on a feature branch, not main.
+
+---
+
+### Phase 1: Content Refactoring (pre-migration prep)
+
+These changes happen **before** App Router or Keystatic. They simplify the content model so it maps cleanly to Keystatic schemas. Each sub-phase is independently deployable and shippable to production.
+
+#### Phase 1a: Flatten news directory structure
+
+**Change**: Move `content/en/news/2024/*.mdx`, `content/en/news/2025/*.mdx`, etc. → `content/en/news/*.mdx`
+
+**Files to modify**:
+- Move all MDX files to `content/en/news/` (flat)
+- `lib/content.js`: Change `getAllNewsItems` to use `readCollection('news', locale)` (non-recursive). Change `getNewsItem` to use `readMdxFileWithFallback` directly.
+- Remove `listMdxFilesRecursive` if no longer used anywhere.
+
+**Edge cases**:
+- **Slug collisions**: Two news items in different year dirs could have the same filename. Audit first: `find content/en/news -name "*.mdx" -exec basename {} \; | sort | uniq -d`. If collisions exist, rename the files (prepend date or add suffix).
+- **Git history**: `git mv` preserves history. Move files one directory at a time.
+- **Spanish translations**: Also flatten `content/es/news/` if it exists.
+
+#### Phase 1b: Move RelatedGuides to page frontmatter
+
+**Change**: Pages currently embed `<RelatedGuides><RelatedGuide slug="..." /></RelatedGuides>` in MDX body. Move to frontmatter `relatedGuides: [slug1, slug2]` (same format guides already use).
+
+**Files to modify**:
+- Each page MDX that has `<RelatedGuides>` — extract slugs, add to frontmatter, remove from body
+- `pages/[...slug].js`: Remove the regex extraction logic (lines 168-176). Instead, pass `frontmatter.relatedGuides` to the Page component.
+- `components/pages/Page.js`: Render RelatedGuides from frontmatter array prop instead of serialized MDX.
+
+**Edge cases**:
+- **Pages with no RelatedGuides**: Already handled — `relatedGuides` field is optional.
+- **Pages with RelatedGuides in the middle of content** (not at the end): Audit all pages. If any have RelatedGuides mid-content, those need special handling (keep as MDX component for those pages, or restructure content).
+
+---
+
+### Phase 2: App Router Migration (REQUIRED — Keystatic will not work without this)
+
+**Keystatic requires App Router.** It uses App Router API route handlers (`app/api/keystatic/[...params]/route.ts`) and the `app/keystatic/[[...params]]/page.tsx` catch-all route for its admin UI. These cannot be implemented in Pages Router. This is the largest phase and a hard blocker for Phase 3. The actual implementation details belong in a dedicated `PLAN-app-router-migration.md`.
+
+#### What must change
+
+**Routing**:
+- `pages/[...slug].js` → `app/[...slug]/page.tsx`
+- `pages/index.js` → `app/page.tsx`
+- `pages/checklists.js` → `app/checklists/page.tsx`
+- `pages/news.js` → `app/news/page.tsx`
+- `pages/changelog.js` → `app/changelog/page.tsx`
+- `pages/contact.js` → `app/contact/page.tsx`
+- `pages/_app.js` → `app/layout.tsx`
+- `pages/_document.js` → `app/layout.tsx` (merged)
+- `pages/dev/*` → `app/dev/*/page.tsx`
+
+**Data loading**:
+- `getStaticProps` → async Server Components (data fetched directly in the component)
+- `getStaticPaths` → `generateStaticParams`
+- `serialize()` from next-mdx-remote → `compileMDX()` or `MDXRemote` with RSC support (next-mdx-remote v5+ has App Router support via `next-mdx-remote/rsc`)
+
+**i18n** (account for, but separate implementation):
+- Next.js built-in `i18n` config in `next.config.js` is **Pages Router only**. App Router doesn't support it.
+- Must migrate to middleware-based i18n routing: `middleware.ts` detects locale and redirects to `app/[locale]/...` route segments.
+- `next-intl` has an App Router integration that handles this, but it's a different API than the Pages Router version.
+- **Important**: This is a significant sub-project. The plan should account for it but it can be implemented as part of the App Router migration or as a follow-up.
+
+**Client/Server component boundaries**:
+- All interactive components (checkbox state, accordion expand/collapse, theme toggle, search, localStorage access) must be `'use client'` components.
+- Layout, data fetching, and MDX rendering can stay as Server Components.
+- Context providers (`ChecklistItemsContext`, `SectionContext`, `TableOfContentsContext`, `LayoutContext`) must be in `'use client'` wrapper components.
+- `useRouter` from `next/router` → `useRouter` from `next/navigation` (different API: no `locale`, no `defaultLocale`, etc.)
+
+**Head/Metadata**:
+- `<Head>` from `next/head` → `export const metadata` or `generateMetadata()` in page files
+- OG image generation via `satori` can use Next.js App Router's built-in `opengraph-image.tsx` convention
+
+**Static export**:
+- `BUILD_MODE=static` with `output: 'export'` should still work in App Router
+- But `i18n` middleware won't run in static export — need to use route groups `app/(en)/...` and `app/(es)/...` or `app/[locale]/...` with `generateStaticParams` returning all locales
+- API rewrites for Fastify dev proxy → need different approach (env-based fetch URLs)
+
+**Things that stay the same**:
+- `lib/content.js` — unchanged, still reads files with `fs`
+- `lib/mdx-options.js` — remark plugins work the same
+- `lib/mdx-components.js` — component map unchanged
+- All component files — unchanged (except adding `'use client'` where needed)
+- `styles/globals.css`, `tailwind.config.js` — unchanged
+- `scripts/*` — unchanged
+- Fastify API server — unchanged
+- Content files — unchanged
+
+#### Migration strategy
+
+Use Next.js's incremental adoption:
+1. Create `app/layout.tsx` alongside `pages/_app.js`
+2. Migrate one route at a time (start with simplest: `contact`, then `changelog`, then `news`, then `checklists`, then pages, then guides)
+3. Both routers work simultaneously during migration
+4. Delete `pages/` directory entries as each route is migrated
+5. Run the full test suite + manual testing after each route migration
+6. Final step: remove `pages/` directory entirely
+
+---
+
+### Phase 3: Keystatic Integration
+
+**Prerequisite**: Phase 0 POC verified, Phase 1 content refactoring done, Phase 2 App Router migration complete.
+
+#### Step 3.1: Install and configure Keystatic
+
+```bash
+yarn add @keystatic/core @keystatic/next
+```
+
+Create `keystatic.config.tsx`:
 
 ```typescript
-// keystatic.config.ts (simplified)
-import { config, collection, fields } from '@keystatic/core'
+import { config, collection, fields, singleton } from '@keystatic/core'
 import { wrapper, block } from '@keystatic/core/content-components'
 
-const checklistItems = collection({
-  label: 'Checklist Items',
-  slugField: 'title',
-  path: 'content/en/checklist-items/*',
-  format: { contentField: 'body' },
+// ─── Shared content components (reused across collections) ───────
+
+const alertComponent = wrapper({
+  label: 'Alert',
+  description: 'Warning, info, or success callout box',
   schema: {
-    title: fields.slug({ name: { label: 'Title' } }),
-    type: fields.select({ label: 'Type', options: [...], defaultValue: 'checkbox' }),
-    preview: fields.text({ label: 'Preview text' }),
-    do: fields.text({ label: 'Do (recommendation)' }),
-    dont: fields.text({ label: "Don't (avoid)" }),
-    body: fields.mdx({
-      label: 'Body',
-      components: {
-        Alert: wrapper({
-          label: 'Alert',
-          schema: {
-            type: fields.select({ label: 'Type', options: [...] }),
-            title: fields.text({ label: 'Title' }),
+    type: fields.select({
+      label: 'Type',
+      options: [
+        { label: 'Warning', value: 'warning' },
+        { label: 'Info', value: 'info' },
+        { label: 'Success', value: 'success' },
+        { label: 'Error', value: 'error' },
+      ],
+      defaultValue: 'warning',
+    }),
+    title: fields.text({ label: 'Title' }),
+  },
+})
+
+const buttonComponent = block({
+  label: 'Button',
+  description: 'Call-to-action button',
+  schema: {
+    title: fields.text({ label: 'Title', validation: { isRequired: true } }),
+    url: fields.url({ label: 'URL', validation: { isRequired: true } }),
+    variant: fields.select({
+      label: 'Variant',
+      options: [
+        { label: 'Default', value: 'default' },
+        { label: 'Outline', value: 'outline' },
+        { label: 'Ghost', value: 'ghost' },
+      ],
+      defaultValue: 'default',
+    }),
+    icon: fields.text({ label: 'Icon name (optional)' }),
+    download: fields.checkbox({ label: 'Download link?' }),
+  },
+})
+
+const howToComponent = wrapper({
+  label: 'How To',
+  description: 'Step-by-step instructions (can contain Alerts and Buttons)',
+  schema: {
+    title: fields.text({ label: 'Title', validation: { isRequired: true } }),
+  },
+  // Children: freeform markdown + Alert + Button (inherits all registered components)
+})
+
+const imageEmbedComponent = wrapper({
+  label: 'Image',
+  description: 'Image with optional caption',
+  schema: {
+    src: fields.text({ label: 'Image path', validation: { isRequired: true } }),
+    alt: fields.text({ label: 'Alt text', validation: { isRequired: true } }),
+    size: fields.select({
+      label: 'Size',
+      options: [
+        { label: 'Small', value: 'small' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Large', value: 'large' },
+        { label: 'Full', value: 'full' },
+      ],
+      defaultValue: 'medium',
+    }),
+  },
+})
+
+const videoEmbedComponent = wrapper({
+  label: 'Video',
+  description: 'Video embed with optional caption',
+  schema: {
+    src: fields.text({ label: 'Video path', validation: { isRequired: true } }),
+  },
+})
+
+const copyButtonComponent = block({
+  label: 'Copy Button',
+  description: 'Text with a copy-to-clipboard button',
+  schema: {
+    text: fields.text({ label: 'Text to copy' }),
+  },
+})
+
+// ─── Shared content component set ────────────────────────────────
+
+const contentComponents = {
+  Alert: alertComponent,
+  HowTo: howToComponent,
+  Button: buttonComponent,
+  ImageEmbed: imageEmbedComponent,
+  VideoEmbed: videoEmbedComponent,
+  CopyButton: copyButtonComponent,
+}
+
+// ─── Badge components (checklist items only) ─────────────────────
+
+const badgeComponent = block({
+  label: 'Badge',
+  schema: {
+    variant: fields.text({ label: 'Variant' }),
+    children: fields.text({ label: 'Text' }),
+  },
+})
+
+const protectionBadgeComponent = block({
+  label: 'Protection Badge',
+  schema: {
+    type: fields.select({
+      label: 'Type',
+      options: [
+        { label: 'Basic', value: 'basic' },
+        { label: 'Enhanced', value: 'enhanced' },
+      ],
+      defaultValue: 'basic',
+    }),
+  },
+})
+
+// ─── Collections ─────────────────────────────────────────────────
+
+export default config({
+  storage: {
+    // Local mode for dev, GitHub mode for production editing
+    kind: process.env.NODE_ENV === 'development' ? 'local' : 'github',
+    repo: {
+      owner: 'OWNER',
+      name: 'ActivistChecklist.org',
+    },
+  },
+
+  collections: {
+    checklistItems: collection({
+      label: 'Checklist Items',
+      slugField: 'title',
+      path: 'content/en/checklist-items/*',
+      format: { contentField: 'body' },
+      schema: {
+        title: fields.slug({ name: { label: 'Title' } }),
+        type: fields.select({
+          label: 'Type',
+          options: [
+            { label: 'Action (with checkbox)', value: 'action' },
+            { label: 'Info (no checkbox)', value: 'info' },
+          ],
+          defaultValue: 'action',
+        }),
+        preview: fields.text({ label: 'Preview text', multiline: true }),
+        why: fields.text({ label: 'Why this matters', multiline: true }),
+        do: fields.text({ label: 'Do (recommendation)' }),
+        tools: fields.text({ label: 'Tools (alternative to Do)' }),
+        dont: fields.text({ label: "Don't (avoid)" }),
+        stop: fields.text({ label: 'Stop (alternative to Dont)' }),
+        titleBadges: fields.multiselect({
+          label: 'Title Badges',
+          options: [{ label: 'Important', value: 'important' }],
+        }),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        body: fields.mdx({
+          label: 'Body',
+          components: {
+            ...contentComponents,
+            Badge: badgeComponent,
+            ProtectionBadge: protectionBadgeComponent,
+            InlineChecklist: wrapper({
+              label: 'Inline Checklist',
+              description: 'Converts bullet list into interactive checklist',
+              schema: {
+                storageKey: fields.text({ label: 'Storage key (for localStorage)' }),
+              },
+            }),
           },
         }),
-        HowTo: wrapper({
-          label: 'How To',
-          schema: {
-            title: fields.text({ label: 'Title' }),
+      },
+    }),
+
+    guides: collection({
+      label: 'Guides',
+      slugField: 'title',
+      path: 'content/en/guides/*',
+      format: { contentField: 'body' },
+      schema: {
+        title: fields.slug({ name: { label: 'Title' } }),
+        estimatedTime: fields.text({ label: 'Estimated Time' }),
+        summary: fields.text({ label: 'Summary', multiline: true }),
+        relatedGuides: fields.array(
+          fields.relationship({
+            label: 'Related Guide',
+            collection: 'guides',
+          }),
+          { label: 'Related Guides', itemLabel: (props) => props.value || 'Select guide...' }
+        ),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        // Guide body uses Section/ChecklistItem/RiskLevel as MDX content components.
+        // Editors compose guides visually: insert Section wrappers, drop in
+        // ChecklistItem blocks (with relationship field for slug), etc.
+        body: fields.mdx({
+          label: 'Guide Content',
+          components: {
+            ...contentComponents,
+            Section: wrapper({
+              label: 'Section',
+              description: 'Guide section that groups checklist items',
+              schema: {
+                title: fields.text({ label: 'Section Title', validation: { isRequired: true } }),
+                slug: fields.text({ label: 'Section Slug', validation: { isRequired: true } }),
+              },
+              // Children: RiskLevel, ChecklistItem blocks, Alerts, prose, etc.
+            }),
+            ChecklistItem: block({
+              label: 'Checklist Item',
+              description: 'Reference to a checklist item by slug',
+              schema: {
+                slug: fields.relationship({
+                  label: 'Checklist Item',
+                  collection: 'checklistItems',
+                }),
+              },
+            }),
+            RiskLevel: wrapper({
+              label: 'Risk Level',
+              description: 'Who this section applies to',
+              schema: {
+                level: fields.select({
+                  label: 'Level',
+                  options: [
+                    { label: 'Everyone', value: 'everyone' },
+                    { label: 'Medium Risk', value: 'medium' },
+                    { label: 'High Risk', value: 'high' },
+                  ],
+                  defaultValue: 'everyone',
+                }),
+                mode: fields.select({
+                  label: 'Mode',
+                  options: [
+                    { label: 'Default', value: 'default' },
+                    { label: 'For You', value: 'for_you' },
+                    { label: 'For You If', value: 'for_you_if' },
+                  ],
+                  defaultValue: 'default',
+                }),
+              },
+            }),
+            RelatedGuides: wrapper({
+              label: 'Related Guides',
+              description: 'Block showing related guide cards',
+              schema: {},
+            }),
+            RelatedGuide: block({
+              label: 'Related Guide',
+              description: 'Reference to a related guide',
+              schema: {
+                slug: fields.relationship({
+                  label: 'Guide',
+                  collection: 'guides',
+                }),
+              },
+            }),
           },
-          // HowTo's children can contain Alert and Button
         }),
-        Button: block({
-          label: 'Button',
-          schema: {
-            title: fields.text({ label: 'Title' }),
-            url: fields.url({ label: 'URL' }),
-            variant: fields.select({ label: 'Variant', options: [...] }),
-          },
+      },
+    }),
+
+    pages: collection({
+      label: 'Pages',
+      slugField: 'title',
+      path: 'content/en/pages/*',
+      format: { contentField: 'body' },
+      schema: {
+        title: fields.slug({ name: { label: 'Title' } }),
+        relatedGuides: fields.array(
+          fields.relationship({
+            label: 'Related Guide',
+            collection: 'guides',
+          }),
+          { label: 'Related Guides', itemLabel: (props) => props.value || 'Select guide...' }
+        ),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        body: fields.mdx({
+          label: 'Body',
+          components: contentComponents,
+        }),
+      },
+    }),
+
+    news: collection({
+      label: 'News',
+      slugField: 'title',
+      path: 'content/en/news/*',  // flat after Phase 1a
+      format: { contentField: 'body' },
+      schema: {
+        title: fields.slug({ name: { label: 'Title' } }),
+        date: fields.date({ label: 'Date', validation: { isRequired: true } }),
+        url: fields.url({ label: 'Article URL' }),
+        source: fields.text({ label: 'Source Publication' }),
+        tags: fields.array(fields.text({ label: 'Tag' }), { label: 'Tags' }),
+        imageOverride: fields.text({ label: 'Image Override Path' }),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        body: fields.mdx({
+          label: 'Comment (optional)',
+          components: {},  // news items don't use MDX components
+        }),
+      },
+    }),
+
+    changelog: collection({
+      label: 'Changelog',
+      slugField: 'slug',
+      path: 'content/en/changelog/*',
+      format: { contentField: 'body' },
+      schema: {
+        slug: fields.slug({ name: { label: 'Slug' } }),
+        date: fields.date({ label: 'Date', validation: { isRequired: true } }),
+        type: fields.select({
+          label: 'Type',
+          options: [
+            { label: 'Minor', value: 'minor' },
+            { label: 'Major', value: 'major' },
+          ],
+          defaultValue: 'minor',
+        }),
+        firstPublished: fields.date({ label: 'First Published' }),
+        lastUpdated: fields.date({ label: 'Last Updated' }),
+        body: fields.mdx({
+          label: 'Body',
+          components: {},
         }),
       },
     }),
@@ -537,9 +1006,294 @@ const checklistItems = collection({
 })
 ```
 
-### Phase 5: Translation integration
+**Edge cases in schema design**:
 
-Add Weblate (or chosen translation tool) watching the repo. Keystatic edits English content; Weblate manages translations independently.
+- **`fields.slug` vs manual slug**: Keystatic's `fields.slug` auto-generates a slug from the title. Our existing slugs are manually curated and don't always match titles. Existing content should retain its slugs — Keystatic respects existing filenames when editing (it only generates slugs for new items).
+- **`fields.text` multiline**: Some frontmatter fields (`preview`, `why`) contain multi-line text. Use `multiline: true` for these.
+- **`fields.date`**: Keystatic writes dates as `YYYY-MM-DD` strings. Our `gray-matter` parses these as Date objects, then `serializeFrontmatter` converts back to `YYYY-MM-DD`. This round-trip should be clean.
+- **`fields.array` for tags**: News tags are currently sometimes stored as comma-separated strings (`tags: "tag1, tag2"`) and sometimes as YAML arrays (`tags: [tag1, tag2]`). Keystatic will write them as YAML arrays. The `toNewsListItem` function in `lib/content.js` handles both formats via `String(fm.tags).split(',')`, but we should normalize all existing news items to YAML arrays during Phase 1a.
+- **MDX body with no components**: News and changelog `body` fields use `fields.mdx()` but don't need any content components. Passing empty `components: {}` tells Keystatic not to show the component insertion toolbar for these collections.
+
+#### Step 3.2: Add Keystatic routes
+
+**Admin routes** (editing deployment only):
+
+```typescript
+// app/keystatic/layout.tsx
+import KeystaticApp from './keystatic-app'
+
+// Only show admin UI when not doing a static export
+export const showAdminUI =
+  process.env.NODE_ENV === 'development' ||
+  process.env.KEYSTATIC_GITHUB_CLIENT_ID !== undefined
+
+export default function KeystaticLayout() {
+  if (!showAdminUI) {
+    return notFound()
+  }
+  return <KeystaticApp />
+}
+```
+
+```typescript
+// app/keystatic/[[...params]]/page.tsx
+export default function KeystaticPage() {
+  return null // rendered by layout
+}
+```
+
+```typescript
+// app/api/keystatic/[...params]/route.ts
+import { makeRouteHandler } from '@keystatic/next/route-handler'
+import keystaticConfig from '../../../keystatic.config'
+
+export const { POST, GET } = makeRouteHandler({ config: keystaticConfig })
+```
+
+**Draft mode routes** (editing deployment only):
+
+```typescript
+// app/api/preview/start/route.ts
+import { draftMode } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const branch = url.searchParams.get('branch')
+  const to = url.searchParams.get('to') || '/'
+
+  if (!branch) {
+    return new Response('Missing branch parameter', { status: 400 })
+  }
+
+  const draft = await draftMode()
+  draft.enable()
+
+  // Store branch name in a cookie for the reader to use
+  const response = redirect(to)
+  // Note: branch stored via cookie or headers — implementation depends on
+  // how we wire up createGitHubReader in the content loading layer
+  return response
+}
+```
+
+```typescript
+// app/api/preview/end/route.ts
+import { draftMode } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+export async function GET() {
+  const draft = await draftMode()
+  draft.disable()
+  return redirect('/')
+}
+```
+
+**next.config.js changes**:
+
+```javascript
+// next.config.js (updated for conditional Keystatic)
+const baseConfig = {
+  trailingSlash: true,
+  images: { unoptimized: true },
+  // ... existing webpack config
+}
+
+if (process.env.BUILD_MODE === 'static') {
+  baseConfig.output = 'export'
+  baseConfig.distDir = 'out'
+  // ... existing static export config
+}
+
+module.exports = baseConfig
+```
+
+**Edge cases**:
+- **Static export + Keystatic routes**: When `output: 'export'` is set, the `[[...params]]` dynamic route fails because `generateStaticParams` isn't defined. The `showAdminUI` pattern returns `notFound()` which avoids this — Next.js skips the route in static export mode.
+- **Keystatic env vars on production**: Production builds (static export) must NOT have `KEYSTATIC_GITHUB_CLIENT_ID` set, or the `showAdminUI` flag would be true. Ensure Vercel env vars are scoped: Keystatic vars only on the editing deployment, `BUILD_MODE=static` only on production.
+
+#### Step 3.3: Configure draft-mode-aware content loading
+
+For the editing deployment to support preview, we need a content reader that can fetch from a GitHub branch:
+
+```typescript
+// lib/content-preview.ts (new file, editing deployment only)
+import { createGitHubReader } from '@keystatic/core/reader/github'
+import keystaticConfig from '../keystatic.config'
+
+export function createPreviewReader(branch: string) {
+  return createGitHubReader(keystaticConfig, {
+    repo: { owner: 'OWNER', name: 'ActivistChecklist.org' },
+    ref: branch,
+    token: process.env.GITHUB_TOKEN, // read-only token for preview
+  })
+}
+```
+
+In page components (App Router), check draft mode:
+
+```typescript
+// Example: app/[...slug]/page.tsx (simplified)
+import { draftMode, cookies } from 'next/headers'
+
+export default async function SlugPage({ params }) {
+  const draft = await draftMode()
+
+  if (draft.isEnabled) {
+    const branch = cookies().get('keystatic-branch')?.value
+    if (branch) {
+      // Use Keystatic GitHub reader to fetch from preview branch
+      const reader = createPreviewReader(branch)
+      // ... render from branch content
+    }
+  }
+
+  // Normal: use lib/content.js to read from disk
+  const guide = getGuide(slug, locale)
+  // ...
+}
+```
+
+**Edge cases**:
+- **Draft mode on static export**: Draft mode requires a server to set cookies. It will NOT work on the static production site. This is fine — previews only happen on the editing deployment.
+- **GitHub token for preview**: The `createGitHubReader` needs a GitHub token to read branch content. This can be the GitHub App's installation token (which Keystatic's auth flow provides) or a separate fine-grained PAT with read-only repo access. The token goes in the editing deployment's env vars only.
+- **Preview of new (not yet committed) content**: Keystatic's preview flow requires saving to a branch first. Unsaved editor changes are not previewable — they only exist in the browser's localStorage.
+- **Stale preview**: If an editor saves, previews, then saves again, the preview shows the latest save. But if they navigate away and come back, draft mode may still be enabled showing old branch content. The "Exit preview" button calls `/api/preview/end` to clear the cookie.
+
+#### Step 3.4: GitHub App setup
+
+1. Run the project locally in dev mode
+2. Visit `http://localhost:3000/keystatic`
+3. Follow Keystatic's automated GitHub App creation flow:
+   - It prompts you to create a GitHub App on github.com
+   - Sets the correct permissions (contents: read/write)
+   - Generates the callback URL
+4. Collect the 4 env vars:
+   - `KEYSTATIC_GITHUB_CLIENT_ID`
+   - `KEYSTATIC_GITHUB_CLIENT_SECRET`
+   - `KEYSTATIC_SECRET` (random 64-char string for session encryption)
+   - GitHub App slug (used in the config)
+5. Add the editing deployment's callback URL to the GitHub App settings:
+   - `https://edit.activistchecklist.org/api/keystatic/github/oauth/callback`
+
+**Why GitHub App (not OAuth App)**:
+- Fine-grained permissions: only `contents: read/write` on specific repos (OAuth App's `repo` scope gives full access to ALL repos)
+- Repository-scoped installation: repo owner controls which repos the App can access
+- Short-lived tokens (1 hour expiry vs permanent OAuth tokens)
+- Independent identity for commits/API calls
+
+**Edge cases**:
+- **GitHub App rate limits**: GitHub Apps get 5,000 requests/hour per installation. With 2-5 editors, this is more than enough.
+- **GitHub App permissions change**: If we later need to read issues or PRs, the App permissions must be updated and re-approved by the repo owner.
+- **Personal repo limitations**: GitHub Apps on personal repos (not orgs) have some restrictions. Keystatic's setup flow handles this — it creates the App on the user's account, not an org.
+
+#### Step 3.5: GitHub rulesets for branch protection
+
+1. Go to repo Settings → Rules → Rulesets (NOT the legacy "Branch protection rules")
+2. Create a new ruleset:
+   - **Name**: "Protect main"
+   - **Enforcement**: Active
+   - **Target**: Include `main` branch
+   - **Rules**:
+     - Require a pull request before merging
+     - Require 1 approving review
+   - **Bypass actors**: Add "Repository admin" role
+3. Verify:
+   - Collaborators cannot push directly to `main`
+   - Collaborators cannot merge PRs without owner approval
+   - Repo owner CAN self-merge their own PRs (bypass actor)
+
+**Why rulesets (not legacy branch protection)**:
+- Legacy branch protection on personal repos doesn't support bypass actor lists
+- Rulesets are the newer feature and are free on public repos
+- Rulesets support the "Repository admin" bypass role, which is how the repo owner can self-merge
+
+**Edge cases**:
+- **Keystatic branch creation**: Keystatic creates branches named like `keystatic-{timestamp}` or based on editor input. These are not protected by the ruleset (it only protects `main`).
+- **Force push protection**: Consider also adding "Block force pushes" to the ruleset for extra safety.
+- **Collaborator removal**: If an editor leaves, remove them as a collaborator. Their existing branches/PRs remain but they can no longer create new ones.
+
+#### Step 3.6: Vercel deployment configuration
+
+**Editing deployment** (`edit.activistchecklist.org`):
+- Domain: `edit.activistchecklist.org` (or any subdomain)
+- Build command: `yarn build` (standard, NOT static export)
+- Env vars:
+  - `KEYSTATIC_GITHUB_CLIENT_ID` = (from GitHub App setup)
+  - `KEYSTATIC_GITHUB_CLIENT_SECRET` = (from GitHub App setup)
+  - `KEYSTATIC_SECRET` = (random 64-char string)
+  - `GITHUB_TOKEN` = (fine-grained PAT for preview reader, read-only)
+  - Do NOT set `BUILD_MODE=static`
+- Branch: `main` (auto-deploys on push to main)
+
+**Production deployment** (activistchecklist.org):
+- Remains on the LAMP static host (not Vercel)
+- Built via `BUILD_MODE=static yarn build`
+- No Keystatic env vars
+- Deployed via existing FTP/rsync process
+
+**Vercel branch previews**:
+- Already configured for PR previews
+- Editors can see their content changes rendered on Vercel preview deployments
+- These are full static builds of the branch, not draft mode previews
+
+**Edge cases**:
+- **Vercel Hobby plan limits**: 6,000 build minutes/month, 100 GB bandwidth, 12 serverless functions per deployment. With 2-5 editors making occasional edits, this is well within limits. Monitor usage.
+- **Vercel serverless function cold starts**: The Keystatic admin API route is a serverless function. First load after inactivity may take 1-2 seconds. Not a problem for an editing tool.
+- **CORS**: The editing deployment needs to make API calls to GitHub. Keystatic handles this server-side (route handlers), so no CORS issues.
+- **DNS**: `edit.activistchecklist.org` needs a CNAME record pointing to Vercel. The main domain stays on the LAMP host.
+
+---
+
+### Phase 4: Testing and Validation
+
+#### Step 4.1: Content round-trip testing
+
+After Keystatic is integrated, verify that content edited in Keystatic produces identical output to hand-edited MDX:
+
+1. **Edit a checklist item** in Keystatic → save → verify the MDX file matches expected format
+2. **Edit a guide** (add/remove/reorder checklist items in a section) → verify MDX structure (Section wrappers, ChecklistItem blocks with correct slugs)
+3. **Create a new news item** → verify it appears in the news listing
+4. **Test nested components**: Create a checklist item with `HowTo` containing an `Alert` and a `Button` → verify MDX output
+5. **Test relationship fields**: Add a checklist item reference to a guide section → verify it saves the correct slug
+
+#### Step 4.2: Security validation
+
+1. **Content validation still works**: Run `scripts/validate-content.mjs` on Keystatic-generated MDX. It should pass (Keystatic doesn't generate imports, exports, or blocked HTML).
+2. **MDX security pipeline**: Keystatic's MDX field blocks HTML tags and imports by design. Verify that even if an editor pastes raw HTML into the rich-text editor, Keystatic sanitizes it before saving.
+3. **Production site has no admin routes**: Build with `BUILD_MODE=static` and verify no `/keystatic` or `/api/keystatic` routes exist in the output.
+4. **Editing site requires authentication**: Visit `edit.activistchecklist.org/keystatic` without being logged in — should see only a GitHub login prompt.
+
+#### Step 4.3: Editor workflow testing
+
+Full end-to-end test with a test collaborator account:
+
+1. Add test account as repo collaborator
+2. Test account visits `edit.activistchecklist.org/keystatic`
+3. Authenticates via GitHub OAuth
+4. Edits a checklist item (change text, add an Alert)
+5. Saves → Keystatic creates a branch and PR
+6. Verify PR appears on GitHub with correct changes
+7. Repo owner reviews and merges PR
+8. Verify production site rebuilds with the change
+9. Verify test account CANNOT push to main or merge PRs without owner approval
+
+---
+
+### Phase 5: Translation Integration
+
+**Separate from Keystatic**. Keystatic edits English content only. Translation workflow is independent:
+
+1. English content lives in `content/en/`
+2. Translation tool (Weblate/Crowdin) watches the repo
+3. When English content changes on `main`, translation tool marks translations as outdated
+4. Translators update translations in the tool's UI
+5. Tool creates PRs with updated files in `content/{locale}/`
+6. Repo owner reviews and merges
+
+**Why this works**: Keystatic and the translation tool operate on different directory subtrees. Keystatic edits `content/en/*`. The translation tool edits `content/es/*` (and future locales). No conflicts.
+
+**Edge case**: If an editor uses Keystatic to edit a file that has translations, the translation tool should detect the English source changed and flag the translations as outdated. This depends on the translation tool's change detection (usually based on git diff).
 
 ---
 
@@ -577,16 +1331,57 @@ These tradeoffs are acceptable because TinaCMS's real-time preview **doesn't wor
 
 ---
 
+## Risk Register
+
+### High risk
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Keystatic wrapper nesting doesn't work | Blocks entire plan | Phase 0 POC verifies this first |
+| Relationship fields don't work inside content component schemas | Degraded UX (manual slug typing) | POC tests this; fallback to `fields.text()` is viable |
+| App Router migration breaks existing functionality | Site downtime | Incremental migration, full test coverage, feature branch |
+
+### Medium risk
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Keystatic + static export has issues | Need alternative admin hosting | POC verifies this; fallback: disable admin via env var |
+| next-intl App Router migration is painful | Delays project | Can be deferred — Keystatic doesn't depend on i18n working |
+| GitHub App setup is confusing | Delays editor onboarding | Follow Keystatic's automated flow, document steps |
+| Vercel Hobby plan limits exceeded | Editing site goes down temporarily | Monitor usage, upgrade if needed ($20/mo) |
+
+### Low risk
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Content validation rejects Keystatic-generated MDX | Editor saves fail CI | Keystatic's MDX output is clean by design; test in POC |
+| Keystatic relationship field doesn't work in content components | Must use text field for slugs | Acceptable fallback — editors type slugs manually |
+| Editor accidentally creates duplicate content | Confusion | Keystatic shows existing items; slug uniqueness enforced by filesystem |
+
+---
+
 ## Open Questions
 
-1. **App Router migration scope**: How much work is the Pages Router → App Router migration? This is the main gating factor. Needs its own analysis/plan.
+1. ~~**App Router migration scope**~~: Accounted for in Phase 2. Detailed implementation plan in separate `PLAN-app-router-migration.md`.
 
-2. **Keystatic wrapper nesting depth — hands-on verification needed**: Keystatic docs show wrapper-inside-wrapper examples (Container → Testimonial) and there's no documented depth limit. Our depth-2 pattern (`HowTo` → `Alert`) should work, but needs hands-on testing to confirm the editor UI handles it well (can editors insert an Alert inside a HowTo in the visual editor?).
+2. **Keystatic wrapper nesting depth**: Phase 0 POC will verify. Docs show it works, but hands-on testing is required.
 
-3. **Keystatic + `output: 'export'`**: Has anyone successfully used Keystatic's Reader API with Next.js `output: 'export'`? The Reader API is build-time only, so it should work, but needs verification.
+3. ~~**Keystatic + `output: 'export'`**~~: Documented workaround exists (disable admin UI via env flag). Phase 0 POC will verify.
 
-4. **Vercel free tier limits**: Is the Vercel Hobby plan sufficient for the editing deployment? (Serverless function limits, build minutes, etc.)
+4. **Vercel free tier limits**: Should be fine for 2-5 editors. Monitor after launch.
+
+5. **News tag normalization**: During Phase 1a, need to audit and normalize all news item tags from comma-separated strings to YAML arrays.
 
 ## Resolved Questions
 
 - **~~MDX format compatibility~~**: Confirmed — Keystatic's `fields.mdx()` reads and writes standard JSX tags (`<Component>`) to `.mdx` files. The `{% %}` syntax is only for `fields.markdoc()` which we don't use. **Our migration plan's MDX format works with Keystatic as-is. No changes needed.**
+
+- **~~Content pipeline approach~~**: Keep existing `lib/content.js` for production builds. Use Keystatic Reader API only for draft mode previews on the editing deployment. Keystatic is an editing UI only — it writes files, our pipeline reads them.
+
+- **~~News directory structure~~**: Flatten to `content/en/news/*.mdx`. Year subdirs are redundant (date is in frontmatter).
+
+- **~~RelatedGuides in pages~~**: Move to frontmatter `relatedGuides: [slug1, slug2]` to match guides. Eliminates fragile regex extraction.
+
+- **~~GitHub App vs OAuth App~~**: GitHub App is required by Keystatic for fine-grained permissions, repo-scoped access, and short-lived tokens. OAuth Apps grant too-broad access.
+
+- **~~Keystatic + static export~~**: Known issue with documented workaround. Admin routes return `notFound()` when `showAdminUI` flag is false. Static export skips them.
