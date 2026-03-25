@@ -258,20 +258,9 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
-        type: fields.select({
-          label: 'Type',
-          options: [
-            { label: 'Action (with checkbox)', value: 'action' },
-            { label: 'Info (no checkbox)', value: 'info' },
-          ],
-          defaultValue: 'action',
-        }),
-        preview: fields.text({ label: 'Preview text', multiline: true }),
-        why: fields.text({ label: 'Why this matters', multiline: true }),
-        do: fields.text({ label: 'Do (recommendation)' }),
-        tools: fields.text({ label: 'Tools (alternative to Do)' }),
-        dont: fields.text({ label: "Don't (avoid)" }),
-        stop: fields.text({ label: 'Stop (alternative to Dont)' }),
+        preview: fields.markdoc.inline({ label: 'Preview text', multiline: true }),
+        do: fields.markdoc.inline({ label: '✅ DO:' }),
+        dont: fields.markdoc.inline({ label: "❌ DON'T:" }),
         titleBadges: fields.multiselect({
           label: 'Title Badges',
           options: [{ label: 'Important', value: 'important' }],
