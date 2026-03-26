@@ -34,6 +34,7 @@ function rotateBackups() {
     return;
   }
 
+  // Only rotate default out-* backups; snapshot-* and snapshot-compare-* are never deleted here.
   const backups = fs.readdirSync(BACKUP_DIR)
     .filter(item => item.startsWith('out-'))
     .map(item => ({
