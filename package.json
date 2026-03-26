@@ -32,6 +32,7 @@
     "api:status": "yarn run pm2 status ac-api",
     "api:delete": "yarn run pm2 delete ac-api",
     "api:logs": "yarn run pm2 logs ac-api",
+    "deploy:secrets": "bash scripts/deploy-secrets.sh",
     "fetch-news": "node scripts/fetch-news-images.js",
     "news": "node scripts/news-wizard.js",
     "og-images": "node scripts/generate-og-images.mjs",

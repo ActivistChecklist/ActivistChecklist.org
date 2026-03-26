@@ -67,5 +67,12 @@ metadata-cleaner/
 # SSL check log
 .ssl-check.log
 
-# Deploy/upload script (host-specific, not committed)
-scripts/deploy-remote.sh
+# GitHub deploy webhook secrets (local/server-only; never commit)
+public/webhooks/deploy-webhook.config.local.php
+public/webhooks/deploy-webhook.error.log
+
+# Deploy lock file (flock in scripts/build_deploy.sh)
+.build_deploy.lock
+
+# GitHub webhook deploy log (default path written by public/webhooks/deploy.php)
+.deploy-webhook.log
