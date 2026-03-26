@@ -6,8 +6,8 @@
  * (configure PHP execution on your host; do not serve this as raw source.)
  *
  * Paths:
- *   This file lives in public/webhooks/, so repo root is dirname(__DIR__, 2).
- *   By default it runs scripts/build_deploy.sh under that root (committed in git).
+ *   Set repo_root in deploy-webhook.config.local.php (absolute checkout path).
+ *   deploy.php runs scripts/build_deploy.sh there and passes REPO_DIR to the shell.
  *
  * Deploy:
  *   1. Copy deploy-webhook.config.example.php → deploy-webhook.config.local.php in repo root.
@@ -62,7 +62,7 @@ if (!is_readable($configPath)) {
   exit('Configuration error');
 }
 
-/** @var array{secret:string,allowed_ref?:string,allowed_repository?:string,repo_root?:string,deploy_script?:string,script_parent_dir?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string|false} $config */
+/** @var array{secret:string,repo_root:string,allowed_ref?:string,allowed_repository?:string,deploy_script?:string,script_parent_dir?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string|false} $config */
 $config = require $configPath;
 
 $secret = $config['secret'] ?? '';
@@ -99,18 +99,15 @@ if (!empty($config['allowed_repository'])) {
   }
 }
 
-// Repo root: public/webhooks/deploy.php → ../.. is project root (same layout as in git).
 $repoRootConfigured = $config['repo_root'] ?? '';
-if ($repoRootConfigured !== '' && !is_string($repoRootConfigured)) {
-  error_log('deploy-webhook: repo_root must be a string');
+if (!is_string($repoRootConfigured) || $repoRootConfigured === '') {
+  error_log('deploy-webhook: repo_root must be set to the absolute checkout path in deploy-webhook.config.local.php');
   http_response_code(500);
   exit('Configuration error');
 }
-$repoRoot = $repoRootConfigured !== ''
-  ? realpath($repoRootConfigured)
-  : realpath(__DIR__ . '/../..');
+$repoRoot = realpath($repoRootConfigured);
 if ($repoRoot === false) {
-  error_log('deploy-webhook: could not resolve repo root');
+  error_log('deploy-webhook: repo_root does not exist or is not readable');
   http_response_code(500);
   exit('Configuration error');
 }
@@ -184,11 +181,14 @@ foreach ($deployEnv as $k => $v) {
   }
 }
 
+// REPO_DIR last so it always matches resolved repo_root (do not rely on ~/… paths in deploy_env).
 $env = array_merge($_ENV, [
   'PATH' => '/usr/local/bin:/usr/bin:/bin',
   'HOME' => getenv('HOME') ?: '',
   'GITHUB_DELIVERY' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
-], $deployEnv);
+], $deployEnv, [
+  'REPO_DIR' => $repoRoot,
+]);
 
 $cwd = $realParent;
 $process = proc_open($resolvedCmd, $descriptorspec, $pipes, $cwd, $env);

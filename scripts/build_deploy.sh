@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 #
-# Pulled from the repo at scripts/build_deploy.sh. Webhook runs:
-#   public/webhooks/deploy.php → this script (paths inferred there).
+# Pulled from the repo at scripts/build_deploy.sh.
+# public/webhooks/deploy.php runs this and sets REPO_DIR from deploy-webhook.config.local.php (repo_root).
 #
 # Uses flock so overlapping webhook deliveries do not run two builds at once.
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="${REPO_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# Webhook passes REPO_DIR; for a manual run from a checkout: export REPO_DIR="$(pwd)" first.
+if [[ -z "${REPO_DIR:-}" ]]; then
+  REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 LOCK_FILE="${LOCK_FILE:-$REPO_DIR/.build_deploy.lock}"
 # Set on the server (export, systemd Environment=, etc.) to your site docroot
 DEPLOY_TARGET="${DEPLOY_TARGET:-$HOME/public_html}"

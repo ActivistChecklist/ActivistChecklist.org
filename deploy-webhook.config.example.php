@@ -16,6 +16,9 @@ return [
   // GitHub webhook "Secret" — use: openssl rand -hex 32
   'secret' => 'CHANGE_ME_LONG_RANDOM',
 
+  // Absolute path to this git checkout on the server (required).
+  'repo_root' => '/var/www/activistchecklist.org',
+
   // Optional: require this exact repo (stops stray webhooks if URL leaks).
   // This is the GitHub "full_name" field, NOT a URL.
   // Example: 'ActivistChecklist/ActivistChecklist.org'
@@ -23,16 +26,14 @@ return [
 
   'allowed_ref' => 'refs/heads/main',
 
-  // Required in practice: pass env into scripts/build_deploy.sh (PHP often runs as www-data).
-  // DEPLOY_TARGET — absolute path to the web docroot where `out/` is rsynced (your live site files).
-  // HOME — user whose ~/.ssh and permissions match the git remote (often same as repo owner).
+  // Passed into scripts/build_deploy.sh (PHP often runs as www-data).
+  // Do not set REPO_DIR here — deploy.php sets it from repo_root above.
+  // DEPLOY_TARGET — absolute path to the web docroot where `out/` is rsynced.
+  // HOME — user whose ~/.ssh matches the git remote (if different from PHP's user).
   'deploy_env' => [
     'DEPLOY_TARGET' => '/var/www/html',
     'HOME' => '/home/YOURUSER',
   ],
-
-  // Optional: only if checkout path is not …/repo/public/webhooks (unusual symlink layouts)
-  // 'repo_root' => '/home/you/include/ActivistChecklist.org',
 
   // Optional: custom script path (must still live under script_parent_dir / repo root)
   // 'deploy_script' => '/custom/path/scripts/build_deploy.sh',
