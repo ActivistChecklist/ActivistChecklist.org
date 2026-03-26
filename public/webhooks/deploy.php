@@ -10,26 +10,26 @@
  *   By default it runs scripts/build_deploy.sh under that root (committed in git).
  *
  * Deploy:
- *   1. Copy deploy.local.example.php → deploy.local.php (secret only + options).
- *   2. chmod 640 deploy.local.php && chown root:www-data (or owner + PHP-FPM group).
- *   3. chmod +x scripts/build_deploy.sh; set DEPLOY_TARGET for the bash script (server env).
+ *   1. Copy deploy-webhook.config.example.php → deploy-webhook.config.local.php in repo root.
+ *   2. chmod 640 deploy-webhook.config.local.php && chown root:www-data (or owner + PHP-FPM group).
+ *   3. chmod +x scripts/build_deploy.sh; set DEPLOY_TARGET in deploy_env (see example).
  *   4. Ensure PHP may execute the deploy script, or use sudoers (see below).
- * 5. GitHub: Webhook → JSON, secret = same as in deploy.local.php, push only.
+ * 5. GitHub: Webhook → JSON, secret = same as in deploy-webhook.config.local.php, push only.
  *
  * Long builds: this request blocks until the script exits. Raise nginx/apache
  * proxy_read_timeout (and GitHub will retry on 5xx) or switch to a queue that
  * returns 202 immediately.
  *
  * Hardening notes:
- *   - Secret never appears in this file; use deploy.local.php (not in git).
+ *   - Secret never appears in this file; use deploy-webhook.config.local.php in repo root (not in git).
  *   - Signature verified with hash_equals before parsing JSON.
  *   - Deploy output is not echoed to the client (reduces information leakage).
- *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in deploy.local.php).
+ *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in config).
  *   - Deploy script defaults to repo scripts/build_deploy.sh; must stay under repo root.
  *   - If www-data cannot run your deploy (git/yarn in $HOME), either:
  *       a) Run this pool as your deploy user (PHP-FPM user = you), or
  *       b) sudoers: www-data ALL=(deployuser) NOPASSWD: /bin/bash /full/path/to/repo/scripts/build_deploy.sh
- *          and set 'deploy_command_prefix' => ['sudo', '-n', '-u', 'deployuser'] in deploy.local.php
+ *          and set 'deploy_command_prefix' => ['sudo', '-n', '-u', 'deployuser'] in deploy-webhook.config.local.php
  *     (Adjust to your policy; prefix is fixed in config, no user input.)
  */
 
@@ -55,9 +55,9 @@ if ($payload === false || strlen($payload) > $maxBytes) {
   exit('Payload Too Large');
 }
 
-$configPath = __DIR__ . '/deploy.local.php';
+$configPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php';
 if (!is_readable($configPath)) {
-  error_log('deploy-webhook: missing or unreadable deploy.local.php');
+  error_log('deploy-webhook: missing or unreadable deploy-webhook.config.local.php (repo root)');
   http_response_code(500);
   exit('Configuration error');
 }

@@ -1,10 +1,13 @@
 <?php
 /**
- * Copy to deploy.local.php beside deploy.php on the server (not committed).
- * chmod 640 deploy.local.php && chown root:www-data (or owner + PHP-FPM group).
+ * GitHub deploy webhook — configuration (example).
  *
- * deploy.php finds the repo as the parent of public/ (expects …/repo/public/webhooks/deploy.php).
- * It runs scripts/build_deploy.sh in that repo unless you override below.
+ * On the server, copy to deploy-webhook.config.local.php in the repo root (not committed).
+ *   cp deploy-webhook.config.example.php deploy-webhook.config.local.php
+ *   chmod 640 deploy-webhook.config.local.php
+ *   chown root:www-data (or owner + PHP-FPM group)
+ *
+ * public/webhooks/deploy.php loads deploy-webhook.config.local.php from the project root.
  */
 
 declare(strict_types=1);
@@ -37,6 +40,6 @@ return [
 
   // Logging is on by default: repo root .deploy-webhook.log (gitignored). Override path:
   // 'log_file' => '/var/log/activistchecklist-deploy-webhook.log',
-  // Or disable with: 
+  // Or disable with:
   // 'log_file' => false,
 ];
