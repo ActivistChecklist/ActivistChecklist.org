@@ -1,4 +1,10 @@
 // @ts-nocheck
+/**
+ * Keystatic admin UI is dev-only and is omitted from static export (BUILD_MODE=static).
+ */
+export const showKeystaticUI =
+  process.env.NODE_ENV === 'development' && process.env.BUILD_MODE !== 'static';
+
 import { config, collection, fields } from '@keystatic/core';
 import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';
 import { Icon } from '@keystar/ui/icon';

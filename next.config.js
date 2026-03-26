@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const baseConfig = {
@@ -12,13 +13,28 @@ const baseConfig = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
     };
-    
+
     // Exclude fs from client-side bundles
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
     };
-    
+
+    // Static export cannot run Keystatic API routes; swap in 404 stubs at build time.
+    if (process.env.BUILD_MODE === 'static') {
+      const stubDir = path.join(__dirname, 'lib', 'stubs');
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          /[\\/]app[\\/]api[\\/]keystatic[\\/]\[\.\.\.params\][\\/]route\.ts$/,
+          path.join(stubDir, 'keystatic-api-catchall.ts')
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+          /[\\/]app[\\/]api[\\/]keystatic[\\/]checklist-item-preview[\\/]route\.ts$/,
+          path.join(stubDir, 'keystatic-checklist-preview.ts')
+        )
+      );
+    }
+
     return config;
   },
 };
