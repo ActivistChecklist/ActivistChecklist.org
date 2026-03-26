@@ -48,6 +48,9 @@ return [
     'DEPLOY_TARGET' => '/home/you/web',
     // Helps tools that rely on $HOME (ssh keys, etc.)
     'HOME' => '/home/you',
+    // Optional: set PATH explicitly if your PHP/FPM environment is minimal.
+    // Example (May First-style nvm + user bin):
+    // 'PATH' => '/home/sites/360449/include/.nvm/versions/node/v22.12.0/bin:/home/sites/360449/bin:/usr/local/bin:/usr/bin:/bin',
   ],
 
   // Logging is on by default: repo root .deploy-webhook.log (gitignored). Override path:

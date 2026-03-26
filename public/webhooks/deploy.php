@@ -328,8 +328,20 @@ foreach ($deployEnv as $k => $v) {
 }
 
 // REPO_DIR last so it always matches resolved repo_root (do not rely on ~/… paths in deploy_env).
+$basePath = getenv('PATH');
+if (!is_string($basePath) || $basePath === '') {
+  $basePath = '/usr/local/bin:/usr/bin:/bin';
+}
+
+// Prefer PATH from deploy_env if provided; otherwise inherit the PHP process PATH.
+$effectivePath = $basePath;
+if (isset($deployEnv['PATH']) && is_string($deployEnv['PATH']) && $deployEnv['PATH'] !== '') {
+  $effectivePath = $deployEnv['PATH'];
+  unset($deployEnv['PATH']);
+}
+
 $env = array_merge($_ENV, [
-  'PATH' => '/usr/local/bin:/usr/bin:/bin',
+  'PATH' => $effectivePath,
   'HOME' => getenv('HOME') ?: '',
   'GITHUB_DELIVERY' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
 ], $deployEnv, [
