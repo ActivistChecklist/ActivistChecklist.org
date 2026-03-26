@@ -67,8 +67,8 @@ metadata-cleaner/
 # SSL check log
 .ssl-check.log
 
-# GitHub deploy webhook secrets (repo root; loaded by public/webhooks/deploy.php)
-deploy-webhook.config.local.php
+# GitHub deploy webhook secrets (local/server-only; never commit)
+public/webhooks/deploy-webhook.config.local.php
 
 # Deploy lock file (flock in scripts/build_deploy.sh)
 .build_deploy.lock

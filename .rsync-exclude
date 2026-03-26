@@ -1,1 +1,45 @@
+# Used when rsyncing out/ to the server (deploy-remote.sh, build_deploy.sh).
+# Patterns match filenames at each level under the source dir (out/).
+
+# OS / editor junk
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Dependencies (should not appear in out/)
+node_modules
+.pnp
+.pnp.js
+
+# Secrets & env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# VCS & CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# Webhook secrets (server-managed; must be protected from rsync --delete)
+webhooks/deploy-webhook.config.local.php
+
+# Build / dev artifacts
+out
+.next
+buildbackups
+coverage
+.turbo
+.vercel
+.cursor
+.idea
+.vscode
+*.log
+
+# Uncomment to omit source maps from uploads
+# *.map

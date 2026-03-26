@@ -49,6 +49,10 @@ if [[ ! -d "$REPO_DIR/out" ]]; then
   exit 1
 fi
 
-rsync -a --delete "$REPO_DIR/out/" "$DEPLOY_TARGET/"
+RSYNC_EXCLUDE=()
+if [[ -f "$REPO_DIR/.rsync-exclude" ]]; then
+  RSYNC_EXCLUDE=(--exclude-from="$REPO_DIR/.rsync-exclude")
+fi
+rsync -a --delete "${RSYNC_EXCLUDE[@]}" "$REPO_DIR/out/" "$DEPLOY_TARGET/"
 
 log "Deploy finished → $DEPLOY_TARGET"

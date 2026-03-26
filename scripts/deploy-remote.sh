@@ -17,7 +17,11 @@ if [[ "$REMOTE_SKIP_GIT" != "1" ]] || [[ "$REMOTE_SKIP_API" != "1" ]]; then
 fi
 
 echo "===> Uploading built site (out/) to $FTP_HOST..."
-rsync -avz --delete "$ROOT/out/" "$FTP_USER@$FTP_HOST:$FTP_DIR"
+RSYNC_EXCLUDE=()
+if [[ -f "$ROOT/.rsync-exclude" ]]; then
+  RSYNC_EXCLUDE=(--exclude-from="$ROOT/.rsync-exclude")
+fi
+rsync -avz --delete "${RSYNC_EXCLUDE[@]}" "$ROOT/out/" "$FTP_USER@$FTP_HOST:$FTP_DIR"
 
 echo "===> Uploading .env.production..."
 rsync -avz "$ROOT/.env.production" "$FTP_USER@$FTP_HOST:$ENV_PRODUCTION_PATH"

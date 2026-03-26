@@ -5,13 +5,19 @@
  * Path in repo: public/webhooks/deploy.php → served as /webhooks/deploy.php
  * (configure PHP execution on your host; do not serve this as raw source.)
  *
- * Paths:
- *   Set repo_root in deploy-webhook.config.local.php (absolute checkout path).
- *   deploy.php runs scripts/build_deploy.sh there and passes REPO_DIR to the shell.
+ * Config file (secrets, not in git):
+ *   - Recommended: place it in the SAME directory as this script:
+ *       webhooks/deploy-webhook.config.local.php
+ *     and ensure your rsync deploy excludes it so --delete doesn't remove it.
+ *   - Alternative: set Apache/PHP-FPM env:
+ *       DEPLOY_WEBHOOK_CONFIG=/absolute/path/to/deploy-webhook.config.local.php
+ *
+ * repo_root is configured inside deploy-webhook.config.local.php (absolute checkout path).
+ * deploy.php runs scripts/build_deploy.sh there and passes REPO_DIR to the shell.
  *
  * Deploy:
- *   1. Copy deploy-webhook.config.example.php → deploy-webhook.config.local.php in repo root.
- *   2. chmod 640 deploy-webhook.config.local.php && chown root:www-data (or owner + PHP-FPM group).
+ *   1. Copy deploy-webhook.config.example.php → webhooks/deploy-webhook.config.local.php on the server.
+ *   2. chmod 640 webhooks/deploy-webhook.config.local.php && chown root:www-data (or owner + PHP-FPM group).
  *   3. chmod +x scripts/build_deploy.sh; set DEPLOY_TARGET in deploy_env (see example).
  *   4. Ensure PHP may execute the deploy script, or use sudoers (see below).
  * 5. GitHub: Webhook → JSON, secret = same as in deploy-webhook.config.local.php, push only.
@@ -21,7 +27,7 @@
  * returns 202 immediately.
  *
  * Hardening notes:
- *   - Secret never appears in this file; use deploy-webhook.config.local.php in repo root (not in git).
+ *   - Secret never appears in this file; use deploy-webhook.config.local.php (not in git).
  *   - Signature verified with hash_equals before parsing JSON.
  *   - Deploy output is not echoed to the client (reduces information leakage).
  *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in config).
@@ -36,6 +42,19 @@
 declare(strict_types=1);
 
 header('Content-Type: text/plain; charset=UTF-8');
+
+function getClientIp(): string {
+  // Best-effort; on shared hosts this may be behind a proxy.
+  $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+  return is_string($ip) ? $ip : '';
+}
+
+function jsonOut(int $status, array $data): void {
+  http_response_code($status);
+  header('Content-Type: application/json; charset=UTF-8');
+  echo json_encode($data, JSON_UNESCAPED_SLASHES) ?: '{}';
+  exit;
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   http_response_code(405);
@@ -55,15 +74,48 @@ if ($payload === false || strlen($payload) > $maxBytes) {
   exit('Payload Too Large');
 }
 
-$configPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php';
-if (!is_readable($configPath)) {
-  error_log('deploy-webhook: missing or unreadable deploy-webhook.config.local.php (repo root)');
+// Config should NOT be part of the static build output. Keep it as a server-managed file and
+// protect it from rsync --delete (either by excluding it in rsync, or by storing it outside web/).
+//
+// Search order:
+//   1) Same directory as this script (recommended if you also protect it from rsync deletion)
+//   2) Apache/FPM env DEPLOY_WEBHOOK_CONFIG=/abs/path/to/config
+//   3) Parent of webhooks/ (dev repo root or exported site root)
+$configPath = '';
+$sameDir = __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php';
+if (is_readable($sameDir)) {
+  $configPath = $sameDir;
+}
+$fromEnv = getenv('DEPLOY_WEBHOOK_CONFIG');
+if ($configPath === '' && is_string($fromEnv) && $fromEnv !== '' && is_readable($fromEnv)) {
+  $configPath = $fromEnv;
+}
+if ($configPath === '') {
+  $aboveWebhooks = dirname(__DIR__, 2);
+  $candidates = [
+    $aboveWebhooks . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+  ];
+  foreach ($candidates as $candidate) {
+    if (is_readable($candidate)) {
+      $configPath = $candidate;
+      break;
+    }
+  }
+}
+if ($configPath === '') {
+  error_log('deploy-webhook: missing deploy-webhook.config.local.php (same dir as deploy.php, or SetEnv DEPLOY_WEBHOOK_CONFIG)');
   http_response_code(500);
   exit('Configuration error');
 }
 
 /** @var array{secret:string,repo_root:string,allowed_ref?:string,allowed_repository?:string,deploy_script?:string,script_parent_dir?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string|false} $config */
 $config = require $configPath;
+
+$debug = ($config['debug'] ?? false) === true;
+$debugAllowIps = $config['debug_allow_ips'] ?? [];
+if (!is_array($debugAllowIps)) $debugAllowIps = [];
+$clientIp = getClientIp();
+$canDebugToClient = $debug && (count($debugAllowIps) === 0 || in_array($clientIp, $debugAllowIps, true));
 
 $secret = $config['secret'] ?? '';
 if ($secret === '' || strlen($secret) < 16) {
@@ -75,6 +127,18 @@ if ($secret === '' || strlen($secret) < 16) {
 $sigHeader = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
 $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
 if (!is_string($sigHeader) || !hash_equals($expected, $sigHeader)) {
+  // Safe debug: never print secrets; avoid printing full signatures.
+  if ($canDebugToClient) {
+    jsonOut(403, [
+      'ok' => false,
+      'error' => 'signature_mismatch',
+      'client_ip' => $clientIp,
+      'received_sig_prefix' => is_string($sigHeader) ? substr($sigHeader, 0, 16) : null,
+      'expected_sig_prefix' => substr($expected, 0, 16),
+      'payload_len' => strlen($payload),
+      'payload_sha256' => hash('sha256', $payload),
+    ]);
+  }
   http_response_code(403);
   exit('Forbidden');
 }
