@@ -73,5 +73,8 @@ scripts/deploy-remote.sh
 # GitHub deploy webhook secrets (server copy beside public/webhooks/deploy.php)
 public/webhooks/deploy.local.php
 
-# If you keep a real build_deploy in-repo while testing
-scripts/build_deploy.sh
+# Deploy lock file (flock in scripts/build_deploy.sh)
+.build_deploy.lock
+
+# GitHub webhook deploy log (default path written by public/webhooks/deploy.php)
+.deploy-webhook.log

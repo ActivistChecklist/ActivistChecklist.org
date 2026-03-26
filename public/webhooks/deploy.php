@@ -5,11 +5,16 @@
  * Path in repo: public/webhooks/deploy.php → served as /webhooks/deploy.php
  * (configure PHP execution on your host; do not serve this as raw source.)
  *
+ * Paths:
+ *   This file lives in public/webhooks/, so repo root is dirname(__DIR__, 2).
+ *   By default it runs scripts/build_deploy.sh under that root (committed in git).
+ *
  * Deploy:
- *   1. Copy deploy.local.example.php → deploy.local.php and fill in values.
+ *   1. Copy deploy.local.example.php → deploy.local.php (secret only + options).
  *   2. chmod 640 deploy.local.php && chown root:www-data (or owner + PHP-FPM group).
- *   3. Ensure PHP may execute the deploy script, or use sudoers (see below).
- * 4. GitHub: Webhook → JSON, secret = same as in deploy.local.php, push only.
+ *   3. chmod +x scripts/build_deploy.sh; set DEPLOY_TARGET for the bash script (server env).
+ *   4. Ensure PHP may execute the deploy script, or use sudoers (see below).
+ * 5. GitHub: Webhook → JSON, secret = same as in deploy.local.php, push only.
  *
  * Long builds: this request blocks until the script exits. Raise nginx/apache
  * proxy_read_timeout (and GitHub will retry on 5xx) or switch to a queue that
@@ -19,10 +24,11 @@
  *   - Secret never appears in this file; use deploy.local.php (not in git).
  *   - Signature verified with hash_equals before parsing JSON.
  *   - Deploy output is not echoed to the client (reduces information leakage).
- *   - Script path is resolved with realpath and constrained under a prefix.
+ *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in deploy.local.php).
+ *   - Deploy script defaults to repo scripts/build_deploy.sh; must stay under repo root.
  *   - If www-data cannot run your deploy (git/yarn in $HOME), either:
  *       a) Run this pool as your deploy user (PHP-FPM user = you), or
- *       b) sudoers: www-data ALL=(deployuser) NOPASSWD: /bin/bash /home/deployuser/include/build_deploy.sh
+ *       b) sudoers: www-data ALL=(deployuser) NOPASSWD: /bin/bash /full/path/to/repo/scripts/build_deploy.sh
  *          and set 'deploy_command_prefix' => ['sudo', '-n', '-u', 'deployuser'] in deploy.local.php
  *     (Adjust to your policy; prefix is fixed in config, no user input.)
  */
@@ -56,7 +62,7 @@ if (!is_readable($configPath)) {
   exit('Configuration error');
 }
 
-/** @var array{secret:string,deploy_script:string,script_parent_dir:string,allowed_ref?:string,allowed_repository?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string} $config */
+/** @var array{secret:string,allowed_ref?:string,allowed_repository?:string,repo_root?:string,deploy_script?:string,script_parent_dir?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string|false} $config */
 $config = require $configPath;
 
 $secret = $config['secret'] ?? '';
@@ -93,12 +99,37 @@ if (!empty($config['allowed_repository'])) {
   }
 }
 
-$script = $config['deploy_script'] ?? '';
-$parent = $config['script_parent_dir'] ?? '';
+// Repo root: public/webhooks/deploy.php → ../.. is project root (same layout as in git).
+$repoRootConfigured = $config['repo_root'] ?? '';
+if ($repoRootConfigured !== '' && !is_string($repoRootConfigured)) {
+  error_log('deploy-webhook: repo_root must be a string');
+  http_response_code(500);
+  exit('Configuration error');
+}
+$repoRoot = $repoRootConfigured !== ''
+  ? realpath($repoRootConfigured)
+  : realpath(__DIR__ . '/../..');
+if ($repoRoot === false) {
+  error_log('deploy-webhook: could not resolve repo root');
+  http_response_code(500);
+  exit('Configuration error');
+}
+
+$defaultDeployScript = $repoRoot . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'build_deploy.sh';
+$scriptConfigured = $config['deploy_script'] ?? '';
+$script = ($scriptConfigured !== '' && is_string($scriptConfigured))
+  ? $scriptConfigured
+  : $defaultDeployScript;
+
+$parentConfigured = $config['script_parent_dir'] ?? '';
+$parent = ($parentConfigured !== '' && is_string($parentConfigured))
+  ? $parentConfigured
+  : $repoRoot;
+
 $realScript = realpath($script);
 $realParent = realpath($parent);
 if ($realScript === false || $realParent === false) {
-  error_log('deploy-webhook: deploy_script or script_parent_dir not found');
+  error_log('deploy-webhook: deploy script or script_parent_dir not found');
   http_response_code(500);
   exit('Configuration error');
 }
@@ -174,8 +205,20 @@ fclose($pipes[1]);
 fclose($pipes[2]);
 $code = proc_close($process);
 
-$logFile = $config['log_file'] ?? '';
-if ($logFile !== '') {
+$logRaw = $config['log_file'] ?? null;
+if ($logRaw === false) {
+  $logFile = null;
+} elseif (is_string($logRaw) && $logRaw !== '') {
+  $logFile = $logRaw;
+} elseif ($logRaw === null || $logRaw === '') {
+  $logFile = $repoRoot . DIRECTORY_SEPARATOR . '.deploy-webhook.log';
+} else {
+  error_log('deploy-webhook: log_file must be false, a non-empty string, or omitted');
+  http_response_code(500);
+  exit('Configuration error');
+}
+
+if ($logFile !== null) {
   $line = sprintf(
     "[%s] exit=%d delivery=%s\n--- stdout ---\n%s\n--- stderr ---\n%s\n",
     gmdate('c'),
@@ -184,7 +227,9 @@ if ($logFile !== '') {
     is_string($stdout) ? $stdout : '',
     is_string($stderr) ? $stderr : ''
   );
-  @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
+  if (file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX) === false) {
+    error_log('deploy-webhook: could not write log file: ' . $logFile);
+  }
 }
 
 if ($code !== 0) {
