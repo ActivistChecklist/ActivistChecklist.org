@@ -81,8 +81,33 @@ function rotateAndAppendLog(string $path, string $line, int $maxBytes = 1000000,
   }
 }
 
+function resolveEarlyLogPath(): ?string {
+  $candidates = [];
+
+  $home = getenv('HOME');
+  if (is_string($home) && $home !== '') {
+    $candidates[] = rtrim($home, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'logs';
+  }
+
+  // Fallback when HOME is unavailable: /.../web/webhooks -> /.../include/logs
+  $baseFromWeb = dirname(__DIR__, 3);
+  if (is_string($baseFromWeb) && $baseFromWeb !== '' && $baseFromWeb !== DIRECTORY_SEPARATOR) {
+    $candidates[] = rtrim($baseFromWeb, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'logs';
+  }
+
+  foreach ($candidates as $dir) {
+    if (is_dir($dir) || @mkdir($dir, 0750, true)) {
+      return $dir . DIRECTORY_SEPARATOR . 'deploy-webhook.error.log';
+    }
+  }
+
+  return null;
+}
+
 function earlyLog(string $event, array $meta = []): void {
-  $path = __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.error.log';
+  $path = resolveEarlyLogPath();
+  if ($path === null) return;
+
   $base = [
     'ts' => gmdate('c'),
     'event' => $event,
