@@ -7,13 +7,15 @@ import readline from 'readline';
 const OUTPUT_DIR = 'out';
 const APPROVED_URLS_FILE = '.approved-urls.json';
 
-// Create readline interface for user input
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+const URL_APPROVAL_MODE = (process.env.CHECKBUILD_URL_APPROVAL || 'prompt').toLowerCase();
+const isInteractive = URL_APPROVAL_MODE === 'prompt';
 
-// Promisify readline question
+// Only create readline interface when we intend to prompt.
+const rl = isInteractive
+  ? readline.createInterface({ input: process.stdin, output: process.stdout })
+  : null;
+
+// Promisify readline question (only used in interactive mode)
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 // Load approved URLs from file
@@ -47,6 +49,13 @@ async function approveUrls(urls) {
     console.log(`\n   ${chalk.gray(`${index + 1}.`)} ${chalk.bold(url)}`);
     files.forEach(file => console.log(`      ${chalk.gray(file)}`));
   });
+
+  if (!isInteractive) {
+    // Non-interactive mode: allow deploy to proceed without saving approvals.
+    // We still print the URLs so they can be reviewed later.
+    console.log(chalk.blue('\nℹ️  CHECKBUILD_URL_APPROVAL is not "prompt"; continuing without approving/saving.'));
+    return true;
+  }
 
   const answer = await question(chalk.yellow('\nWould you like to approve all these URLs? (y/n): '));
   return answer.toLowerCase().startsWith('y');
@@ -267,8 +276,12 @@ try {
     const areApproved = await approveUrls(newUrls);
 
     if (areApproved) {
-      newUrls.forEach(url => approvedUrls.add(url));
-      console.log(chalk.green(`✅ Added ${newUrls.length} URLs to approved list (total: ${approvedUrls.size})`));
+      if (isInteractive) {
+        newUrls.forEach(url => approvedUrls.add(url));
+        console.log(chalk.green(`✅ Added ${newUrls.length} URLs to approved list (total: ${approvedUrls.size})`));
+      } else {
+        console.log(chalk.green(`✅ Proceeding with ${newUrls.length} new URLs (not saved to ${APPROVED_URLS_FILE})`));
+      }
     } else {
       newUrls.forEach(url => {
         console.log(chalk.red(`❌ URL rejected: ${url}`));
@@ -281,7 +294,9 @@ try {
     }
 
     // Save updated approved URLs
-    saveApprovedUrls(approvedUrls);
+    if (isInteractive && areApproved) {
+      saveApprovedUrls(approvedUrls);
+    }
   } else {
     console.log(chalk.blue(`ℹ️  All ${approvedUrls.size} URLs already approved`));
   }
@@ -323,10 +338,10 @@ try {
     console.log(chalk.green.bold('✅ No forbidden strings found'));
   }
 
-  rl.close();
+  if (rl) rl.close();
   process.exit(findings.length > 0 ? 1 : 0);
 } catch (error) {
   console.error(chalk.red.bold('❌ Error:'), chalk.red(error.message));
-  rl.close();
+  if (rl) rl.close();
   process.exit(1);
 }
