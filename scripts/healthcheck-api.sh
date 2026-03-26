@@ -48,6 +48,27 @@ log_echo() {
   log "$1"
 }
 
+hc_post() {
+  local url="$1"
+  local body="$2"
+  # Never let a failed ping crash the monitor script.
+  curl -fsS --max-time 10 --retry 3 --data-raw "$body" "$url" >/dev/null || true
+}
+
+hc_fail() {
+  local body="$1"
+  if [[ -n "$API_HEALTHCHECK_PING_URL" ]]; then
+    hc_post "${API_HEALTHCHECK_PING_URL%/}/fail" "$body"
+  fi
+}
+
+hc_ok() {
+  local body="$1"
+  if [[ -n "$API_HEALTHCHECK_PING_URL" ]]; then
+    hc_post "${API_HEALTHCHECK_PING_URL%/}" "$body"
+  fi
+}
+
 ensure_yarn() {
   if command -v yarn >/dev/null 2>&1; then
     return 0
@@ -84,14 +105,22 @@ log_echo "Log file: $LOG_FILE"
 log_echo "PM2_HOME: $PM2_HOME"
 
 if [[ ! -d "$PROJECT_DIR" ]]; then
+  msg="api-health failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ"))\nproject_dir_missing=$PROJECT_DIR\npm2_home=$PM2_HOME"
   log_echo "ERROR: Project directory missing: $PROJECT_DIR"
+  hc_fail "$msg"
   exit 1
 fi
 
 cd "$PROJECT_DIR"
 
 if ! ensure_yarn; then
+  msg=$(
+    printf "api-health failed (%s)\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    printf "reason=yarn_not_found\n"
+    printf "project_dir=%s\npm2_home=%s\npath=%s\n" "$PROJECT_DIR" "$PM2_HOME" "$PATH"
+  )
   log_echo "ERROR: yarn not found. PATH=$PATH"
+  hc_fail "$msg"
   exit 1
 fi
 
@@ -122,17 +151,17 @@ else
 fi
 
 if [[ "$SERVICE_ONLINE" -eq 1 ]]; then
-  if [[ -n "$API_HEALTHCHECK_PING_URL" ]]; then
-    if curl -fsS --max-time 10 --retry 3 "$API_HEALTHCHECK_PING_URL" >/dev/null; then
-      log_echo "OK: API health ping sent"
-    else
-      log_echo "ERROR: API health ping failed"
-    fi
-  else
-    log_echo "WARN: API_HEALTHCHECK_PING_URL is empty; skipping ping"
-  fi
+  hc_ok "api-health ok $(date -u +"%Y-%m-%dT%H:%M:%SZ") app=$APP_NAME"
+  log_echo "OK: API health ping sent"
 else
-  log_echo "WARN: Service not online; skipping health ping"
+  body=$(
+    printf "api-health failed (%s)\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    printf "app=%s\nproject_dir=%s\npm2_home=%s\n" "$APP_NAME" "$PROJECT_DIR" "$PM2_HOME"
+    printf "pm2_status_snippet=%s\n" "$(echo "$PM2_OUTPUT" | tr '\n' ' ' | head -c 400)"
+  )
+  hc_fail "$body"
+  log_echo "WARN: Service not online; sent fail ping"
+  exit 1
 fi
 
 log_echo "=== API Health Monitor Completed ==="
