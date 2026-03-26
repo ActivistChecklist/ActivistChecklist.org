@@ -24,7 +24,7 @@ fi
 find out -name '.DS_Store' -delete 2>/dev/null || true
 
 # Check SSL certificate expiry (at most once per week)
-yarn ssl-check
+yarn check-ssl
 
 # Create build backup
 yarn buildbackup

@@ -7,35 +7,35 @@
  *
  * Config file (secrets, not in git):
  *   - Recommended: place it in the SAME directory as this script:
- *       webhooks/deploy-webhook.config.local.php
+ *       webhooks/webhook-secrets.local.php
  *     and ensure your rsync deploy excludes it so --delete doesn't remove it.
  *   - Alternative: set Apache/PHP-FPM env:
- *       DEPLOY_WEBHOOK_CONFIG=/absolute/path/to/deploy-webhook.config.local.php
+ *       DEPLOY_WEBHOOK_CONFIG=/absolute/path/to/webhook-secrets.local.php
  *
- * repo_root is configured inside deploy-webhook.config.local.php (absolute checkout path).
- * deploy.php runs scripts/build_deploy.sh there and passes REPO_DIR to the shell.
+ * repo_root is configured inside webhook-secrets.local.php (absolute checkout path).
+ * deploy.php runs scripts/build-deploy.sh there and passes REPO_DIR to the shell.
  *
  * Deploy:
- *   1. Copy deploy-webhook.config.example.php → webhooks/deploy-webhook.config.local.php on the server.
- *   2. chmod 640 webhooks/deploy-webhook.config.local.php && chown root:www-data (or owner + PHP-FPM group).
- *   3. chmod +x scripts/build_deploy.sh; set DEPLOY_TARGET in deploy_env (see example).
+ *   1. Copy webhook-secrets.example.php → webhooks/webhook-secrets.local.php on the server.
+ *   2. chmod 640 webhooks/webhook-secrets.local.php && chown root:www-data (or owner + PHP-FPM group).
+ *   3. chmod +x scripts/build-deploy.sh; set DEPLOY_TARGET in deploy_env (see example).
  *   4. Ensure PHP may execute the deploy script, or use sudoers (see below).
- * 5. GitHub: Webhook → JSON, secret = same as in deploy-webhook.config.local.php, push only.
+ * 5. GitHub: Webhook → JSON, secret = same as in webhook-secrets.local.php, push only.
  *
  * Long builds: this request blocks until the script exits. Raise nginx/apache
  * proxy_read_timeout (and GitHub will retry on 5xx) or switch to a queue that
  * returns 202 immediately.
  *
  * Hardening notes:
- *   - Secret never appears in this file; use deploy-webhook.config.local.php (not in git).
+ *   - Secret never appears in this file; use webhook-secrets.local.php (not in git).
  *   - Signature verified with hash_equals before parsing JSON.
  *   - Deploy output is not echoed to the client (reduces information leakage).
  *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in config).
- *   - Deploy script defaults to repo scripts/build_deploy.sh; must stay under repo root.
+ *   - Deploy script defaults to repo scripts/build-deploy.sh; must stay under repo root.
  *   - If www-data cannot run your deploy (git/yarn in $HOME), either:
  *       a) Run this pool as your deploy user (PHP-FPM user = you), or
- *       b) sudoers: www-data ALL=(deployuser) NOPASSWD: /bin/bash /full/path/to/repo/scripts/build_deploy.sh
- *          and set 'deploy_command_prefix' => ['sudo', '-n', '-u', 'deployuser'] in deploy-webhook.config.local.php
+ *       b) sudoers: www-data ALL=(deployuser) NOPASSWD: /bin/bash /full/path/to/repo/scripts/build-deploy.sh
+ *          and set 'deploy_command_prefix' => ['sudo', '-n', '-u', 'deployuser'] in webhook-secrets.local.php
  *     (Adjust to your policy; prefix is fixed in config, no user input.)
  */
 
@@ -151,7 +151,7 @@ if ($payload === false || strlen($payload) > $maxBytes) {
 //   2) Apache/FPM env DEPLOY_WEBHOOK_CONFIG=/abs/path/to/config
 //   3) Parent of webhooks/ (dev repo root or exported site root)
 $configPath = '';
-$sameDir = __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php';
+$sameDir = __DIR__ . DIRECTORY_SEPARATOR . 'webhook-secrets.local.php';
 if (is_readable($sameDir)) {
   $configPath = $sameDir;
 }
@@ -162,7 +162,7 @@ if ($configPath === '' && is_string($fromEnv) && $fromEnv !== '' && is_readable(
 if ($configPath === '') {
   $aboveWebhooks = dirname(__DIR__, 2);
   $candidates = [
-    $aboveWebhooks . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+    $aboveWebhooks . DIRECTORY_SEPARATOR . 'webhook-secrets.local.php',
   ];
   foreach ($candidates as $candidate) {
     if (is_readable($candidate)) {
@@ -173,9 +173,9 @@ if ($configPath === '') {
 }
 if ($configPath === '') {
   failConfig('config_missing', [
-    'tried_same_dir' => __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+    'tried_same_dir' => __DIR__ . DIRECTORY_SEPARATOR . 'webhook-secrets.local.php',
     'env_DEPLOY_WEBHOOK_CONFIG_set' => is_string(getenv('DEPLOY_WEBHOOK_CONFIG')) && getenv('DEPLOY_WEBHOOK_CONFIG') !== '' ? 'yes' : 'no',
-    'also_tried' => dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+    'also_tried' => dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'webhook-secrets.local.php',
   ]);
 }
 
@@ -372,7 +372,7 @@ if ($runGitPull) {
   }
 }
 
-$defaultDeployScript = $repoRoot . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'build_deploy.sh';
+$defaultDeployScript = $repoRoot . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'build-deploy.sh';
 $scriptConfigured = $config['deploy_script'] ?? '';
 $script = ($scriptConfigured !== '' && is_string($scriptConfigured))
   ? $scriptConfigured
