@@ -247,6 +247,107 @@ if ($repoRoot === false) {
   ]);
 }
 
+$ref = (string) ($data['ref'] ?? '');
+$branch = '';
+if (strpos($ref, 'refs/heads/') === 0) {
+  $branch = substr($ref, strlen('refs/heads/'));
+}
+if ($branch === '') {
+  $branch = 'main';
+}
+
+// Build environment once so both git pre-pull and deploy script run consistently.
+$deployEnv = $config['deploy_env'] ?? [];
+if (!is_array($deployEnv)) {
+  configOut('deploy_env must be an array of string keys to string values', [
+    'configPath' => $configPath,
+  ]);
+}
+foreach ($deployEnv as $k => $v) {
+  if (!is_string($k) || !is_string($v)) {
+    configOut('deploy_env must use string keys and string values', [
+      'configPath' => $configPath,
+    ]);
+  }
+}
+
+// REPO_DIR and GIT_BRANCH are forced from validated webhook/config values.
+$basePath = getenv('PATH');
+if (!is_string($basePath) || $basePath === '') {
+  $basePath = '/usr/local/bin:/usr/bin:/bin';
+}
+
+// Prefer PATH from deploy_env if provided; otherwise inherit the PHP process PATH.
+$effectivePath = $basePath;
+if (isset($deployEnv['PATH']) && is_string($deployEnv['PATH']) && $deployEnv['PATH'] !== '') {
+  $effectivePath = $deployEnv['PATH'];
+  unset($deployEnv['PATH']);
+}
+
+$env = array_merge($_ENV, [
+  'PATH' => $effectivePath,
+  'HOME' => getenv('HOME') ?: '',
+  'GITHUB_DELIVERY' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
+], $deployEnv, [
+  'REPO_DIR' => $repoRoot,
+  'GIT_BRANCH' => $branch,
+]);
+
+// Pre-pull: ensure the repo (and deploy script) are up to date before resolving script paths.
+// This avoids edge cases where an older build script can't run a newer build.
+$gitPrefix = $config['git_command_prefix'] ?? [];
+if (!is_array($gitPrefix) || $gitPrefix !== array_values($gitPrefix)) {
+  configOut('git_command_prefix must be a list (or omitted)', [
+    'configPath' => $configPath,
+  ]);
+}
+foreach ($gitPrefix as $part) {
+  if (!is_string($part) || $part === '') {
+    configOut('git_command_prefix entries must be non-empty strings', [
+      'configPath' => $configPath,
+    ]);
+  }
+}
+
+$runGitPull = ($config['git_pull'] ?? true) !== false;
+if ($runGitPull) {
+  $gitSteps = [
+    array_merge($gitPrefix, ['git', 'fetch', 'origin', '--prune']),
+    array_merge($gitPrefix, ['git', 'checkout', $branch]),
+    array_merge($gitPrefix, ['git', 'pull', '--ff-only', 'origin', $branch]),
+  ];
+
+  foreach ($gitSteps as $cmd) {
+    $descriptors = [
+      0 => ['pipe', 'r'],
+      1 => ['pipe', 'w'],
+      2 => ['pipe', 'w'],
+    ];
+    $p = proc_open($cmd, $descriptors, $pipes, $repoRoot, $env);
+    if (!is_resource($p)) {
+      configOut('failed to run git (proc_open)', [
+        'cwd' => $repoRoot,
+        'cmd' => implode(' ', array_map('strval', $cmd)),
+      ]);
+    }
+    fclose($pipes[0]);
+    $gOut = stream_get_contents($pipes[1]);
+    $gErr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $gCode = proc_close($p);
+    if ($gCode !== 0) {
+      configOut('git step failed', [
+        'cwd' => $repoRoot,
+        'cmd' => implode(' ', array_map('strval', $cmd)),
+        'exit' => $gCode,
+        'stderr' => is_string($gErr) ? trim($gErr) : '',
+        'stdout' => is_string($gOut) ? trim($gOut) : '',
+      ]);
+    }
+  }
+}
+
 $defaultDeployScript = $repoRoot . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'build_deploy.sh';
 $scriptConfigured = $config['deploy_script'] ?? '';
 $script = ($scriptConfigured !== '' && is_string($scriptConfigured))
@@ -312,41 +413,6 @@ $descriptorspec = [
   1 => ['pipe', 'w'],
   2 => ['pipe', 'w'],
 ];
-
-$deployEnv = $config['deploy_env'] ?? [];
-if (!is_array($deployEnv)) {
-  error_log('deploy-webhook: deploy_env must be an array of string keys to string values');
-  http_response_code(500);
-  exit('Configuration error');
-}
-foreach ($deployEnv as $k => $v) {
-  if (!is_string($k) || !is_string($v)) {
-    error_log('deploy-webhook: deploy_env must use string keys and string values');
-    http_response_code(500);
-    exit('Configuration error');
-  }
-}
-
-// REPO_DIR last so it always matches resolved repo_root (do not rely on ~/… paths in deploy_env).
-$basePath = getenv('PATH');
-if (!is_string($basePath) || $basePath === '') {
-  $basePath = '/usr/local/bin:/usr/bin:/bin';
-}
-
-// Prefer PATH from deploy_env if provided; otherwise inherit the PHP process PATH.
-$effectivePath = $basePath;
-if (isset($deployEnv['PATH']) && is_string($deployEnv['PATH']) && $deployEnv['PATH'] !== '') {
-  $effectivePath = $deployEnv['PATH'];
-  unset($deployEnv['PATH']);
-}
-
-$env = array_merge($_ENV, [
-  'PATH' => $effectivePath,
-  'HOME' => getenv('HOME') ?: '',
-  'GITHUB_DELIVERY' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
-], $deployEnv, [
-  'REPO_DIR' => $repoRoot,
-]);
 
 $cwd = $realParent;
 $process = proc_open($resolvedCmd, $descriptorspec, $pipes, $cwd, $env);
