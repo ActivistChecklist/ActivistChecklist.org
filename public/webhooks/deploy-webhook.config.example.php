@@ -45,6 +45,11 @@ return [
   // Server accepts requests within +/- this many seconds.
   'timestamp_window_sec' => 300,
 
+  // Optional. How webhook updates the server checkout before running build_deploy.sh:
+  // - 'hard-reset' (default if omitted): force repo to exactly origin/<branch>
+  // - 'ff-only': safer for local changes; fails if fast-forward isn't possible
+  // 'git_update_mode' => 'hard-reset',
+
   // Passed into scripts/build_deploy.sh (PHP often runs as www-data).
   // Do not set REPO_DIR here — deploy.php sets it from repo_root above.
   'deploy_env' => [
