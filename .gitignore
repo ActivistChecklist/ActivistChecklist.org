@@ -67,9 +67,6 @@ metadata-cleaner/
 # SSL check log
 .ssl-check.log
 
-# Deploy/upload script (host-specific, not committed)
-scripts/deploy-remote.sh
-
 # GitHub deploy webhook secrets (repo root; loaded by public/webhooks/deploy.php)
 deploy-webhook.config.local.php
 
