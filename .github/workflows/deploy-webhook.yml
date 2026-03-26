@@ -1,0 +1,46 @@
+name: Deploy (trigger webhook)
+
+on:
+  push:
+    branches:
+      - main
+      - dev/remote-deploy
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger server deploy webhook
+        env:
+          DEPLOY_URL: https://activistchecklist.org/webhooks/deploy.php
+          DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
+          REPO_FULL_NAME: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          node - <<'NODE'
+          const crypto = require('crypto');
+          const url = process.env.DEPLOY_URL;
+          const secret = process.env.DEPLOY_SECRET;
+          if (!secret) {
+            console.error('Missing DEPLOY_SECRET');
+            process.exit(1);
+          }
+
+          const payloadObj = {
+            ref: process.env.REF,
+            repository: { full_name: process.env.REPO_FULL_NAME }
+          };
+          const payload = JSON.stringify(payloadObj);
+          const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+          const { spawnSync } = require('child_process');
+          const res = spawnSync('curl', [
+            '-sS', '-D', '-', '-X', 'POST', url,
+            '-H', 'Content-Type: application/json',
+            '-H', `X-Hub-Signature-256: ${sig}`,
+            '--data-binary', payload
+          ], { stdio: 'inherit' });
+
+          process.exit(res.status ?? 1);
+          NODE
+
