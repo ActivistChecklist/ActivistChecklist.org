@@ -29,12 +29,15 @@ API_HEALTHCHECK_PING_URL="${API_HEALTHCHECK_PING_URL:-}"
 LOG_DIR="${API_HEALTH_LOG_DIR:-$PROJECT_DIR/logs}"
 LOG_FILE="$LOG_DIR/api-health-monitor.log"
 LOG_LINES_KEEP="${API_HEALTH_LOG_LINES_KEEP:-500}"
+PM2_HOME="${API_HEALTH_PM2_HOME:-$PROJECT_DIR/.pm2}"
+export PM2_HOME
 API_HEALTH_USE_NVM="${API_HEALTH_USE_NVM:-1}"
 API_HEALTH_NVM_DIR="${API_HEALTH_NVM_DIR:-$HOME/.nvm}"
 API_HEALTH_NODE_VERSION="${API_HEALTH_NODE_VERSION:-}"
 API_HEALTH_PATH_EXTRA="${API_HEALTH_PATH_EXTRA:-}"
 
 mkdir -p "$LOG_DIR"
+mkdir -p "$PM2_HOME" "$PM2_HOME/logs" "$PM2_HOME/pids" "$PM2_HOME/modules"
 
 log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOG_FILE"
@@ -78,6 +81,7 @@ log_echo "=== API Health Monitor Started ==="
 log_echo "Project: $PROJECT_DIR"
 log_echo "App: $APP_NAME"
 log_echo "Log file: $LOG_FILE"
+log_echo "PM2_HOME: $PM2_HOME"
 
 if [[ ! -d "$PROJECT_DIR" ]]; then
   log_echo "ERROR: Project directory missing: $PROJECT_DIR"
