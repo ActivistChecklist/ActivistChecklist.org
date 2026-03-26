@@ -5,7 +5,7 @@
 #
 # Setup example:
 #   export HEALTHCHECK_PING_URL="https://hc-ping.com/your-uuid"
-#   */5 * * * * /absolute/path/to/repo/scripts/healthcheck.sh >/dev/null 2>&1
+#   */5 * * * * /absolute/path/to/repo/scripts/healthcheck-site.sh >/dev/null 2>&1
 #
 # Optional env vars:
 #   SITE_URL=https://activistchecklist.org
