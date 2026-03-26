@@ -56,6 +56,58 @@ function jsonOut(int $status, array $data): void {
   exit;
 }
 
+function configOut(string $message, array $meta = []): void {
+  // Intentionally verbose for debugging. This reveals server paths; revert when done.
+  http_response_code(500);
+  header('Content-Type: text/plain; charset=UTF-8');
+  echo "Configuration error\n";
+  echo $message . "\n";
+  foreach ($meta as $k => $v) {
+    if (is_array($v) || is_object($v)) {
+      $v = json_encode($v, JSON_UNESCAPED_SLASHES);
+    }
+    echo $k . '=' . (string) $v . "\n";
+  }
+  exit;
+}
+
+function rotateAndAppendLog(string $path, string $line, int $maxBytes = 1000000, int $keepBytes = 200000): void {
+  // Best-effort logging; never throw.
+  try {
+    $dir = dirname($path);
+    if ($dir !== '' && !is_dir($dir)) return;
+
+    $size = @filesize($path);
+    if (is_int($size) && $size > $maxBytes) {
+      $fh = @fopen($path, 'rb');
+      if (is_resource($fh)) {
+        @fseek($fh, -1 * $keepBytes, SEEK_END);
+        $tail = @stream_get_contents($fh);
+        @fclose($fh);
+        if (is_string($tail) && $tail !== '') {
+          @file_put_contents($path, "---- truncated ----\n" . $tail, LOCK_EX);
+        }
+      }
+    }
+
+    @file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
+  } catch (\Throwable $e) {
+    // ignore
+  }
+}
+
+function earlyLog(string $event, array $meta = []): void {
+  $path = __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.error.log';
+  $base = [
+    'ts' => gmdate('c'),
+    'event' => $event,
+    'ip' => getClientIp(),
+    'delivery' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
+  ];
+  $record = array_merge($base, $meta);
+  rotateAndAppendLog($path, (json_encode($record, JSON_UNESCAPED_SLASHES) ?: '{}') . "\n");
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   http_response_code(405);
   exit('Method Not Allowed');
@@ -104,8 +156,15 @@ if ($configPath === '') {
 }
 if ($configPath === '') {
   error_log('deploy-webhook: missing deploy-webhook.config.local.php (same dir as deploy.php, or SetEnv DEPLOY_WEBHOOK_CONFIG)');
-  http_response_code(500);
-  exit('Configuration error');
+  earlyLog('config_missing', [
+    'tried_same_dir' => __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+    'tried_env' => is_string(getenv('DEPLOY_WEBHOOK_CONFIG')) && getenv('DEPLOY_WEBHOOK_CONFIG') !== '' ? 'set' : 'unset',
+  ]);
+  configOut('config file not found/readable', [
+    'tried_same_dir' => __DIR__ . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php',
+    'env_DEPLOY_WEBHOOK_CONFIG' => (string) (getenv('DEPLOY_WEBHOOK_CONFIG') ?: ''),
+    'also_tried' => [dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'deploy-webhook.config.local.php'],
+  ]);
 }
 
 /** @var array{secret:string,repo_root:string,allowed_ref?:string,allowed_repository?:string,deploy_script?:string,script_parent_dir?:string,deploy_command_prefix?:list<string>,deploy_env?:array<string,string>,log_file?:string|false} $config */
@@ -120,14 +179,22 @@ $canDebugToClient = $debug && (count($debugAllowIps) === 0 || in_array($clientIp
 $secret = $config['secret'] ?? '';
 if ($secret === '' || strlen($secret) < 16) {
   error_log('deploy-webhook: invalid secret in config');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('invalid secret in config', [
+    'configPath' => $configPath,
+    'secret_len' => is_string($secret) ? strlen($secret) : 'not_string',
+  ]);
 }
 
 $sigHeader = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
 $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
 if (!is_string($sigHeader) || !hash_equals($expected, $sigHeader)) {
   // Safe debug: never print secrets; avoid printing full signatures.
+  earlyLog('signature_mismatch', [
+    'received_sig_prefix' => is_string($sigHeader) ? substr($sigHeader, 0, 16) : null,
+    'expected_sig_prefix' => substr($expected, 0, 16),
+    'payload_len' => strlen($payload),
+    'payload_sha256' => hash('sha256', $payload),
+  ]);
   if ($canDebugToClient) {
     jsonOut(403, [
       'ok' => false,
@@ -166,14 +233,18 @@ if (!empty($config['allowed_repository'])) {
 $repoRootConfigured = $config['repo_root'] ?? '';
 if (!is_string($repoRootConfigured) || $repoRootConfigured === '') {
   error_log('deploy-webhook: repo_root must be set to the absolute checkout path in deploy-webhook.config.local.php');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('repo_root missing/invalid', [
+    'configPath' => $configPath,
+    'repo_root' => is_string($repoRootConfigured) ? $repoRootConfigured : 'not_string',
+  ]);
 }
 $repoRoot = realpath($repoRootConfigured);
 if ($repoRoot === false) {
   error_log('deploy-webhook: repo_root does not exist or is not readable');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('repo_root not found/readable (realpath failed)', [
+    'configPath' => $configPath,
+    'repo_root' => $repoRootConfigured,
+  ]);
 }
 
 $defaultDeployScript = $repoRoot . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'build_deploy.sh';
@@ -191,21 +262,32 @@ $realScript = realpath($script);
 $realParent = realpath($parent);
 if ($realScript === false || $realParent === false) {
   error_log('deploy-webhook: deploy script or script_parent_dir not found');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('deploy script or script_parent_dir not found (realpath failed)', [
+    'configPath' => $configPath,
+    'repoRoot' => $repoRoot,
+    'deploy_script_configured' => $scriptConfigured,
+    'deploy_script_effective' => $script,
+    'script_parent_dir_configured' => $parentConfigured,
+    'script_parent_dir_effective' => $parent,
+  ]);
 }
 
 $parentPrefix = rtrim($realParent, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 if (strpos($realScript, $parentPrefix) !== 0) {
   error_log('deploy-webhook: deploy_script escapes script_parent_dir');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('deploy_script escapes script_parent_dir', [
+    'deploy_script_realpath' => $realScript,
+    'script_parent_realpath' => $realParent,
+  ]);
 }
 
 if (!is_file($realScript) || !is_executable($realScript)) {
   error_log('deploy-webhook: deploy script not executable');
-  http_response_code(500);
-  exit('Configuration error');
+  configOut('deploy script not executable', [
+    'deploy_script_realpath' => $realScript,
+    'is_file' => is_file($realScript) ? 'yes' : 'no',
+    'is_executable' => is_executable($realScript) ? 'yes' : 'no',
+  ]);
 }
 
 $prefix = $config['deploy_command_prefix'] ?? [];

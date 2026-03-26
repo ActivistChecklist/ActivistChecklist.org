@@ -28,6 +28,7 @@ node_modules
 
 # Webhook secrets (server-managed; must be protected from rsync --delete)
 webhooks/deploy-webhook.config.local.php
+webhooks/deploy-webhook.error.log
 
 # Build / dev artifacts
 out
