@@ -280,8 +280,8 @@ $env = array_merge($_ENV, [
   'GIT_BRANCH' => $branch,
 ]);
 
-// Pre-pull: ensure the repo (and deploy script) are up to date before resolving script paths.
-// This avoids edge cases where an older build script can't run a newer build.
+// Pre-sync: ensure the repo (and deploy script) are up to date before resolving script paths.
+// Default is hard-reset to origin/<branch> (server is treated as disposable deploy checkout).
 $gitPrefix = $config['git_command_prefix'] ?? [];
 if (!is_array($gitPrefix) || $gitPrefix !== array_values($gitPrefix)) {
   failConfig('git_command_prefix_invalid', [
@@ -298,11 +298,23 @@ foreach ($gitPrefix as $part) {
 
 $runGitPull = ($config['git_pull'] ?? true) !== false;
 if ($runGitPull) {
+  $gitUpdateMode = (string) ($config['git_update_mode'] ?? 'hard-reset');
+  if ($gitUpdateMode !== 'hard-reset' && $gitUpdateMode !== 'ff-only') {
+    failConfig('git_update_mode_invalid', [
+      'configPath' => $configPath,
+      'git_update_mode' => $gitUpdateMode,
+    ]);
+  }
+
   $gitSteps = [
     array_merge($gitPrefix, ['git', 'fetch', 'origin', '--prune']),
     array_merge($gitPrefix, ['git', 'checkout', $branch]),
-    array_merge($gitPrefix, ['git', 'pull', '--ff-only', 'origin', $branch]),
   ];
+  if ($gitUpdateMode === 'hard-reset') {
+    $gitSteps[] = array_merge($gitPrefix, ['git', 'reset', '--hard', "origin/$branch"]);
+  } else {
+    $gitSteps[] = array_merge($gitPrefix, ['git', 'pull', '--ff-only', 'origin', $branch]);
+  }
 
   foreach ($gitSteps as $cmd) {
     $descriptors = [
