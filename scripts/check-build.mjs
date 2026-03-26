@@ -89,6 +89,15 @@ const FORBIDDEN_STRINGS = [
   'notion.site',
   'storyblok.io',
 ];
+
+// Exceptions: allow specific forbidden strings in bundled third-party code.
+// Keystatic uses "http://localhost" as a base URL for the URL constructor (not a real request)
+// and registers 127.0.0.1 as a GitHub OAuth callback for local development.
+const FORBIDDEN_STRING_EXCEPTIONS = [
+  { string: '://localhost', filePattern: '_next/static/chunks/' },
+  { string: 'localhost:300', filePattern: '_next/static/chunks/' },
+  { string: '://127.0.0.1', filePattern: '_next/static/chunks/' },
+];
 const CONTEXT_CHARS = 150; // Number of characters to show before and after match
 
 const __filename = fileURLToPath(import.meta.url);
@@ -173,10 +182,18 @@ function readAndTransformFile(filePath) {
   return transformedContent;
 }
 
+function isExcepted(forbiddenString, filePath) {
+  return FORBIDDEN_STRING_EXCEPTIONS.some(
+    ex => ex.string === forbiddenString && filePath.includes(ex.filePattern)
+  );
+}
+
 function checkForbiddenStrings(content, filePath) {
   const fileFindings = [];
 
   for (const forbiddenString of FORBIDDEN_STRINGS) {
+    if (isExcepted(forbiddenString, filePath)) continue;
+
     let index = content.indexOf(forbiddenString);
     while (index !== -1) {
       const context = getContext(content, index, forbiddenString.length);

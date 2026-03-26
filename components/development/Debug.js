@@ -1,6 +1,8 @@
+'use client';
+
 import { useState, useEffect } from 'react'
 import { useDebug } from '../../contexts/DebugContext'
-import { useRouter } from 'next/router'
+import { usePathname, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
 const ReactJson = dynamic(() => import('react-json-view'), {
@@ -10,7 +12,8 @@ const ReactJson = dynamic(() => import('react-json-view'), {
 export default function Debug() {
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('router')
-  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { debugData } = useDebug()
   const [isMounted, setIsMounted] = useState(false)
 
@@ -34,50 +37,42 @@ export default function Debug() {
     }
   }, [isOpen])
 
-  if (process.env.NODE_ENV !== 'development' || !isMounted) {
-    return null
-  }
+  if (!isMounted || process.env.NODE_ENV !== 'development') return null
 
-  const tabs = {
-    router: { label: 'Router', data: router },
-    page: { label: 'Page Data', data: debugData },
+  const routerState = {
+    pathname,
+    query: Object.fromEntries(searchParams?.entries() || []),
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-4 right-4 z-50 bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-mono opacity-50 hover:opacity-100 transition-opacity"
+      >
+        {isOpen ? 'Close Debug' : 'Debug'}
+      </button>
       {isOpen && (
-        <div className="fixed bottom-16 right-4 max-w-[95vw] w-[800px] h-[85vh] overflow-auto bg-gray-800 text-white rounded-lg shadow-xl">
-          <div className="sticky top-0 flex flex-wrap border-b border-gray-700 bg-gray-800">
-            {Object.entries(tabs).map(([key, { label }]) => (
+        <div className="fixed bottom-14 right-4 z-50 bg-background border rounded shadow-lg p-4 w-96 max-h-96 overflow-auto text-xs font-mono">
+          <div className="flex gap-2 mb-3">
+            {['router', 'debug'].map((tab) => (
               <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`px-4 py-2 ${
-                  activeTab === key ? 'bg-gray-700' : ''
-                }`}
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-2 py-1 rounded ${activeTab === tab ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
               >
-                {label}
+                {tab}
               </button>
             ))}
           </div>
-          <div className="p-6">
-            <ReactJson 
-              src={tabs[activeTab].data} 
-              theme="monokai" 
-              style={{ backgroundColor: 'transparent' }}
-              displayDataTypes={false}
-              enableClipboard={false}
-            />
-          </div>
+          {activeTab === 'router' && (
+            <ReactJson src={routerState} theme="monokai" collapsed={false} />
+          )}
+          {activeTab === 'debug' && (
+            <ReactJson src={debugData || {}} theme="monokai" collapsed={false} />
+          )}
         </div>
       )}
-      
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-gray-800 text-white px-4 py-2 rounded-md opacity-50 hover:opacity-100 transition-opacity duration-200"
-      >
-        🔍 Debug
-      </button>
-    </div>
+    </>
   )
-} 
+}

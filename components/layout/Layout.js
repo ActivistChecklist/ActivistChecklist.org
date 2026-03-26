@@ -1,3 +1,5 @@
+'use client';
+import { Suspense } from 'react';
 import TopNav from "./nav-top";
 import Footer from "./Footer";
 import Debug from "../development/Debug";
@@ -64,7 +66,7 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
                   </div>
                 </div>
               </div>
-              <Debug />
+              <Suspense><Debug /></Suspense>
               <Footer />
               <PageCounter />
             </div>

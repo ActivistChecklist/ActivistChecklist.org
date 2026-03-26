@@ -1,7 +1,8 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { MDXRemote } from 'next-mdx-remote';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/router';
+import { useTranslations, useLocale } from 'next-intl';
 import { mdxComponents } from '@/lib/mdx-components';
 import { useLayout } from '@/contexts/LayoutContext';
 import { MetaBar, getDateMetaItem } from '@/components/ui/meta-bar';
@@ -23,11 +24,12 @@ function parseRelatedGuides(value) {
  * Sources content from:
  *   - frontmatter: title, lastUpdated (date)
  *   - serializedBody: next-mdx-remote compiled MDX
+ *   - locale: BCP 47 locale string for date formatting (provided by parent Server Component)
  */
-export default function Page({ frontmatter, serializedBody, serializedRelatedGuides = null }) {
+export default function Page({ frontmatter, serializedBody, locale }) {
   const t = useTranslations();
-  const router = useRouter();
-  const dateLocale = LOCALES[router.locale]?.intlLocale || 'en-US';
+  const intlLocale = useLocale() || locale || 'en';
+  const dateLocale = LOCALES[intlLocale]?.intlLocale || 'en-US';
   const { setSidebarType } = useLayout();
 
   useEffect(() => {
@@ -48,9 +50,6 @@ export default function Page({ frontmatter, serializedBody, serializedRelatedGui
       </div>
       {relatedGuideSlugs.length > 0 && (
         <RelatedGuides isBlock guideSlugs={relatedGuideSlugs} />
-      )}
-      {serializedRelatedGuides && (
-        <MDXRemote {...serializedRelatedGuides} components={mdxComponents} />
       )}
     </>
   );

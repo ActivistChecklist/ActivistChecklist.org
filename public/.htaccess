@@ -1,5 +1,29 @@
 ErrorDocument 404 /404/index.html
 
+# Locale rewrite: serve English content from /en/ without showing /en/ in URL
+# Spanish URLs at /es/ are served directly (no rewrite needed)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Skip if the file/directory already exists at the bare path
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Skip rewriting for /es/, static files, API routes, and keystatic
+  RewriteCond %{REQUEST_URI} !^/es/
+  RewriteCond %{REQUEST_URI} !^/en/
+  RewriteCond %{REQUEST_URI} !^/_next/
+  RewriteCond %{REQUEST_URI} !^/api/
+  RewriteCond %{REQUEST_URI} !^/keystatic
+  RewriteCond %{REQUEST_URI} !^/rss/
+  RewriteCond %{REQUEST_URI} !^/images/
+  RewriteCond %{REQUEST_URI} !^/fonts/
+  RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|xml|txt|json|webmanifest)$
+
+  # Rewrite bare paths to /en/ equivalent
+  RewriteRule ^(.*)$ /en/$1 [L]
+</IfModule>
+
 # Redirects
 Redirect 301 /government /federal
 

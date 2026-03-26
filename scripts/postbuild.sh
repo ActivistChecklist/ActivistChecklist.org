@@ -4,14 +4,20 @@
 
 set -e
 
-# Generate sitemap, RSS feed, and search index
+# Generate sitemap and RSS feed
 next-sitemap
 yarn rss
-yarn index
 
 # Static build tasks
 if [ "$BUILD_MODE" = "static" ]; then
+  # Search index is only needed for static exports (buildstatic).
+  yarn index
+
   cp public/.htaccess out/.htaccess
+
+  # Copy English content to root so bare URLs (e.g. /about/) work on any static server.
+  # Spanish stays at /es/. The .htaccess rewrite is a fallback for Apache.
+  cp -a out/en/* out/
 fi
 
 # Clean up .DS_Store files from output

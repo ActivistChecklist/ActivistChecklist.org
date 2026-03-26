@@ -11,7 +11,7 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join, basename } from 'path';
-import { DEFAULT_LOCALE } from '../lib/i18n-config.js';
+import { DEFAULT_LOCALE } from '../lib/i18n-config.mjs';
 
 const MESSAGES_DIR = new URL('../messages', import.meta.url).pathname;
 const strict = process.argv.includes('--strict');

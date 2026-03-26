@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SectionContext } from '@/contexts/SectionContext';
@@ -9,10 +10,14 @@ import { SectionContext } from '@/contexts/SectionContext';
  *   <Section slug="digital-security" title="Digital Security" description="...">
  *     <ChecklistItem slug="signal" />
  *     <ChecklistItem slug="browser" />
+ *     <!-- or Keystatic repeating group: -->
+ *     <ChecklistItemGroup>
+ *       <ChecklistItem slug="signal" />
+ *       <ChecklistItem slug="browser" />
+ *     </ChecklistItemGroup>
  *   </Section>
  *
- * Counts direct ChecklistItem children to decide whether to show
- * the Expand/Collapse all button (only shown when count > 1).
+ * Counts ChecklistItem children (direct or inside ChecklistItemGroup) for Expand/Collapse all.
  */
 const Section = ({ slug, title, description, children }) => {
   const [expandTrigger, setExpandTrigger] = useState(null);
@@ -22,29 +27,38 @@ const Section = ({ slug, title, description, children }) => {
   const isChecklistItemChild = (child) =>
     child?.props?.slug !== undefined || child?.type?.name === 'ChecklistItemMdx';
 
+  const isChecklistItemGroup = (child) => child?.type?.isChecklistItemGroup === true;
+
+  /** Flatten direct ChecklistItems plus items inside `<ChecklistItemGroup>`. */
+  const collectChecklistItemElements = (arr) => {
+    const out = [];
+    arr.forEach((child) => {
+      if (isChecklistItemChild(child)) {
+        out.push(child);
+      } else if (isChecklistItemGroup(child)) {
+        React.Children.forEach(child.props.children, (c) => {
+          if (isChecklistItemChild(c)) out.push(c);
+        });
+      }
+    });
+    return out;
+  };
+
   const triggerExpand = (shouldExpand) => {
     setIsExpanded(shouldExpand);
     setExpandTrigger({ timestamp: Date.now(), shouldExpand });
   };
 
-  // Count ChecklistItem children to decide whether to show the toggle button
-  const checklistItemCount = useMemo(() => {
-    let count = 0;
-    childrenArray.forEach((child) => {
-      if (isChecklistItemChild(child)) {
-        count++;
-      }
-    });
-    return count;
-  }, [childrenArray]);
-
-  const sectionIntroChildren = useMemo(
-    () => childrenArray.filter((child) => !isChecklistItemChild(child)),
+  const checklistChildren = useMemo(
+    () => collectChecklistItemElements(childrenArray),
     [childrenArray]
   );
 
-  const checklistChildren = useMemo(
-    () => childrenArray.filter((child) => isChecklistItemChild(child)),
+  const checklistItemCount = checklistChildren.length;
+
+  const sectionIntroChildren = useMemo(
+    () =>
+      childrenArray.filter((child) => !isChecklistItemChild(child) && !isChecklistItemGroup(child)),
     [childrenArray]
   );
 

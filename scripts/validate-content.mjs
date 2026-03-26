@@ -50,7 +50,9 @@ const SUSPICIOUS_PATTERNS = [
 const ALLOWED_COMPONENTS = new Set([
   'Alert', 'HowTo', 'Button', 'ImageEmbed', 'VideoEmbed',
   'RiskLevel', 'Table', 'RelatedGuides', 'RelatedGuide', 'Section', 'ChecklistItem',
-  'CopyButton', 'Badge', 'ProtectionBadge', 'InlineChecklist',
+  'ChecklistItemGroup',
+  'CopyButton', 'Badge', 'InlineChecklist',
+  'StyledSpan',
 ]);
 
 const ALLOWED_HTML_ELEMENTS = new Set([

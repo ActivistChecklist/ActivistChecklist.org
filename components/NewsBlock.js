@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import NewsItem from '@/components/NewsItem';
 import Link from '@/components/Link';

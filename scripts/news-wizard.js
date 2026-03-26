@@ -144,7 +144,7 @@ async function fetchOg(url) {
 
 function formatTagsForFrontmatter(tags) {
   if (!tags.length) return null;
-  return tags;
+  return tags.join(', ');
 }
 
 /**
@@ -219,9 +219,7 @@ async function main() {
 
     const baseSlug = slugify(title);
     const slug = uniqueSlug(baseSlug);
-    const year = published.slice(0, 4);
-    const outDir = path.join(CONTENT_NEWS, year);
-    const outPath = path.join(outDir, `${slug}.mdx`);
+    const outPath = path.join(CONTENT_NEWS, `${slug}.mdx`);
 
     if (fs.existsSync(outPath)) {
       throw new Error(`Refusing to overwrite existing file: ${outPath}`);
@@ -239,7 +237,7 @@ async function main() {
     }
     console.log(`Date published:   ${published}`);
     console.log(`Site add dates:   firstPublished / lastUpdated → ${today}`);
-    console.log(`File:             content/en/news/${year}/${slug}.mdx`);
+    console.log(`File:             content/en/news/${slug}.mdx`);
     console.log(`Image (planned):  public/images/news/${slug}.jpg`);
     console.log('------------------------------------------------------------------\n');
 
@@ -270,8 +268,8 @@ async function main() {
 
     const mdxBody = normalizeWizardYamlDates(matter.stringify('\n', frontmatter));
 
-    if (!fs.existsSync(outDir)) {
-      fs.mkdirSync(outDir, { recursive: true });
+    if (!fs.existsSync(CONTENT_NEWS)) {
+      fs.mkdirSync(CONTENT_NEWS, { recursive: true });
     }
     fs.writeFileSync(outPath, mdxBody, 'utf8');
     console.log(`Wrote ${outPath}\n`);

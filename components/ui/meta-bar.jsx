@@ -1,3 +1,4 @@
+'use client';
 import { cn } from "@/lib/utils";
 import { Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';

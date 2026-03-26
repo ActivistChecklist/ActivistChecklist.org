@@ -111,7 +111,7 @@ describe('OG Image Configuration', () => {
         'utf-8'
       );
       const apiContent = fs.readFileSync(
-        path.join(process.cwd(), 'pages/api/og-image.js'),
+        path.join(process.cwd(), 'app/api/og-image/route.ts'),
         'utf-8'
       );
       
@@ -177,7 +177,7 @@ describe('OG Image Configuration', () => {
 describe('API Route Security', () => {
   it('should only be available in development', () => {
     const apiContent = fs.readFileSync(
-      path.join(process.cwd(), 'pages/api/og-image.js'),
+      path.join(process.cwd(), 'app/api/og-image/route.ts'),
       'utf-8'
     );
     
