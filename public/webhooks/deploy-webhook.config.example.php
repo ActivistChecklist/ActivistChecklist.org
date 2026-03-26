@@ -41,6 +41,10 @@ return [
   // Only deploy on this branch push.
   'allowed_ref' => 'refs/heads/main',
 
+  // Signed timestamp replay protection.
+  // Server accepts requests within +/- this many seconds.
+  'timestamp_window_sec' => 300,
+
   // Passed into scripts/build_deploy.sh (PHP often runs as www-data).
   // Do not set REPO_DIR here — deploy.php sets it from repo_root above.
   'deploy_env' => [

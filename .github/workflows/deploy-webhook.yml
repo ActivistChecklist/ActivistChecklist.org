@@ -7,7 +7,7 @@ on:
       - dev/remote-deploy
 
 jobs:
-  trigger:
+  trigger_build_and_deploy_webhook:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger server deploy webhook
@@ -31,16 +31,18 @@ jobs:
             repository: { full_name: process.env.REPO_FULL_NAME }
           };
           const payload = JSON.stringify(payloadObj);
-          const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
+          const ts = Math.floor(Date.now() / 1000);
+          const signed = `${ts}\n${payload}`;
+          const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(signed).digest('hex');
 
           const { spawnSync } = require('child_process');
           const res = spawnSync('curl', [
             '-sS', '-D', '-', '-X', 'POST', url,
             '-H', 'Content-Type: application/json',
+            '-H', `X-Deploy-Timestamp: ${ts}`,
             '-H', `X-Hub-Signature-256: ${sig}`,
             '--data-binary', payload
           ], { stdio: 'inherit' });
 
           process.exit(res.status ?? 1);
           NODE
-
