@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Pulled from the repo at scripts/build_deploy.sh.
-# public/webhooks/deploy.php runs this and sets REPO_DIR from deploy-webhook.config.local.php (repo_root).
+# Pulled from the repo at scripts/build-deploy.sh.
+# public/webhooks/deploy.php runs this and sets REPO_DIR from webhook-secrets.local.php (repo_root).
 #
 # Uses flock so overlapping webhook deliveries do not run two builds at once.
 #
@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -z "${REPO_DIR:-}" ]]; then
   REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
-LOCK_FILE="${LOCK_FILE:-$REPO_DIR/.build_deploy.lock}"
+LOCK_FILE="${LOCK_FILE:-$REPO_DIR/.build-deploy.lock}"
 # Set on the server (export, systemd Environment=, etc.) to your site docroot
 DEPLOY_TARGET="${DEPLOY_TARGET:-$HOME/public_html}"
 
@@ -99,5 +99,33 @@ if [[ -f "$REPO_DIR/.rsync-exclude" ]]; then
   RSYNC_EXCLUDE=(--exclude-from="$REPO_DIR/.rsync-exclude")
 fi
 rsync -a --delete "${RSYNC_EXCLUDE[@]}" "$REPO_DIR/out/" "$DEPLOY_TARGET/"
+
+# Post-deploy smoke checks (informational only; deploy already published).
+SITE_URL="${SITE_URL:-https://activistchecklist.org}"
+SMOKE_GUIDE_PATH="${SMOKE_GUIDE_PATH:-/essentials/}"
+SMOKE_FAILED=0
+
+if ! curl -fsS --max-time 15 "$SITE_URL/" | grep -qi "Activist Checklist"; then
+  log "WARN: smoke check failed for $SITE_URL/"
+  SMOKE_FAILED=1
+fi
+if ! curl -fsS --max-time 15 "$SITE_URL/news/" >/dev/null; then
+  log "WARN: smoke check failed for $SITE_URL/news/"
+  SMOKE_FAILED=1
+fi
+if ! curl -fsS --max-time 15 "$SITE_URL$SMOKE_GUIDE_PATH" >/dev/null; then
+  log "WARN: smoke check failed for $SITE_URL$SMOKE_GUIDE_PATH"
+  SMOKE_FAILED=1
+fi
+if ! curl -fsS --max-time 15 "$SITE_URL/api-server/hello" >/dev/null; then
+  log "WARN: smoke check failed for $SITE_URL/api-server/hello"
+  SMOKE_FAILED=1
+fi
+
+if [[ "$SMOKE_FAILED" -eq 1 ]]; then
+  log "WARN: one or more post-deploy smoke checks failed"
+else
+  log "Post-deploy smoke checks passed"
+fi
 
 log "Deploy finished → $DEPLOY_TARGET"

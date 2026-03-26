@@ -1,4 +1,4 @@
-# Used when rsyncing out/ to the server (deploy-remote.sh, build_deploy.sh).
+# Used when rsyncing out/ to the server (deploy-remote.sh, build-deploy.sh).
 # Patterns match filenames at each level under the source dir (out/).
 
 # OS / editor junk
@@ -27,7 +27,6 @@ node_modules
 .gitattributes
 
 # Webhook secrets (server-managed; must be protected from rsync --delete)
-webhooks/deploy-webhook.config.local.php
 webhooks/deploy-webhook.error.log
 
 # Build / dev artifacts

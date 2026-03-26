@@ -11,9 +11,17 @@ source "$ROOT/.env"
 : "${FTP_USER:?Set FTP_USER in .env}"
 : "${FTP_DIR:?Set FTP_DIR in .env (remote web root, e.g. web or /public_html)}"
 : "${ENV_PRODUCTION_PATH:?Set ENV_PRODUCTION_PATH in .env (remote .env.production file path)}"
+: "${LOCAL_ENV_PRODUCTION_FILE:=./.env.production.local}"
+if [[ "$LOCAL_ENV_PRODUCTION_FILE" != /* ]]; then
+  LOCAL_ENV_PRODUCTION_FILE="$ROOT/${LOCAL_ENV_PRODUCTION_FILE#./}"
+fi
+if [[ ! -f "$LOCAL_ENV_PRODUCTION_FILE" ]]; then
+  echo "Missing local production env file: $LOCAL_ENV_PRODUCTION_FILE" >&2
+  exit 1
+fi
 
-echo "===> Uploading .env.production..."
-rsync -avz "$ROOT/.env.production" "$FTP_USER@$FTP_HOST:$ENV_PRODUCTION_PATH"
+echo "===> Uploading remote .env.production from $LOCAL_ENV_PRODUCTION_FILE..."
+rsync -avz "$LOCAL_ENV_PRODUCTION_FILE" "$FTP_USER@$FTP_HOST:$ENV_PRODUCTION_PATH"
 
 echo "===> Syncing public/webhooks/ to $FTP_HOST:$FTP_DIR/webhooks/ ..."
 rsync -avz --delete \
