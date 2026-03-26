@@ -1,10 +1,9 @@
-name: Deploy (trigger webhook)
+name: Build and Deploy (via webhook)
 
 on:
   push:
     branches:
       - main
-      - dev/remote-deploy
 
 jobs:
   trigger_build_and_deploy_webhook:
