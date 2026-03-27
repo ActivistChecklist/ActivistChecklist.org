@@ -16,8 +16,10 @@ LOCK_FILE="${LOCK_FILE:-$REPO_DIR/.build-deploy.lock}"
 # Set on the server (export, systemd Environment=, etc.) to your site docroot
 DEPLOY_TARGET="${DEPLOY_TARGET:-$HOME/public_html}"
 
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/log.sh"
 log() {
-  printf '[%s] %s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$*" >&2
+  log_stderr_utc "$@"
 }
 
 ensure_yarn() {
