@@ -192,7 +192,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                                       <Link
                                         href={subItem.href}
                                         className={cn(
-                                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary",
+                                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-hidden transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary",
                                           isSubItemActive(subItem, pathname) && "bg-muted"
                                         )}
                                       >
@@ -218,7 +218,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                                       <Link
                                         href={item.footerLink.href}
                                         className={cn(
-                                          "block select-none rounded-md p-2 no-underline outline-none transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary text-center",
+                                          "block select-none rounded-md p-2 no-underline outline-hidden transition-colors hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary text-center",
                                           item.footerLink.type === "full-width" && item.items.length % 2 === 0 ? "bg-muted" : "bg-muted h-full flex items-center justify-center",
                                           item.footerLink.className
                                         )}

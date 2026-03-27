@@ -77,7 +77,7 @@ const NewsItem = ({ entry }) => {
             </div>
 
             {/* Image */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {hasUrl ? (
                 <Link
                   href={originalUrl}
@@ -203,7 +203,7 @@ const NewsItem = ({ entry }) => {
           </div>
 
           {/* Image */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {hasUrl ? (
               <Link
                 href={originalUrl}
@@ -254,7 +254,7 @@ const NewsItem = ({ entry }) => {
   return (
     <div
 
-      className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-sm hover:bg-gray-100 transition-all duration-200 group"
+      className="news-item mb-4 bg-gray-50 border border-gray-300 rounded-lg p-4 hover:shadow-xs hover:bg-gray-100 transition-all duration-200 group"
     >
       <NewsItemContent />
     </div>

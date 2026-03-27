@@ -376,7 +376,7 @@ const Search = ({ variant = 'searchbar', className, ...props }) => {
                         <a 
                           key={subIndex} 
                           href={subResult.url}
-                          className="block text-sm pl-10 relative before:content-['\2937'] before:absolute before:left-4 before:top-[0.5rem] before:text-primary before:text-lg hover:bg-muted rounded-md group transition-colors p-3 -mx-3"
+                          className="block text-sm pl-10 relative before:content-['\2937'] before:absolute before:left-4 before:top-2 before:text-primary before:text-lg hover:bg-muted rounded-md group transition-colors p-3 -mx-3"
                           onClick={() => setOpen(false)}
                         >
                           <div 

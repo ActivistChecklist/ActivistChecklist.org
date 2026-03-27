@@ -93,7 +93,7 @@ export default function NotFoundContent({ messages }) {
           <div className="container max-w-2xl mx-auto px-4 py-16 text-center">
             <div className={cn(
               "mb-8 p-8 rounded-full w-32 h-32 mx-auto",
-              "bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20",
+              "bg-linear-to-br from-primary/20 via-accent/10 to-primary/20",
               "flex items-center justify-center",
               "group hover:scale-105 transition-transform duration-300",
               "hover:bg-primary/30",
@@ -106,10 +106,10 @@ export default function NotFoundContent({ messages }) {
             </div>
 
             <div className={cn("space-y-2", !mounted && "invisible")}>
-              <h3 className="text-2xl leading-tight font-semibold bg-gradient-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+              <h3 className="text-2xl leading-tight font-semibold bg-linear-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent">
                 Oops! This page doesn&apos;t exist
               </h3>
-              <h1 className="text-4xl leading-tight font-bold bg-gradient-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+              <h1 className="text-4xl leading-tight font-bold bg-linear-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent">
                 {visual.title}
               </h1>
             </div>

@@ -1,3 +1,5 @@
+@reference "./globals.css";
+
 /* Alert styles - !text-inherit overrides prose's font-size so alert matches its container */
 .alert {
   @apply relative w-full rounded-md border-l-[6px] py-2 px-5 [&:not(:first-child)]:mt-3 !text-inherit min-h-[2.7rem];

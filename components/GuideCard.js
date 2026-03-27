@@ -19,9 +19,9 @@ const GuideCard = ({
   if (size === "large") {
     return (
       <Link href={href} className="block group">
-        <Card className="relative h-full overflow-hidden rounded-lg border border-primary/15 shadow-sm transition-all duration-200 hover:shadow-xl hover:scale-[1.01] hover:border-primary/40 flex flex-col bg-gradient-to-br from-card via-card to-primary/15">
+        <Card className="relative h-full overflow-hidden rounded-lg border border-primary/15 shadow-xs transition-all duration-200 hover:shadow-xl hover:scale-[1.01] hover:border-primary/40 flex flex-col bg-linear-to-br from-card via-card to-primary/15">
           <div className="absolute top-1/2 right-3 -translate-y-1/2 w-44 h-44 flex items-center justify-center pointer-events-none">
-            <Icon className="h-36 w-36 text-primary/[0.09]" strokeWidth={0.9} />
+            <Icon className="h-36 w-36 text-primary/9" strokeWidth={0.9} />
           </div>
           <CardHeader className="relative py-4 pb-2">
             <CardTitle className="text-2xl">{title}</CardTitle>
@@ -41,7 +41,7 @@ const GuideCard = ({
 
   return (
     <Link href={href} className="block group">
-      <Card className="h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 flex flex-col">
+      <Card className="h-full transition-all duration-200 ease-in-out transform hover:scale-101 hover:shadow-xl border-primary/10 hover:border-primary/30 bg-linear-to-br from-card via-card to-primary/5 flex flex-col">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">

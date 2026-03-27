@@ -33,7 +33,7 @@ export const HowTo = ({ title, children }) => {
                 "right-0 bg-transparent px-0 my-3 w-6 h-6",
               )}
               />
-              <h4 className="!text-sm !font-semibold !mb-4 uppercase tracking-tight text-muted-foreground pr-8 md:pr-0">
+              <h4 className="text-sm! font-semibold! mb-4! uppercase tracking-tight text-muted-foreground pr-8 md:pr-0">
                 {title}
               </h4>
             </>

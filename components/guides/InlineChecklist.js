@@ -137,7 +137,7 @@ export function InlineChecklist({ children, storageKey, className }) {
                 >
                   <span
                     className={cn(
-                      "flex-shrink-0 w-5 h-5 mt-0.5 rounded-sm border-2 flex items-center justify-center transition-colors duration-300",
+                      "shrink-0 w-5 h-5 mt-0.5 rounded-sm border-2 flex items-center justify-center transition-colors duration-300",
                       isChecked
                         ? "bg-primary border-primary text-primary-foreground"
                         : "border-muted-foreground/40 hover:border-primary"
