@@ -480,8 +480,21 @@ if ($logFile !== null) {
 if ($code !== 0) {
   error_log('deploy-webhook: deploy script exited ' . $code);
   http_response_code(500);
-  exit('Deploy failed');
+  header('Content-Type: text/plain; charset=UTF-8');
+  $delivery = $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '';
+  $deliveryLine = is_string($delivery) && $delivery !== '' ? $delivery : '(unknown)';
+  $body = <<<TXT
+Deploy failed (exit code {$code}).
+
+GitHub delivery: {$deliveryLine}
+
+Check the deploy webhook log on the server for full stdout/stderr.
+
+If the log shows another run holding the lock, wait and re-dispatch the webhook or push again.
+TXT;
+  exit($body);
 }
 
 http_response_code(200);
+header('Content-Type: text/plain; charset=UTF-8');
 echo 'OK';
