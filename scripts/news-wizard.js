@@ -145,6 +145,115 @@ function formatTagsForFrontmatter(tags) {
   return tags.join(', ');
 }
 
+/** Map lowercase tag -> preferred spelling as it first appears in existing news MDX. */
+function collectKnownTagCanonical() {
+  const canonical = new Map();
+  for (const { frontmatter } of loadNewsItems()) {
+    const raw = frontmatter.tags;
+    if (!raw || typeof raw !== 'string') continue;
+    for (const part of raw.split(',')) {
+      const t = part.trim();
+      if (!t) continue;
+      const lc = t.toLowerCase();
+      if (!canonical.has(lc)) canonical.set(lc, t);
+    }
+  }
+  return canonical;
+}
+
+function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const row = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const temp = row[j];
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + cost);
+      prev = temp;
+    }
+  }
+  return row[n];
+}
+
+function maxTypoDistanceForLength(len) {
+  if (len <= 4) return 1;
+  if (len <= 10) return 2;
+  return 2;
+}
+
+/**
+ * If `lc` is not known, return a single best existing tag spelling that looks like a typo, else null.
+ */
+function findTypoSuggestion(lc, canonical) {
+  if (lc.length <= 2) return null;
+  const maxD = maxTypoDistanceForLength(lc.length);
+  const scored = [];
+  for (const [knownLc, display] of canonical) {
+    if (knownLc === lc) continue;
+    const d = levenshtein(lc, knownLc);
+    if (d <= maxD) scored.push({ d, display, knownLc });
+  }
+  if (scored.length === 0) return null;
+  scored.sort((a, b) => a.d - b.d || a.knownLc.localeCompare(b.knownLc));
+  const best = scored[0];
+  if (scored.length > 1 && scored[1].d === best.d) return null;
+  return best.display;
+}
+
+/** Dedupe tags case-insensitively, preserve first occurrence order. */
+function dedupeTagsCaseInsensitive(tags) {
+  const seen = new Set();
+  const out = [];
+  for (const t of tags) {
+    const lc = t.toLowerCase();
+    if (seen.has(lc)) continue;
+    seen.add(lc);
+    out.push(t);
+  }
+  return out;
+}
+
+async function resolveTagsWithTypoHints(rawTags, getRl) {
+  const canonical = collectKnownTagCanonical();
+  const resolved = [];
+
+  for (const raw of rawTags) {
+    const tag = raw.trim();
+    if (!tag) continue;
+    const lc = tag.toLowerCase();
+
+    if (canonical.has(lc)) {
+      resolved.push(canonical.get(lc));
+      continue;
+    }
+
+    const suggestion = findTypoSuggestion(lc, canonical);
+    if (suggestion) {
+      const line = await promptLine(
+        getRl(),
+        `Did you mean "${suggestion}" instead of "${tag}"? [Y/n]: `
+      );
+      const a = String(line || '')
+        .trim()
+        .toLowerCase();
+      if (a === '' || a === 'y' || a === 'yes') {
+        resolved.push(suggestion);
+      } else {
+        resolved.push(tag);
+      }
+    } else {
+      resolved.push(tag);
+    }
+  }
+
+  return dedupeTagsCaseInsensitive(resolved);
+}
+
 function git(args, options = {}) {
   const output = execFileSync('git', args, {
     encoding: 'utf8',
@@ -179,31 +288,6 @@ function buildContentBranchName(slug) {
     n += 1;
   }
   return candidate;
-}
-
-function buildPullRequestUrl(branchName) {
-  const origin = tryGit(['remote', 'get-url', 'origin']);
-  if (!origin.ok) return null;
-  const raw = String(origin.value || '').trim();
-  if (!raw) return null;
-
-  // Support SSH and HTTPS remotes, including SSH host aliases.
-  let repoPath = '';
-  const sshLike = raw.match(/^[^@]+@[^:]+:(.+)$/);
-  if (sshLike) {
-    repoPath = sshLike[1];
-  } else {
-    try {
-      const parsed = new URL(raw);
-      repoPath = parsed.pathname.replace(/^\/+/, '');
-    } catch {
-      return null;
-    }
-  }
-
-  const repoSlug = repoPath.replace(/\.git$/i, '');
-  if (!/^[^/]+\/[^/]+$/.test(repoSlug)) return null;
-  return `https://github.com/${repoSlug}/compare/main...${branchName}?expand=1`;
 }
 
 function transactionalCommitToContentBranch({ slug, mdxBody }) {
@@ -378,12 +462,14 @@ async function main() {
       tagsLine = await promptLine(getRl(), 'Tags (comma-separated, Enter for none): ');
     }
 
-    const tags = tagsLine
+    const rawTags = tagsLine
       ? tagsLine
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean)
       : [];
+
+    const tags = await resolveTagsWithTypoHints(rawTags, getRl);
 
     const frontmatter = {
       title,
@@ -405,7 +491,6 @@ async function main() {
       slug,
       mdxBody,
     });
-    const prUrl = buildPullRequestUrl(pushedBranch);
 
     console.log(`✅ Done. Committed and pushed to ${pushedBranch}.`);
   } finally {
