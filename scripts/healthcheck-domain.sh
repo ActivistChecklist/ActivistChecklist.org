@@ -33,31 +33,49 @@ fail() {
   exit 1
 }
 
-if ! command -v whois >/dev/null 2>&1; then
-  fail "domain-check failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ")) domain=$DOMAIN_NAME reason=whois_not_installed"
+expiry_raw=""
+source_method=""
+
+# 1) Try WHOIS first when available.
+if command -v whois >/dev/null 2>&1; then
+  whois_out="$(whois "$DOMAIN_NAME" 2>/dev/null || true)"
+  if [[ -n "$whois_out" ]]; then
+    expiry_raw="$(
+      echo "$whois_out" | awk -F: '
+        BEGIN {IGNORECASE=1}
+        $1 ~ /(Registry Expiry Date|Registrar Registration Expiration Date|Expiration Date|Expiry Date|paid-till|renewal date|expire|expires)/ {
+          sub(/^[^:]*:[[:space:]]*/, "", $0)
+          print $0
+          exit
+        }
+      '
+    )"
+    if [[ -n "$expiry_raw" ]]; then
+      source_method="whois"
+    fi
+  fi
 fi
 
-whois_out="$(whois "$DOMAIN_NAME" 2>/dev/null || true)"
-if [[ -z "$whois_out" ]]; then
-  fail "domain-check failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ")) domain=$DOMAIN_NAME reason=empty_whois"
+# 2) Fallback to RDAP over HTTPS (no whois binary/sudo required).
+if [[ -z "$expiry_raw" ]]; then
+  rdap_json="$(curl -fsS --max-time 15 "https://rdap.org/domain/${DOMAIN_NAME}" 2>/dev/null || true)"
+  if [[ -n "$rdap_json" ]]; then
+    one_line_json="$(echo "$rdap_json" | tr -d '\n' | tr -d '\r')"
+    # Common case: eventAction then eventDate in same event object.
+    expiry_raw="$(echo "$one_line_json" | sed -n 's/.*"eventAction"[[:space:]]*:[[:space:]]*"expiration"[^}]*"eventDate"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    # Less common ordering: eventDate appears before eventAction.
+    if [[ -z "$expiry_raw" ]]; then
+      expiry_raw="$(echo "$one_line_json" | sed -n 's/.*"eventDate"[[:space:]]*:[[:space:]]*"\([^"]*\)"[^}]*"eventAction"[[:space:]]*:[[:space:]]*"expiration".*/\1/p')"
+    fi
+    if [[ -n "$expiry_raw" ]]; then
+      source_method="rdap"
+    fi
+  fi
 fi
-
-# Try common expiry fields across registries/TLDs.
-expiry_raw="$(
-  echo "$whois_out" | awk -F: '
-    BEGIN {IGNORECASE=1}
-    $1 ~ /(Registry Expiry Date|Registrar Registration Expiration Date|Expiration Date|Expiry Date|paid-till|renewal date|expire|expires)/ {
-      # print first match value and exit
-      sub(/^[^:]*:[[:space:]]*/, "", $0)
-      print $0
-      exit
-    }
-  '
-)"
 
 expiry_raw="$(echo "$expiry_raw" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 if [[ -z "$expiry_raw" ]]; then
-  fail "domain-check failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ")) domain=$DOMAIN_NAME reason=expiry_not_found"
+  fail "domain-check failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ")) domain=$DOMAIN_NAME reason=expiry_not_found whois_or_rdap"
 fi
 
 # Normalize: take first token that looks like a date for ISO-ish formats.
@@ -88,5 +106,5 @@ if [[ "$days_left" -lt "$DOMAIN_WARN_DAYS" ]]; then
   fail "domain-check failed ($(date -u +"%Y-%m-%dT%H:%M:%SZ")) domain=$DOMAIN_NAME days_left=$days_left warn_days=$DOMAIN_WARN_DAYS expiry=$expiry_token"
 fi
 
-hc_post "${DOMAIN_HEALTHCHECK_PING_URL%/}" "domain-check ok $(date -u +"%Y-%m-%dT%H:%M:%SZ") domain=$DOMAIN_NAME days_left=$days_left expiry=$expiry_token"
+hc_post "${DOMAIN_HEALTHCHECK_PING_URL%/}" "domain-check ok $(date -u +"%Y-%m-%dT%H:%M:%SZ") domain=$DOMAIN_NAME days_left=$days_left expiry=$expiry_token source=$source_method"
 
