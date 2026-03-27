@@ -8,6 +8,8 @@
 # Cron example:
 # */5 * * * * /absolute/path/to/repo/scripts/api-health-monitor.sh >/dev/null 2>&1
 #
+# Logs: LOG_DIR (or <repo>/logs); trim lines from LOG_LINES_KEEP (or 500).
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,7 +37,7 @@ API_HEALTH_NVM_DIR="${API_HEALTH_NVM_DIR:-$HOME/.nvm}"
 API_HEALTH_NODE_VERSION="${API_HEALTH_NODE_VERSION:-}"
 API_HEALTH_PATH_EXTRA="${API_HEALTH_PATH_EXTRA:-}"
 
-init_scripts_file_log "${API_HEALTH_LOG_DIR:-$PROJECT_DIR/logs}" "api-health-monitor.log" "${API_HEALTH_LOG_LINES_KEEP:-500}"
+init_scripts_file_log "$(resolve_server_log_dir "$PROJECT_DIR")" "api-health-monitor.log" "$(resolve_server_log_lines_keep)"
 mkdir -p "$PM2_HOME" "$PM2_HOME/logs" "$PM2_HOME/pids" "$PM2_HOME/modules"
 
 hc_post() {
