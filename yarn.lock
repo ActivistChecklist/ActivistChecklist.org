@@ -5424,10 +5424,10 @@ lru-cache@^7.14.1:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-7.18.3.tgz#f793896e0fd0e954a59dfdd82f0773808df6aa89"
   integrity sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==
 
-lucide-react@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.0.1.tgz#1b7f9930281ffca90d161289419c1df321612aad"
-  integrity sha512-lih7tKEczCYOQjVEzpFuxEuNzlwf+1yhvlMlEkGWJM3va8Pugv8bYXc/pRtcjPncaP7k84X0Pt/71ufxvqEPtQ==
+lucide-react@^1.0.1:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.7.0.tgz#ad72fe48ebe1e5631a9cffdc94fc99dd853aa247"
+  integrity sha512-yI7BeItCLZJTXikmK4KNUGCKoGzSvbKlfCvw44bU4fXAL6v3gYS4uHD1jzsLkfwODYwI6Drw5Tu9Z5ulDe0TSg==
 
 magic-string@^0.30.21:
   version "0.30.21"
@@ -6125,7 +6125,7 @@ next-intl-swc-plugin-extractor@^4.8.3:
   resolved "https://registry.yarnpkg.com/next-intl-swc-plugin-extractor/-/next-intl-swc-plugin-extractor-4.8.3.tgz#1e8f5b51884afc42fad251cb5bf94523c69ed3c7"
   integrity sha512-YcaT+R9z69XkGhpDarVFWUprrCMbxgIQYPUaXoE6LGVnLjGdo8hu3gL6bramDVjNKViYY8a/pXPy7Bna0mXORg==
 
-next-intl@4.8.3:
+next-intl@^4.8.3:
   version "4.8.3"
   resolved "https://registry.yarnpkg.com/next-intl/-/next-intl-4.8.3.tgz#c23bed78167e91cd19fa40ff4a76da8725aa6046"
   integrity sha512-PvdBDWg+Leh7BR7GJUQbCDVVaBRn37GwDBWc9sv0rVQOJDQ5JU1rVzx9EEGuOGYo0DHAl70++9LQ7HxTawdL7w==
