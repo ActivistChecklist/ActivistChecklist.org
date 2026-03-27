@@ -18,6 +18,11 @@ jobs:
         run: |
           node - <<'NODE'
           const crypto = require('crypto');
+          const fs = require('fs');
+          const os = require('os');
+          const path = require('path');
+          const { spawnSync } = require('child_process');
+
           const url = process.env.DEPLOY_URL;
           const secret = process.env.DEPLOY_SECRET;
           if (!secret) {
@@ -34,15 +39,60 @@ jobs:
           const signed = `${ts}\n${payload}`;
           const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(signed).digest('hex');
 
-          const { spawnSync } = require('child_process');
-          // -f: exit non-zero on HTTP 4xx/5xx (otherwise curl succeeds on "Configuration error" 500s)
-          const res = spawnSync('curl', [
-            '-sS', '-f', '-D', '-', '-X', 'POST', url,
-            '-H', 'Content-Type: application/json',
-            '-H', `X-Deploy-Timestamp: ${ts}`,
-            '-H', `X-Hub-Signature-256: ${sig}`,
-            '--data-binary', payload
-          ], { stdio: 'inherit' });
+          const bodyFile = path.join(os.tmpdir(), `deploy-webhook-body-${process.pid}.txt`);
+          // Do not use curl -f: we need the response body on 4xx/5xx (deploy.php explains the failure).
+          const res = spawnSync(
+            'curl',
+            [
+              '-sS',
+              '-o',
+              bodyFile,
+              '-w',
+              '%{http_code}',
+              '-X',
+              'POST',
+              url,
+              '-H',
+              'Content-Type: application/json',
+              '-H',
+              `X-Deploy-Timestamp: ${ts}`,
+              '-H',
+              `X-Hub-Signature-256: ${sig}`,
+              '--data-binary',
+              payload
+            ],
+            { encoding: 'utf8' }
+          );
 
-          process.exit(res.status ?? 1);
+          if (res.error) {
+            console.error(res.error.message);
+            process.exit(1);
+          }
+          if (res.status !== 0) {
+            console.error('curl failed:', res.stderr || '(no stderr)');
+            process.exit(res.status ?? 1);
+          }
+
+          const httpCode = String(res.stdout || '').trim();
+          let body = '';
+          try {
+            body = fs.readFileSync(bodyFile, 'utf8');
+          } catch (e) {
+            body = '(could not read response body)';
+          }
+          try {
+            fs.unlinkSync(bodyFile);
+          } catch (_) {
+            // ignore
+          }
+
+          console.log('--- Webhook HTTP status:', httpCode, '---');
+          console.log(body);
+          if (httpCode !== '200') {
+            console.error(
+              '\nDeploy webhook did not return 200. The message above is from the server (if any). ' +
+                'For details, check the host deploy log (build-deploy / .deploy-webhook.log).'
+            );
+            process.exit(1);
+          }
           NODE

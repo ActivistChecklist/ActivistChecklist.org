@@ -26,8 +26,10 @@ node_modules
 .gitignore
 .gitattributes
 
-# Webhook secrets (server-managed; must be protected from rsync --delete)
+# Webhook (server-managed; must be protected from rsync --delete)
+# Without these, `out/webhooks/` lacks gitignored files, so --delete would remove them from docroot.
 webhooks/deploy-webhook.error.log
+webhooks/webhook-secrets.local.php
 
 # Build / dev artifacts
 out
