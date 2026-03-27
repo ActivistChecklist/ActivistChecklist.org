@@ -23,8 +23,9 @@ fi
 # Clean up .DS_Store files from output
 find out -name '.DS_Store' -delete 2>/dev/null || true
 
-# Check SSL certificate expiry (at most once per week)
-yarn check-ssl
-
 # Create build backup
-yarn buildbackup
+if [ -n "$CI" ]; then
+  echo "CI detected; skipping build backup"
+else
+  yarn buildbackup
+fi
