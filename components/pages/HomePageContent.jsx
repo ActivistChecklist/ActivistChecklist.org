@@ -10,7 +10,6 @@ import { ROUTES } from '@/config/routes';
 import { SECURITY_CHECKLISTS } from '@/config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
-import NewsBlock, { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
 import Markdown from '@/components/Markdown';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
@@ -42,7 +41,7 @@ const ConcernCard = ({ title, description }) => (
   </Card>
 );
 
-export default function HomePageContent({ changelogEntries = [], newsItems = [], latestMajorBodyText = null, locale = 'en' }) {
+export default function HomePageContent({ children, changelogEntries = [], latestMajorBodyText = null, locale = 'en' }) {
   const t = useTranslations();
   const currentLocale = useLocale() || locale;
   const baseUrl = getBaseUrl();
@@ -140,8 +139,8 @@ export default function HomePageContent({ changelogEntries = [], newsItems = [],
             </div>
           </section>
 
-          {/* Latest News */}
-          <NewsBlock newsItems={newsItems} />
+          {/* Latest News — loaded in server component HomeNewsSection (see app/[locale]/page.tsx) */}
+          {children}
 
           {/* Recent Updates */}
           <section className="mb-16">

@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { setRequestLocale } from 'next-intl/server';
-import { getAllChangelogEntries, getAllNewsItems, toChangelogListEntry, toNewsListItem } from '@/lib/content';
-import { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
+import { getAllChangelogEntries, toChangelogListEntry } from '@/lib/content';
 import HomePageContent from '@/components/pages/HomePageContent';
+import HomeNewsSection from './HomeNewsSection';
 import { DEFAULT_LOCALE } from '@/lib/i18n-config';
 import { getBaseUrl } from '@/lib/utils';
 import { getOgImagePathForSlug } from '@/lib/og-image';
@@ -60,14 +60,14 @@ export default async function HomePage({ params }) {
 
   const changelogEntries = getAllChangelogEntries(locale).map(toChangelogListEntry);
   const latestMajor = changelogEntries.find((e) => e.type === 'major');
-  const newsItems = getAllNewsItems(locale).map(toNewsListItem);
 
   return (
     <HomePageContent
       changelogEntries={changelogEntries.slice(0, 5)}
-      newsItems={newsItems.slice(0, NEWS_BLOCK_DEFAULT_LIMIT)}
       latestMajorBodyText={latestMajor?.bodyText ?? null}
       locale={locale}
-    />
+    >
+      <HomeNewsSection locale={locale} />
+    </HomePageContent>
   );
 }
