@@ -59,8 +59,9 @@ ensure_yarn() {
 
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
-  log "Another deploy holds the lock; exiting."
-  exit 0
+  log "ERROR: Another deploy holds the lock; exiting without deploying."
+  # Non-zero so the webhook returns failure to GitHub (do not report success when no deploy ran).
+  exit 1
 fi
 
 if [[ ! -d "$REPO_DIR/content" ]] || [[ ! -d "$REPO_DIR/.git" ]]; then
