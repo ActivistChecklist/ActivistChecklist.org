@@ -43,7 +43,7 @@ yarn install
 yarn dev
 ```
 
-The application will be available at `https://localhost:3001`
+The Next.js app will be at `http://localhost:3000` (API on the port in `API_PORT`, default `4321`).
 
 ## VS Code extensions
 

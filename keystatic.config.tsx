@@ -5,7 +5,7 @@
 export const showKeystaticUI =
   process.env.NODE_ENV === 'development' && process.env.BUILD_MODE !== 'static';
 
-import { config, collection, fields } from '@keystatic/core';
+import { config, collection, fields, singleton } from '@keystatic/core';
 import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';
 import { Icon } from '@keystar/ui/icon';
 import { boldIcon } from '@keystar/ui/icon/icons/boldIcon';
@@ -451,6 +451,56 @@ export default config({
     brand: {
       name: 'Activist Checklist CMS',
     },
+  },
+
+  singletons: {
+    announcementBar: singleton({
+      label: 'Announcement bar',
+      path: 'content/en/announcement/',
+      schema: {
+        active: fields.checkbox({
+          label: 'Show announcement bar',
+          description: 'Turn off to hide the bar everywhere without deleting copy.',
+          defaultValue: true,
+        }),
+        dismissKey: fields.text({
+          label: 'Dismiss storage key',
+          description:
+            'Visitors who dismissed the bar are remembered by this key. Change it to show the bar again to everyone who had dismissed the old campaign.',
+          defaultValue: 'announcement',
+        }),
+        title: fields.text({ label: 'Title' }),
+        message: fields.text({
+          label: 'Message',
+          multiline: true,
+        }),
+        buttonText: fields.text({ label: 'Primary button label' }),
+        buttonUrl: fields.text({
+          label: 'Primary button URL',
+          description: 'Relative or absolute path, e.g. /protest',
+        }),
+        secondaryButtonText: fields.text({ label: 'Secondary button label' }),
+        secondaryButtonUrl: fields.text({ label: 'Secondary button URL' }),
+        allowDismiss: fields.checkbox({
+          label: 'Allow dismiss (X button)',
+          defaultValue: true,
+        }),
+        colorScheme: fields.select({
+          label: 'Color scheme',
+          options: [{ label: 'Primary', value: 'primary' }],
+          defaultValue: 'primary',
+        }),
+        icon: fields.select({
+          label: 'Icon',
+          options: [
+            { label: 'Megaphone', value: 'megaphone' },
+            { label: 'Bell', value: 'bell' },
+            { label: 'None', value: 'none' },
+          ],
+          defaultValue: 'megaphone',
+        }),
+      },
+    }),
   },
 
   collections: {

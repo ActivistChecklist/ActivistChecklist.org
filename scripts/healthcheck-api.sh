@@ -22,13 +22,12 @@ fi
 # Load repo env values.
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/load-env.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/log.sh"
 
 PROJECT_DIR="${PROJECT_DIR:-$ROOT_DIR}"
 APP_NAME="${API_APP_NAME:-ac-api}"
 API_HEALTHCHECK_PING_URL="${API_HEALTHCHECK_PING_URL:-}"
-LOG_DIR="${API_HEALTH_LOG_DIR:-$PROJECT_DIR/logs}"
-LOG_FILE="$LOG_DIR/api-health-monitor.log"
-LOG_LINES_KEEP="${API_HEALTH_LOG_LINES_KEEP:-500}"
 PM2_HOME="${API_HEALTH_PM2_HOME:-$PROJECT_DIR/.pm2}"
 export PM2_HOME
 API_HEALTH_USE_NVM="${API_HEALTH_USE_NVM:-1}"
@@ -36,17 +35,8 @@ API_HEALTH_NVM_DIR="${API_HEALTH_NVM_DIR:-$HOME/.nvm}"
 API_HEALTH_NODE_VERSION="${API_HEALTH_NODE_VERSION:-}"
 API_HEALTH_PATH_EXTRA="${API_HEALTH_PATH_EXTRA:-}"
 
-mkdir -p "$LOG_DIR"
+init_scripts_file_log "${API_HEALTH_LOG_DIR:-$PROJECT_DIR/logs}" "api-health-monitor.log" "${API_HEALTH_LOG_LINES_KEEP:-500}"
 mkdir -p "$PM2_HOME" "$PM2_HOME/logs" "$PM2_HOME/pids" "$PM2_HOME/modules"
-
-log() {
-  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOG_FILE"
-}
-
-log_echo() {
-  echo "$1"
-  log "$1"
-}
 
 hc_post() {
   local url="$1"
@@ -90,12 +80,6 @@ ensure_yarn() {
   fi
 
   command -v yarn >/dev/null 2>&1
-}
-
-trim_log() {
-  if [[ -f "$LOG_FILE" ]]; then
-    tail -n "$LOG_LINES_KEEP" "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
-  fi
 }
 
 log_echo "=== API Health Monitor Started ==="

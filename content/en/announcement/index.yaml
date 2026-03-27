@@ -1,0 +1,12 @@
+active: true
+dismissKey: noKingsProtest
+title: Headed to No Kings this Saturday?
+message: >-
+  Prep your phone before you go, then bring printable flyers to share.
+buttonText: Protest checklist
+buttonUrl: /protest
+secondaryButtonText: Download flyer
+secondaryButtonUrl: /flyer
+allowDismiss: true
+colorScheme: primary
+icon: megaphone

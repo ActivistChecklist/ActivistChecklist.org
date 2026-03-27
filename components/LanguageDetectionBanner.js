@@ -1,28 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from '@/components/Link';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 import {
   LANGUAGE_BANNER_STORAGE_KEY,
   getDetectedLocaleFromNavigatorLanguage,
   shouldShowLanguageBanner,
 } from '@/lib/language-detection';
-
-function getLocaleUrl(pathname, newLocale) {
-  const currentIsDefault = !pathname.startsWith('/es');
-  if (newLocale === DEFAULT_LOCALE) {
-    return pathname.replace(/^\/[a-z]{2}(\/|$)/, (_, slash) => slash || '/') || '/';
-  }
-  if (currentIsDefault) {
-    return `/${newLocale}${pathname}`;
-  }
-  return pathname.replace(/^\/[a-z]{2}(\/|$)/, `/${newLocale}$1`);
-}
+import { isTranslationUiVisible } from '@/utils/core';
+import { Link, usePathname } from '@/i18n/navigation';
 
 export default function LanguageDetectionBanner() {
   const locale = useLocale();
@@ -34,7 +23,7 @@ export default function LanguageDetectionBanner() {
   const availableLocales = Object.keys(LOCALES);
 
   useEffect(() => {
-    if (availableLocales.length <= 1) return;
+    if (!isTranslationUiVisible || availableLocales.length <= 1) return;
     if (locale !== DEFAULT_LOCALE) return;
 
     if (localStorage.getItem(LANGUAGE_BANNER_STORAGE_KEY)) return;
@@ -55,15 +44,19 @@ export default function LanguageDetectionBanner() {
     setDismissed(true);
   };
 
-  if (!shouldShowLanguageBanner({
-    currentLocale: locale,
-    defaultLocale: DEFAULT_LOCALE,
-    dismissed,
-    detectedLocale,
-  })) return null;
+  if (
+    !isTranslationUiVisible ||
+    !shouldShowLanguageBanner({
+      currentLocale: locale,
+      defaultLocale: DEFAULT_LOCALE,
+      dismissed,
+      detectedLocale,
+    })
+  ) {
+    return null;
+  }
 
   const languageName = LOCALES[detectedLocale]?.name || detectedLocale;
-  const switchUrl = getLocaleUrl(pathname, detectedLocale);
 
   return (
     <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
@@ -73,7 +66,7 @@ export default function LanguageDetectionBanner() {
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <Button asChild variant="outline" size="sm">
-            <Link href={switchUrl}>
+            <Link href={pathname === '' ? '/' : pathname} locale={detectedLocale}>
               {t('switchButton', { language: languageName })}
             </Link>
           </Button>
