@@ -123,6 +123,16 @@ describe('OG Image Configuration', () => {
     });
   });
 
+  describe('getOgImagePathForSlug', () => {
+    it('matches generateOgImageForRoute public paths for default and custom slugs', async () => {
+      const { getOgImagePathForSlug } = await import('../lib/og-image.js');
+      expect(getOgImagePathForSlug('')).toBe('/images/og-image.png');
+      expect(getOgImagePathForSlug('flyer')).toBe('/images/og-image.png');
+      expect(getOgImagePathForSlug('protest')).toBe('/images/og/protest.png');
+      expect(getOgImagePathForSlug('nested/slug')).toBe('/images/og/nested-slug.png');
+    });
+  });
+
   describe('Slug to Icon Matching', () => {
     it('should match common slug patterns to correct icons', async () => {
       const { GUIDE_ICONS } = await import('../config/icons.js');

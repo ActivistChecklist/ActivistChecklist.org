@@ -17,6 +17,7 @@ import {
   serializeFrontmatter,
 } from '@/lib/content';
 import { getBaseUrl } from '@/lib/utils';
+import { getOgImagePathForSlug } from '@/lib/og-image';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
 
 const DEFAULT_DESCRIPTION =
@@ -59,13 +60,14 @@ export async function generateMetadata({ params }) {
   const pageDescription =
     frontmatter?.excerpt || frontmatter?.summary || frontmatter?.description || DEFAULT_DESCRIPTION;
   const rawPageImage = frontmatter?.image || frontmatter?.imageOverride;
-  const pageImage = rawPageImage
+  const customOgImage = rawPageImage
     ? rawPageImage.startsWith('http://') || rawPageImage.startsWith('https://')
       ? rawPageImage
       : rawPageImage.startsWith('/')
         ? `${baseUrl}${rawPageImage}`
         : `${baseUrl}/${rawPageImage}`
     : undefined;
+  const ogImageUrl = customOgImage ?? `${baseUrl}${getOgImagePathForSlug(slug)}`;
 
   const hrefLangLocales = Object.keys(LOCALES);
   const alternates = {};
@@ -88,13 +90,13 @@ export async function generateMetadata({ params }) {
       url: canonical,
       type: 'article',
       siteName: 'Activist Checklist',
-      images: pageImage ? [pageImage] : undefined,
+      images: [ogImageUrl],
     },
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
       description: pageDescription,
-      images: pageImage ? [pageImage] : undefined,
+      images: [ogImageUrl],
     },
   };
 }
