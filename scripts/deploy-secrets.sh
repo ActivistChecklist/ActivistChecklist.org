@@ -20,15 +20,28 @@ if [[ ! -f "$LOCAL_ENV_PRODUCTION_FILE" ]]; then
   exit 1
 fi
 
+WEBHOOK_SECRETS_LOCAL="$ROOT/public/webhooks/webhook-secrets.local.php"
+if [[ ! -f "$WEBHOOK_SECRETS_LOCAL" ]]; then
+  echo "Missing $WEBHOOK_SECRETS_LOCAL" >&2
+  echo "Copy public/webhooks/webhook-secrets.example.php → webhook-secrets.local.php and fill in secrets." >&2
+  exit 1
+fi
+
 echo "===> Uploading remote .env.production from $LOCAL_ENV_PRODUCTION_FILE..."
 rsync -avz "$LOCAL_ENV_PRODUCTION_FILE" "$FTP_USER@$FTP_HOST:$ENV_PRODUCTION_PATH"
 
 echo "===> Syncing public/webhooks/ to $FTP_HOST:$FTP_DIR/webhooks/ ..."
+# Exclude webhook-secrets.local.php from this pass: with --delete, an absent local copy would
+# remove the file from the server; we upload it in the next step instead.
 rsync -avz --delete \
   --exclude 'deploy-webhook.error.log' \
   --exclude '*.log' \
+  --exclude 'webhook-secrets.local.php' \
   "$ROOT/public/webhooks/" \
   "$FTP_USER@$FTP_HOST:$FTP_DIR/webhooks/"
+
+echo "===> Uploading webhook-secrets.local.php..."
+rsync -avz "$WEBHOOK_SECRETS_LOCAL" "$FTP_USER@$FTP_HOST:$FTP_DIR/webhooks/"
 
 echo "===> deploy:secrets complete."
 
