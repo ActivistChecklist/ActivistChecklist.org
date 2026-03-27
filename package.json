@@ -103,12 +103,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.27",
     "chalk": "^5.6.2",
+    "cheerio": "^1.0.0",
     "commander": "^14.0.2",
     "concurrently": "^9.2.1",
     "fastify-cli": "^7.4.1",
@@ -120,7 +120,6 @@
     "node-fetch": "^3.3.2",
     "open-graph-scraper": "^6.11.0",
     "pagefind": "^1.4.0",
-    "playwright": "^1.58.2",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "react-json-view": "^1.21.3",
