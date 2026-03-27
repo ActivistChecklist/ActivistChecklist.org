@@ -13,15 +13,13 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const readline = require('readline');
 const { execFileSync } = require('child_process');
 const matter = require('gray-matter');
 const ogs = require('open-graph-scraper');
 
-const CONTENT_NEWS = path.join(__dirname, '..', 'content', 'en', 'news');
-const NEWS_IMAGES_DIR = path.join(__dirname, '..', 'public', 'images', 'news');
-const FETCH_SCRIPT = path.join(__dirname, 'fetch-news-images.js');
 const { loadNewsItems } = require('./fetch-news-images.js');
 
 function parseArgv(argv) {
@@ -147,6 +145,146 @@ function formatTagsForFrontmatter(tags) {
   return tags.join(', ');
 }
 
+function git(args, options = {}) {
+  const output = execFileSync('git', args, {
+    encoding: 'utf8',
+    cwd: path.join(__dirname, '..'),
+    stdio: ['ignore', 'pipe', 'pipe'],
+    ...options,
+  });
+  if (typeof output === 'string') return output.trim();
+  return '';
+}
+
+function tryGit(args, options = {}) {
+  try {
+    return { ok: true, value: git(args, options) };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
+function buildContentBranchName(slug) {
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+  const base = `content/${date}-news-${slug}`.slice(0, 120);
+  let candidate = base;
+  let n = 2;
+  while (tryGit(['ls-remote', '--exit-code', '--heads', 'origin', `refs/heads/${candidate}`]).ok) {
+    candidate = `${base}-${n}`.slice(0, 120);
+    n += 1;
+  }
+  return candidate;
+}
+
+function buildPullRequestUrl(branchName) {
+  const origin = tryGit(['remote', 'get-url', 'origin']);
+  if (!origin.ok) return null;
+  const raw = String(origin.value || '').trim();
+  if (!raw) return null;
+
+  // Support SSH and HTTPS remotes, including SSH host aliases.
+  let repoPath = '';
+  const sshLike = raw.match(/^[^@]+@[^:]+:(.+)$/);
+  if (sshLike) {
+    repoPath = sshLike[1];
+  } else {
+    try {
+      const parsed = new URL(raw);
+      repoPath = parsed.pathname.replace(/^\/+/, '');
+    } catch {
+      return null;
+    }
+  }
+
+  const repoSlug = repoPath.replace(/\.git$/i, '');
+  if (!/^[^/]+\/[^/]+$/.test(repoSlug)) return null;
+  return `https://github.com/${repoSlug}/compare/main...${branchName}?expand=1`;
+}
+
+function transactionalCommitToContentBranch({ slug, mdxBody }) {
+  const repoRoot = path.join(__dirname, '..');
+  const worktreeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'news-wizard-main-'));
+  const branchName = buildContentBranchName(slug);
+  let worktreeAdded = false;
+
+  try {
+    // Build commit in isolated worktree rooted at latest origin/main.
+    git(['fetch', 'origin', 'main'], { stdio: 'inherit' });
+    git(['worktree', 'add', '--detach', worktreeDir, 'origin/main'], { stdio: 'inherit' });
+    worktreeAdded = true;
+
+    // Ensure commit hooks run with the same dependencies as the main repo.
+    // Many hooks run "yarn test" and expect local node_modules to exist.
+    const repoNodeModules = path.join(repoRoot, 'node_modules');
+    const wtNodeModules = path.join(worktreeDir, 'node_modules');
+    if (fs.existsSync(repoNodeModules) && !fs.existsSync(wtNodeModules)) {
+      fs.symlinkSync(repoNodeModules, wtNodeModules, 'junction');
+    }
+
+    // Generate content directly inside isolated worktree.
+    const mdxRel = path.join('content', 'en', 'news', `${slug}.mdx`);
+    const imageRel = path.join('public', 'images', 'news', `${slug}.jpg`);
+    const mdxAbs = path.join(worktreeDir, mdxRel);
+    fs.mkdirSync(path.dirname(mdxAbs), { recursive: true });
+    fs.writeFileSync(mdxAbs, mdxBody, 'utf8');
+    console.log(`Created in worktree: ${mdxRel}`);
+
+    console.log('Running fetch-news for this slug in worktree…');
+    execFileSync(process.execPath, [path.join(worktreeDir, 'scripts', 'fetch-news-images.js'), `--slug=${slug}`, '--quiet'], {
+      stdio: 'inherit',
+      cwd: worktreeDir,
+    });
+
+    const imageExists = fs.existsSync(path.join(worktreeDir, imageRel));
+    if (!imageExists) {
+      console.warn(
+        '\n⚠️  WARNING: No image was saved in worktree. Commit will include MDX only.\n' +
+          `   Expected: ${imageRel}\n`
+      );
+    } else {
+      console.log(`Image OK in worktree: ${imageRel}\n`);
+    }
+
+    const filesToCommit = imageExists ? [mdxRel, imageRel] : [mdxRel];
+
+    git(['-C', worktreeDir, 'add', ...filesToCommit], { stdio: 'inherit' });
+    const repoBin = path.join(repoNodeModules, '.bin');
+    const commitEnv = {
+      ...process.env,
+      NODE_PATH: process.env.NODE_PATH
+        ? `${repoNodeModules}${path.delimiter}${process.env.NODE_PATH}`
+        : repoNodeModules,
+      PATH: process.env.PATH
+        ? `${repoBin}${path.delimiter}${process.env.PATH}`
+        : repoBin,
+    };
+    git(['-C', worktreeDir, 'commit', '-m', `content: add news item "${slug}"`], {
+      stdio: 'inherit',
+      env: commitEnv,
+    });
+    console.log(`Pushing branch: ${branchName}`);
+    git(['-C', worktreeDir, 'push', '-u', 'origin', `HEAD:refs/heads/${branchName}`], { stdio: 'inherit' });
+    return branchName;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (worktreeAdded) {
+      tryGit(['worktree', 'remove', '--force', worktreeDir], { stdio: 'inherit' });
+    } else {
+      try {
+        if (fs.existsSync(worktreeDir)) fs.rmdirSync(worktreeDir);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
 /**
  * gray-matter uses js-yaml, which quotes `YYYY-MM-DD` *strings* so they stay
  * strings. Elsewhere in this repo we use unquoted YAML date scalars
@@ -219,12 +357,6 @@ async function main() {
 
     const baseSlug = slugify(title);
     const slug = uniqueSlug(baseSlug);
-    const outPath = path.join(CONTENT_NEWS, `${slug}.mdx`);
-
-    if (fs.existsSync(outPath)) {
-      throw new Error(`Refusing to overwrite existing file: ${outPath}`);
-    }
-
     const today = todayIsoLocal();
 
     console.log('\n--- Review (edit the MDX file afterward if anything looks wrong) ---');
@@ -268,30 +400,14 @@ async function main() {
 
     const mdxBody = normalizeWizardYamlDates(matter.stringify('\n', frontmatter));
 
-    if (!fs.existsSync(CONTENT_NEWS)) {
-      fs.mkdirSync(CONTENT_NEWS, { recursive: true });
-    }
-    fs.writeFileSync(outPath, mdxBody, 'utf8');
-    console.log(`Wrote ${outPath}\n`);
-
-    console.log('Running fetch-news for this slug…');
-    execFileSync(process.execPath, [FETCH_SCRIPT, `--slug=${slug}`, '--quiet'], {
-      stdio: 'inherit',
-      cwd: path.join(__dirname, '..'),
+    console.log('\nRunning git automation (transactional push to content branch)…');
+    const pushedBranch = transactionalCommitToContentBranch({
+      slug,
+      mdxBody,
     });
+    const prUrl = buildPullRequestUrl(pushedBranch);
 
-    const imagePath = path.join(NEWS_IMAGES_DIR, `${slug}.jpg`);
-    if (!fs.existsSync(imagePath)) {
-      console.warn(
-        '\n⚠️  WARNING: No image was saved. Add imageOverride in frontmatter or place an image at:\n' +
-          `   public/images/news/${slug}.jpg\n` +
-          '   Then run: yarn fetch-news\n'
-      );
-    } else {
-      console.log(`Image OK: public/images/news/${slug}.jpg\n`);
-    }
-
-    console.log('Done. Commit the MDX file and image when ready.');
+    console.log(`✅ Done. Committed and pushed to ${pushedBranch}.`);
   } finally {
     if (rl) rl.close();
   }
