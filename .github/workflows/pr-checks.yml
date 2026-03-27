@@ -17,16 +17,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: yarn
 
       - name: Restore Next.js build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .next/cache
           key: next-cache-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ hashFiles('next.config.js', 'package.json', 'postcss.config.js', 'tailwind.config.js', 'app/**', 'components/**', 'lib/**', 'styles/**', 'content/**', 'messages/**') }}
