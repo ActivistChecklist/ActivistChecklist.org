@@ -35,8 +35,9 @@ jobs:
           const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(signed).digest('hex');
 
           const { spawnSync } = require('child_process');
+          // -f: exit non-zero on HTTP 4xx/5xx (otherwise curl succeeds on "Configuration error" 500s)
           const res = spawnSync('curl', [
-            '-sS', '-D', '-', '-X', 'POST', url,
+            '-sS', '-f', '-D', '-', '-X', 'POST', url,
             '-H', 'Content-Type: application/json',
             '-H', `X-Deploy-Timestamp: ${ts}`,
             '-H', `X-Hub-Signature-256: ${sig}`,
