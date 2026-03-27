@@ -1,4 +1,5 @@
 // @ts-nocheck
+import '@/styles/globals.css';
 import NotFoundContent from '@/components/pages/NotFoundContent';
 
 export default async function NotFound() {
