@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Bell, AlertTriangle, InfoIcon } from 'lucide-react';
+import { X, Bell } from 'lucide-react';
 import { IoMegaphone } from 'react-icons/io5';
-import Link from 'next/link';
+import Link from '@/components/Link';
 
 // Predefined color schemes
 export const colorSchemes = {
@@ -13,12 +13,14 @@ export const colorSchemes = {
     button: {
       background: 'bg-primary-foreground',
       text: 'text-primary',
-    }
+    },
+    buttonOutline:
+      'border border-primary-foreground/80 bg-transparent text-primary-foreground hover:bg-primary-foreground/15',
   },
 };
 
 // Specify which announcement is currently active
-export const ACTIVE_ANNOUNCEMENT = null; //'noKingsFlyer';
+export const ACTIVE_ANNOUNCEMENT = 'noKingsProtest';
 
 // Configure your announcements
 export const announcements = {
@@ -31,12 +33,15 @@ export const announcements = {
     allowDismiss: false,
     colorScheme: 'primary',
   },
-  noKingsFlyer: {
+  noKingsProtest: {
     icon: IoMegaphone,
-    title: 'Headed to the No Kings protest this weekend?',
-    message: 'Bring some digital security flyers.',
-    buttonText: 'Get flyers',
-    buttonUrl: '/flyer',
+    title: 'Headed to No Kings this Saturday?',
+    message:
+      'Prep your phone before you go, then bring printable flyers to share.',
+    buttonText: 'Protest checklist',
+    buttonUrl: '/protest',
+    secondaryButtonText: 'Download flyer',
+    secondaryButtonUrl: '/flyer',
     allowDismiss: true,
     colorScheme: 'primary',
   },
@@ -66,6 +71,12 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
   const Icon = announcement.icon;
   const allowDismiss = announcement.allowDismiss ?? true;
   const theme = colorSchemes[announcement.colorScheme ?? 'primary'];
+  const btnBase =
+    'inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors';
+  const btnClass = `${btnBase} ${theme.button.background} ${theme.button.text} hover:opacity-90`;
+  const secondaryBtnClass = `${btnBase} ${theme.buttonOutline ?? 'border border-primary-foreground/80 bg-transparent text-primary-foreground hover:bg-primary-foreground/15'}`;
+  const hasSecondary =
+    announcement.secondaryButtonText && announcement.secondaryButtonUrl;
 
   return (
     <div className={`${theme.background} ${theme.text}`}>
@@ -93,13 +104,18 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
             )}
           </div>
           {announcement.buttonText && announcement.buttonUrl && (
-            <div className="flex justify-center">
-              <Link
-                href={announcement.buttonUrl}
-                className={`inline-flex items-center px-3 py-1 rounded-md ${theme.button.background} ${theme.button.text} hover:opacity-90 transition-opacity text-sm font-medium`}
-              >
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href={announcement.buttonUrl} className={btnClass}>
                 {announcement.buttonText}
               </Link>
+              {hasSecondary && (
+                <Link
+                  href={announcement.secondaryButtonUrl}
+                  className={secondaryBtnClass}
+                >
+                  {announcement.secondaryButtonText}
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -115,12 +131,19 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
               {announcement.message}
             </span>
             {announcement.buttonText && announcement.buttonUrl && (
-              <Link
-                href={announcement.buttonUrl}
-                className={`inline-flex items-center px-3 py-1 rounded-md ${theme.button.background} ${theme.button.text} hover:opacity-90 transition-opacity text-sm font-medium`}
-              >
-                {announcement.buttonText}
-              </Link>
+              <>
+                <Link href={announcement.buttonUrl} className={btnClass}>
+                  {announcement.buttonText}
+                </Link>
+                {hasSecondary && (
+                  <Link
+                    href={announcement.secondaryButtonUrl}
+                    className={secondaryBtnClass}
+                  >
+                    {announcement.secondaryButtonText}
+                  </Link>
+                )}
+              </>
             )}
           </div>
           {allowDismiss && (
