@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { HOMEPAGE_NEWS_LIMIT } from '@/config/homepage';
 
-export const NEWS_BLOCK_DEFAULT_LIMIT = 3;
+/** @deprecated Prefer HOMEPAGE_NEWS_LIMIT from config/homepage.js */
+export const NEWS_BLOCK_DEFAULT_LIMIT = HOMEPAGE_NEWS_LIMIT;
 
-const NewsBlock = ({ newsItems = [], limit = NEWS_BLOCK_DEFAULT_LIMIT }) => {
+const NewsBlock = ({ newsItems = [], limit = HOMEPAGE_NEWS_LIMIT }) => {
   const t = useTranslations();
-  // Take only the first N items (already sorted by date in getStaticProps)
   const recentNews = newsItems.slice(0, limit);
 
   if (recentNews.length === 0) {
