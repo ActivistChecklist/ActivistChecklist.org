@@ -12,6 +12,7 @@ import {
   getDetectedLocaleFromNavigatorLanguage,
   shouldShowLanguageBanner,
 } from '@/lib/language-detection';
+import { isTranslationUiVisible } from '@/utils/core';
 
 function getLocaleUrl(pathname, newLocale) {
   const currentIsDefault = !pathname.startsWith('/es');
@@ -34,7 +35,7 @@ export default function LanguageDetectionBanner() {
   const availableLocales = Object.keys(LOCALES);
 
   useEffect(() => {
-    if (availableLocales.length <= 1) return;
+    if (!isTranslationUiVisible || availableLocales.length <= 1) return;
     if (locale !== DEFAULT_LOCALE) return;
 
     if (localStorage.getItem(LANGUAGE_BANNER_STORAGE_KEY)) return;
@@ -55,12 +56,17 @@ export default function LanguageDetectionBanner() {
     setDismissed(true);
   };
 
-  if (!shouldShowLanguageBanner({
-    currentLocale: locale,
-    defaultLocale: DEFAULT_LOCALE,
-    dismissed,
-    detectedLocale,
-  })) return null;
+  if (
+    !isTranslationUiVisible ||
+    !shouldShowLanguageBanner({
+      currentLocale: locale,
+      defaultLocale: DEFAULT_LOCALE,
+      dismissed,
+      detectedLocale,
+    })
+  ) {
+    return null;
+  }
 
   const languageName = LOCALES[detectedLocale]?.name || detectedLocale;
   const switchUrl = getLocaleUrl(pathname, detectedLocale);

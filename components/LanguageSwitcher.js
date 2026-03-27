@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
+import { isTranslationUiVisible } from '@/utils/core';
 
 /**
  * Build the URL for switching to a different locale.
@@ -35,7 +36,7 @@ export default function LanguageSwitcher() {
   const t = useTranslations();
 
   const availableLocales = Object.keys(LOCALES);
-  if (availableLocales.length <= 1) return null;
+  if (!isTranslationUiVisible || availableLocales.length <= 1) return null;
 
   const switchLocale = (newLocale) => {
     router.push(getLocaleUrl(pathname, newLocale));
