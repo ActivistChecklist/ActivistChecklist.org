@@ -1,4 +1,4 @@
-name: PR Checks (tests + static export)
+name: Run Tests and Static Build (for PRs)
 
 on:
   pull_request:
@@ -45,4 +45,3 @@ jobs:
           BUILD_MODE: static
           NEXT_TELEMETRY_DISABLED: 1
         run: yarn buildstatic
-
