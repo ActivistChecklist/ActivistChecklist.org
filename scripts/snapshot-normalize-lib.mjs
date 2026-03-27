@@ -1,15 +1,14 @@
 /**
  * Shared snapshot text normalization (used by snapshot-normalize CLI and snapshot-compare).
- * Renders each page in headless Chromium (Playwright) so client-side / hydrated DOM is captured,
- * then normalizes visible text (dates stripped; per-line trim; blank lines collapsed).
+ * Serves the static tree with http-server, fetches each page’s pre-rendered HTML, strips
+ * script/style/noscript, then extracts visible text from #main-content (same selectors as before).
+ * Dates stripped; per-line trim; blank lines collapsed.
  *
  * URLs come **only** from sitemap.xml. Skips /api/*, skips non-English locales (/es/, etc.),
  * strips /en from paths for fetch + output naming so snapshots stay comparable.
- * Visible text is taken from `#main-content` (see components/layout/Layout.js), not header/footer.
- * Collapsed guide checklist bodies (components/guides/ChecklistItem.js) are expanded before capture.
+ * No browser — no hydrated JS, no “Expand all” for collapsed checklists (SSR HTML only).
  *
- * Env (optional): SNAPSHOT_PAGE_CONCURRENCY (default 3, set 1 for sequential),
- * SNAPSHOT_EXPAND_SETTLE_MS (default 80 ms after expand; was 600 ms every page).
+ * Env (optional): SNAPSHOT_PAGE_CONCURRENCY (default 3, set 1 for sequential).
  */
 
 import crypto from 'crypto';
@@ -17,7 +16,7 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { spawn } from 'child_process';
-import { chromium } from 'playwright';
+import * as cheerio from 'cheerio';
 import { REPO_ROOT } from './snapshot-resolve-dir.mjs';
 
 export const ROOT = REPO_ROOT;
@@ -33,23 +32,9 @@ const DATE_RES = [
 
 const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|ico|css|js|mjs|map|woff2?|ttf|eot|pdf|xml|txt|json|webmanifest)$/i;
 
-/** Max time for navigation + network to settle (static sites are usually fast). */
-const GOTO_TIMEOUT_MS = 90_000;
+/** Max time for each page fetch. */
+const FETCH_TIMEOUT_MS = 90_000;
 
-/**
- * After expanding checklists: double rAF + short timeout (was 600ms/page — too slow × N pages).
- * Tune with SNAPSHOT_EXPAND_SETTLE_MS if needed.
- */
-const SNAPSHOT_EXPAND_SETTLE_MS = (() => {
-  const v = process.env.SNAPSHOT_EXPAND_SETTLE_MS;
-  if (v === undefined || v === '') {
-    return 80;
-  }
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0 ? n : 80;
-})();
-
-/** Parallel Playwright pages (same static server). Set to 1 to go sequential. */
 function getSnapshotPageConcurrency() {
   const raw = process.env.SNAPSHOT_PAGE_CONCURRENCY;
   const n =
@@ -96,9 +81,7 @@ function getFreePort() {
 }
 
 /**
- * Post-process visible text from a rendered page (no HTML parsing — use after innerText).
- * innerText often inserts extra blank lines between block/list nodes; flatten those so
- * compares aren't mostly "- empty line" noise.
+ * Post-process visible text (no HTML).
  */
 function normalizePlainSnapshotText(text) {
   let s = (text || '').replace(/\r\n/g, '\n');
@@ -109,9 +92,27 @@ function normalizePlainSnapshotText(text) {
   for (const re of DATE_RES) {
     s = s.replace(re, '');
   }
-  // Any run of blank lines becomes a single newline (no empty lines in output).
   s = s.replace(/\n{2,}/g, '\n');
   return s.trim() + '\n';
+}
+
+/**
+ * Strip executable / decorative markup, then main text (same region as before).
+ */
+function htmlToNormalizedSnapshotText(html) {
+  const $ = cheerio.load(html, { decodeEntities: true });
+  $('script, style, noscript, template').remove();
+  let root = $('#main-content').first();
+  if (!root.length) {
+    root = $('main[role="main"]').first();
+  }
+  if (!root.length) {
+    root = $('main').first();
+  }
+  if (!root.length) {
+    root = $('body');
+  }
+  return normalizePlainSnapshotText(root.text());
 }
 
 function pathToSafeRel(urlPath) {
@@ -127,9 +128,6 @@ function pathToSafeRel(urlPath) {
   return safe;
 }
 
-/**
- * Stable key so /en/foo/ and /foo/ (both in sitemap) only render once.
- */
 function dedupeKeyForFetchPath(fetchPath) {
   if (fetchPath === '/' || fetchPath === '') {
     return '/';
@@ -138,10 +136,6 @@ function dedupeKeyForFetchPath(fetchPath) {
   return trimmed === '' ? '/' : trimmed;
 }
 
-/**
- * Sitemap pathname → English-only fetch path. Skips API + non-en locales.
- * @returns {{ skip: true, reason?: string } | { skip: false, fetchPath: string, dedupeKey: string }}
- */
 function englishOnlyFetchFromPathname(pathname) {
   let path = pathname || '/';
   if (!path.startsWith('/')) {
@@ -182,81 +176,6 @@ function parseSitemapLocs(xml) {
   return locs;
 }
 
-/**
- * Guide ChecklistItem bodies use grid-rows-[0fr] + overflow hidden when collapsed; innerText
- * omits that content. Click "Expand all" / each card header, then force-open via CSS fallback.
- */
-async function expandChecklistContentForSnapshot(page) {
-  try {
-    const expandAll = page
-      .locator('#main-content')
-      .getByRole('button', { name: /^\s*expand all\s*$/i });
-    const n = await expandAll.count();
-    for (let i = 0; i < n; i++) {
-      await expandAll.nth(i).click({ timeout: 8000 }).catch(() => {});
-    }
-  } catch {
-    // no sections with expand-all
-  }
-
-  await page.evaluate(() => {
-    document.querySelectorAll('#main-content .checklist-item').forEach((card) => {
-      if (!card.querySelector('svg.rotate-180')) {
-        const header = card.children[0];
-        if (header) {
-          header.dispatchEvent(
-            new MouseEvent('click', { bubbles: true, cancelable: true })
-          );
-        }
-      }
-    });
-  });
-
-  await page.addStyleTag({
-    content:
-      '#main-content .checklist-item > div.grid{grid-template-rows:1fr!important}' +
-      '#main-content .checklist-item > div.grid > .overflow-hidden{overflow:visible!important}'
-  });
-
-  await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(resolve));
-      })
-  );
-  await new Promise((r) => setTimeout(r, SNAPSHOT_EXPAND_SETTLE_MS));
-}
-
-async function waitForServer(port, maxMs = 15000) {
-  const start = Date.now();
-  while (Date.now() - start < maxMs) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/`);
-      if (res.ok || res.status === 404) {
-        return;
-      }
-    } catch {
-      // ignore
-    }
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  throw new Error(`http-server did not respond on port ${port}`);
-}
-
-function formatEta(ms) {
-  if (!Number.isFinite(ms) || ms <= 0) {
-    return '…';
-  }
-  const s = Math.round(ms / 1000);
-  if (s < 60) {
-    return `${s}s`;
-  }
-  const m = Math.floor(s / 60);
-  const rs = s % 60;
-  return rs ? `${m}m ${rs}s` : `${m}m`;
-}
-
-/** Single-line progress (\r + ANSI EL). Use progressWarn() so warnings don't garble the line. */
 function writeSnapshotProgress(done, total, pathLabel, startedAt) {
   const pct = total ? Math.min(100, Math.floor((100 * done) / total)) : 100;
   const barW = 22;
@@ -278,12 +197,24 @@ function writeSnapshotProgress(done, total, pathLabel, startedAt) {
   process.stdout.write(`\r\x1b[K${line}`);
 }
 
+function formatEta(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return '…';
+  }
+  const s = Math.round(ms / 1000);
+  if (s < 60) {
+    return `${s}s`;
+  }
+  const m = Math.floor(s / 60);
+  const rs = s % 60;
+  return rs ? `${m}m ${rs}s` : `${m}m`;
+}
+
 function progressWarn(...args) {
   process.stdout.write('\n');
   console.warn(...args);
 }
 
-/** Sitemap URLs → list of pages to render (same filters as the main loop). */
 function collectSnapshotWorkItems(locs) {
   const seen = new Set();
   const items = [];
@@ -316,44 +247,49 @@ function collectSnapshotWorkItems(locs) {
   return items;
 }
 
-async function snapshotRenderOnePage(page, port, item, outSubdir) {
+async function snapshotFetchOnePage(port, item, outSubdir) {
   const { fetchPath, pathname, rel } = item;
   const pageUrl = `http://127.0.0.1:${port}${fetchPath}`;
-  const response = await page.goto(pageUrl, {
-    waitUntil: 'networkidle',
-    timeout: GOTO_TIMEOUT_MS
-  });
-  if (!response) {
-    progressWarn(`⚠️  No response ${fetchPath} (from ${pathname})`);
+  let response;
+  try {
+    response = await fetch(pageUrl, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    progressWarn(`⚠️  Fetch failed ${fetchPath} (from ${pathname}): ${msg}`);
     return;
   }
-  const status = response.status();
-  if (status < 200 || status >= 400) {
-    progressWarn(`⚠️  Skip ${fetchPath} (${status})`);
+  if (!response.ok) {
+    progressWarn(`⚠️  Skip ${fetchPath} (${response.status})`);
     return;
   }
-  const ct = (response.headers()['content-type'] || '').toLowerCase();
+  const ct = (response.headers.get('content-type') || '').toLowerCase();
   if (ct && !ct.includes('text/html')) {
     return;
   }
-
-  const nCheck = await page.locator('#main-content .checklist-item').count();
-  if (nCheck > 0) {
-    await expandChecklistContentForSnapshot(page);
-  }
-
-  const rawText = await page.evaluate(() => {
-    const main =
-      document.querySelector('#main-content') ||
-      document.querySelector('main[role="main"]') ||
-      document.querySelector('main');
-    const el = main || document.body;
-    return el ? el.innerText : '';
-  });
-  const text = normalizePlainSnapshotText(rawText);
+  const html = await response.text();
+  const text = htmlToNormalizedSnapshotText(html);
   const dest = path.join(outSubdir, rel);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, text, 'utf8');
+}
+
+async function waitForServer(port, maxMs = 15000) {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/`);
+      if (res.ok || res.status === 404) {
+        return;
+      }
+    } catch {
+      // ignore
+    }
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  throw new Error(`http-server did not respond on port ${port}`);
 }
 
 export async function normalizeOneStaticDir(absRoot, outSubdir) {
@@ -372,7 +308,6 @@ export async function normalizeOneStaticDir(absRoot, outSubdir) {
     cwd: ROOT
   });
 
-  let browser;
   try {
     await waitForServer(port);
     const smRes = await fetch(`http://127.0.0.1:${port}/sitemap.xml`);
@@ -387,11 +322,6 @@ export async function normalizeOneStaticDir(absRoot, outSubdir) {
 
     fs.mkdirSync(outSubdir, { recursive: true });
 
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 720 }
-    });
-
     const items = collectSnapshotWorkItems(locs);
     const total = items.length;
     const startedAt = Date.now();
@@ -401,21 +331,16 @@ export async function normalizeOneStaticDir(absRoot, outSubdir) {
       writeSnapshotProgress(0, 0, '—', startedAt);
       process.stdout.write('\n');
     } else if (concurrency <= 1) {
-      const page = await context.newPage();
-      try {
-        for (let i = 0; i < items.length; i++) {
-          const { fetchPath } = items[i];
-          writeSnapshotProgress(i, total, fetchPath, startedAt);
-          try {
-            await snapshotRenderOnePage(page, port, items[i], outSubdir);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            progressWarn(`⚠️  ${fetchPath}: ${msg}`);
-          }
-          writeSnapshotProgress(i + 1, total, fetchPath, startedAt);
+      for (let i = 0; i < items.length; i++) {
+        const { fetchPath } = items[i];
+        writeSnapshotProgress(i, total, fetchPath, startedAt);
+        try {
+          await snapshotFetchOnePage(port, items[i], outSubdir);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          progressWarn(`⚠️  ${fetchPath}: ${msg}`);
         }
-      } finally {
-        await page.close();
+        writeSnapshotProgress(i + 1, total, fetchPath, startedAt);
       }
     } else {
       writeSnapshotProgress(0, total, `${concurrency}× parallel`, startedAt);
@@ -424,26 +349,21 @@ export async function normalizeOneStaticDir(absRoot, outSubdir) {
       const label = `${concurrency}× parallel`;
 
       async function worker() {
-        const page = await context.newPage();
-        try {
-          for (;;) {
-            const idx = lock.next++;
-            if (idx >= items.length) {
-              break;
-            }
-            const item = items[idx];
-            const { fetchPath } = item;
-            try {
-              await snapshotRenderOnePage(page, port, item, outSubdir);
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : String(err);
-              progressWarn(`⚠️  ${fetchPath}: ${msg}`);
-            }
-            completed++;
-            writeSnapshotProgress(completed, total, label, startedAt);
+        for (;;) {
+          const idx = lock.next++;
+          if (idx >= items.length) {
+            break;
           }
-        } finally {
-          await page.close();
+          const item = items[idx];
+          const { fetchPath } = item;
+          try {
+            await snapshotFetchOnePage(port, item, outSubdir);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            progressWarn(`⚠️  ${fetchPath}: ${msg}`);
+          }
+          completed++;
+          writeSnapshotProgress(completed, total, label, startedAt);
         }
       }
 
@@ -454,11 +374,7 @@ export async function normalizeOneStaticDir(absRoot, outSubdir) {
 
     writeSnapshotProgress(total, total, '', startedAt);
     process.stdout.write('\n');
-
   } finally {
-    if (browser) {
-      await browser.close().catch(() => {});
-    }
     child.kill('SIGTERM');
     await new Promise((r) => setTimeout(r, 300));
     if (!child.killed) {
