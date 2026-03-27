@@ -56,10 +56,12 @@ export default function HomePageContent({ children, changelogEntries = [], lates
           <div className="">
             <header className={cn(
               "not-prose relative left-1/2 w-dvw max-w-none -translate-x-1/2",
-              "relative mb-16 -mt-8 py-16 px-4 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/20 via-background to-background overflow-hidden",
-              "before:content-[''] before:fixed before:inset-0 before:bg-[linear-gradient(to_right,var(--tw-gradient-stops))] before:from-primary/10 before:via-accent/5 before:to-primary/10 before:opacity-70 before:pointer-events-none"
+              "relative mb-16 -mt-8 py-16 px-4 overflow-hidden",
+              /* v4: use bg-radial / bg-linear-to-* so from/via/to populate --tw-gradient-stops */
+              "bg-radial-[ellipse_at_top] from-primary/20 via-background to-background",
+              "before:content-[''] before:fixed before:inset-0 before:bg-linear-to-r before:from-primary/10 before:via-accent/5 before:to-primary/10 before:opacity-70 before:pointer-events-none"
             )}>
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--tw-gradient-stops))] from-primary/10 via-accent/5 to-primary/10 opacity-70"></div>
+              <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-accent/5 to-primary/10 opacity-70" />
               <div className="relative max-w-4xl mx-auto text-center">
                 <h1 className="text-5xl md:text-6xl font-heavy mb-6 bg-linear-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent text-balance">
                   {t('hero.title')}
