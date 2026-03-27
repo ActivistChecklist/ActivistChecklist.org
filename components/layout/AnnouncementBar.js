@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { X, Bell } from 'lucide-react';
 import { IoMegaphone } from 'react-icons/io5';
 import Link from '@/components/Link';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
 
-// Predefined color schemes
-export const colorSchemes = {
+const colorSchemes = {
   primary: {
     background: 'bg-primary',
     text: 'text-primary-foreground',
@@ -19,58 +19,37 @@ export const colorSchemes = {
   },
 };
 
-// Specify which announcement is currently active
-export const ACTIVE_ANNOUNCEMENT = 'noKingsProtest';
-
-// Configure your announcements
-export const announcements = {
-  softLaunch: {
-    icon: Bell,
-    title: 'Early Access',
-    message: 'We would love your feedback before we launch this site to the public!',
-    buttonText: 'Share feedback',
-    buttonUrl: '/contact',
-    allowDismiss: false,
-    colorScheme: 'primary',
-  },
-  noKingsProtest: {
-    icon: IoMegaphone,
-    title: 'Headed to No Kings this Saturday?',
-    message:
-      'Prep your phone before you go, then bring printable flyers to share.',
-    buttonText: 'Protest checklist',
-    buttonUrl: '/protest',
-    secondaryButtonText: 'Download flyer',
-    secondaryButtonUrl: '/flyer',
-    allowDismiss: true,
-    colorScheme: 'primary',
-  },
+const ICON_MAP = {
+  bell: Bell,
+  megaphone: IoMegaphone,
+  none: null,
 };
 
 const STORAGE_PREFIX = 'announcement_dismissed_';
 
-const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
+const AnnouncementBar = () => {
+  const announcement = useAnnouncement();
   const [isVisible, setIsVisible] = useState(true);
-  const announcement = announcements[announcementKey];
 
   useEffect(() => {
-    // Only hide if explicitly dismissed
-    const isDismissed = localStorage.getItem(STORAGE_PREFIX + announcementKey);
+    if (!announcement) return;
+    const isDismissed = localStorage.getItem(STORAGE_PREFIX + announcement.dismissKey);
     if (isDismissed) {
       setIsVisible(false);
     }
-  }, [announcementKey]);
+  }, [announcement]);
 
   const handleDismiss = () => {
+    if (!announcement) return;
     setIsVisible(false);
-    localStorage.setItem(STORAGE_PREFIX + announcementKey, 'true');
+    localStorage.setItem(STORAGE_PREFIX + announcement.dismissKey, 'true');
   };
 
-  if (!isVisible || !announcement || announcementKey !== ACTIVE_ANNOUNCEMENT) return null;
+  if (!announcement || !isVisible) return null;
 
-  const Icon = announcement.icon;
+  const Icon = ICON_MAP[announcement.icon] ?? IoMegaphone;
   const allowDismiss = announcement.allowDismiss ?? true;
-  const theme = colorSchemes[announcement.colorScheme ?? 'primary'];
+  const theme = colorSchemes[announcement.colorScheme] ?? colorSchemes.primary;
   const btnBase =
     'inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors';
   const btnClass = `${btnBase} ${theme.button.background} ${theme.button.text} hover:opacity-90`;
@@ -98,6 +77,7 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
                 onClick={handleDismiss}
                 className="p-1 hover:opacity-80 transition-opacity ml-2 shrink-0"
                 aria-label="Close announcement"
+                type="button"
               >
                 <X size={16} />
               </button>
@@ -151,6 +131,7 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
               onClick={handleDismiss}
               className="p-1 hover:opacity-80 transition-opacity ml-2"
               aria-label="Close announcement"
+              type="button"
             >
               <X size={16} />
             </button>
@@ -161,4 +142,4 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
   );
 };
 
-export default AnnouncementBar; 
+export default AnnouncementBar;

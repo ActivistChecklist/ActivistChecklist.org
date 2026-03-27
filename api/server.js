@@ -45,8 +45,8 @@ async function app (fastify, opts) {
   await fastify.register(cors, {
     origin: [
       'https://activistchecklist.org',
+      'http://localhost:3000',
       'https://localhost:3000',
-      'https://localhost:3001'
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],

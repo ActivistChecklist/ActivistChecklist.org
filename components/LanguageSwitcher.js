@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import {
@@ -10,24 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
+import { LOCALES } from '@/lib/i18n-config';
 import { isTranslationUiVisible } from '@/utils/core';
-
-/**
- * Build the URL for switching to a different locale.
- * English (default) = no prefix. Other locales = /locale/... prefix.
- */
-function getLocaleUrl(pathname, newLocale) {
-  const currentIsDefault = !pathname.startsWith('/es');
-
-  if (newLocale === DEFAULT_LOCALE) {
-    return pathname.replace(/^\/[a-z]{2}(\/|$)/, (_, slash) => slash || '/') || '/';
-  }
-  if (currentIsDefault) {
-    return `/${newLocale}${pathname}`;
-  }
-  return pathname.replace(/^\/[a-z]{2}(\/|$)/, `/${newLocale}$1`);
-}
+import { usePathname, useRouter } from '@/i18n/navigation';
 
 export default function LanguageSwitcher() {
   const router = useRouter();
@@ -38,8 +22,14 @@ export default function LanguageSwitcher() {
   const availableLocales = Object.keys(LOCALES);
   if (!isTranslationUiVisible || availableLocales.length <= 1) return null;
 
+  /**
+   * Must use next-intl's router.replace(..., { locale }) so NEXT_LOCALE is updated
+   * before navigation. Raw push() to unprefixed / URLs leaves the cookie on Spanish
+   * with localePrefix: 'as-needed' (see next-intl navigation docs).
+   */
   const switchLocale = (newLocale) => {
-    router.push(getLocaleUrl(pathname, newLocale));
+    const path = pathname === '' ? '/' : pathname;
+    router.replace(path, { locale: newLocale });
   };
 
   return (
