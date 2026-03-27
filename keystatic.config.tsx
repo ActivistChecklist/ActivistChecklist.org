@@ -244,7 +244,7 @@ const styledSpanComponent = mark({
   schema: {
     className: fields.text({
       label: 'CSS classes',
-      description: 'Tailwind utilities, e.g. text-error font-bold or !bg-destructive !text-destructive-foreground',
+      description: 'Tailwind utilities, e.g. text-error font-bold or bg-destructive! text-destructive-foreground!',
       multiline: true,
     }),
   },

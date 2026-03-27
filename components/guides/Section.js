@@ -73,7 +73,7 @@ const Section = ({ slug, title, description, children }) => {
             <Button
               variant="defaultOutline"
               size="sm"
-              className="gap-2 start print:hidden w-full sm:w-auto sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0"
+              className="gap-2 print:hidden max-sm:w-full sm:w-fit sm:shrink-0 sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0"
               onClick={() => triggerExpand(!isExpanded)}
             >
               {isExpanded ? 'Collapse all' : 'Expand all'}

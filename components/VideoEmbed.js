@@ -26,7 +26,7 @@ export const VideoEmbed = ({
         autoPlay={autoplay}
         loop={loop}
         muted={muted}
-        className="max-w-full h-auto max-h-[70vh] rounded-lg shadow-sm"
+        className="max-w-full h-auto max-h-[70vh] rounded-lg shadow-xs"
         preload="metadata"
       >
         <source src={src} type="video/mp4" />

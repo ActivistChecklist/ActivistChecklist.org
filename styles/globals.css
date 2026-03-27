@@ -1,53 +1,80 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-/* Libre Franklin - Headers */
-@font-face {
-  font-display: swap;
-  font-family: 'Libre Franklin';
-  font-style: normal;
-  font-weight: 500;
-  src: url('/fonts/libre-franklin-v20-latin-500.woff2') format('woff2');
-}
-@font-face {
-  font-display: swap;
-  font-family: 'Libre Franklin';
-  font-style: normal;
-  font-weight: 600;
-  src: url('/fonts/libre-franklin-v20-latin-600.woff2') format('woff2');
-}
-@font-face {
-  font-display: swap;
-  font-family: 'Libre Franklin';
-  font-style: normal;
-  font-weight: 700;
-  src: url('/fonts/libre-franklin-v20-latin-700.woff2') format('woff2');
-}
-@font-face {
-  font-display: swap;
-  font-family: 'Libre Franklin';
-  font-style: normal;
-  font-weight: 800;
-  src: url('/fonts/libre-franklin-v20-latin-800.woff2') format('woff2');
+/* Class-based dark mode (next-themes); v4 defaults to prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* v4: safelist moved from tailwind.config.js (dynamic class names) */
+@source inline("text-error text-warning");
+
+@config '../tailwind.config.js';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-/* Source Sans 3 - Body Text */
-@font-face {
-  font-display: swap;
-  font-family: 'Source Sans 3';
-  font-style: normal;
-  font-weight: 400;
-  src: url('/fonts/source-sans-3-v19-latin-regular.woff2') format('woff2');
-}
-@font-face {
-  font-display: swap;
-  font-family: 'Source Sans 3';
-  font-style: normal;
-  font-weight: 500;
-  src: url('/fonts/source-sans-3-v19-latin-500.woff2') format('woff2');
-}
-/* @font-face {
+/* Base resets belong in @layer base — if they sit in @layer utilities they override
+   .prose a / .link rules from an earlier layer regardless of selector specificity. */
+@layer base {
+  /* Libre Franklin - Headers */
+  @font-face {
+    font-display: swap;
+    font-family: 'Libre Franklin';
+    font-style: normal;
+    font-weight: 500;
+    src: url('/fonts/libre-franklin-v20-latin-500.woff2') format('woff2');
+  }
+  @font-face {
+    font-display: swap;
+    font-family: 'Libre Franklin';
+    font-style: normal;
+    font-weight: 600;
+    src: url('/fonts/libre-franklin-v20-latin-600.woff2') format('woff2');
+  }
+  @font-face {
+    font-display: swap;
+    font-family: 'Libre Franklin';
+    font-style: normal;
+    font-weight: 700;
+    src: url('/fonts/libre-franklin-v20-latin-700.woff2') format('woff2');
+  }
+  @font-face {
+    font-display: swap;
+    font-family: 'Libre Franklin';
+    font-style: normal;
+    font-weight: 800;
+    src: url('/fonts/libre-franklin-v20-latin-800.woff2') format('woff2');
+  }
+
+  /* Source Sans 3 - Body Text */
+  @font-face {
+    font-display: swap;
+    font-family: 'Source Sans 3';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/fonts/source-sans-3-v19-latin-regular.woff2') format('woff2');
+  }
+  @font-face {
+    font-display: swap;
+    font-family: 'Source Sans 3';
+    font-style: normal;
+    font-weight: 500;
+    src: url('/fonts/source-sans-3-v19-latin-500.woff2') format('woff2');
+  }
+  /* @font-face {
   font-display: swap;
   font-family: 'Source Sans 3';
   font-style: normal;
@@ -55,39 +82,57 @@
   src: url('/fonts/source-sans-3-v19-latin-600.woff2') format('woff2');
 } */
 
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  font-size: 17px; /* Slightly larger to compensate for Source Sans 3's smaller appearance */
-}
+  html,
+  body {
+    padding: 0;
+    margin: 0;
+    font-family:
+      'Source Sans 3',
+      -apple-system,
+      BlinkMacSystemFont,
+      Segoe UI,
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      Fira Sans,
+      Droid Sans,
+      Helvetica Neue,
+      sans-serif;
+    font-size: 17px; /* Slightly larger to compensate for Source Sans 3's smaller appearance */
+  }
 
-h1, h2, h3, h4, h5, h6, font-heading {
-  font-family: var(--font-heading);
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  font-heading {
+    font-family: var(--font-heading);
+  }
 
-html {
-  scroll-padding-top: 4rem;
-  /* scroll-behavior: smooth; */
-}
+  html {
+    scroll-padding-top: 4rem;
+    /* scroll-behavior: smooth; */
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-/* English violet 275 31% 29% */
-/* Avocado: 81 96% 29% */
-/* Sea green: 161 89% 28% */
-/* skbeuloff: 175 89% 28% */
-/* paynes gray 196 39% 32% */ 
-/* intl orange: 18 88% 50% */ 
+  /* English violet 275 31% 29% */
+  /* Avocado: 81 96% 29% */
+  /* Sea green: 161 89% 28% */
+  /* skbeuloff: 175 89% 28% */
+  /* paynes gray 196 39% 32% */
+  /* intl orange: 18 88% 50% */
+} 
 
 @layer base {
   :root {
@@ -258,7 +303,7 @@ a {
 
   /* Standard link styling */
   .link {
-    @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2 transition-colors;
+    @apply font-medium text-primary underline underline-offset-4 decoration-1 hover:decoration-2 transition-colors;
   }
 
   .search-dialog a {
@@ -267,12 +312,12 @@ a {
 
   /* Inline markdown (outside prose) should keep standard link styling */
   .inline-markdown a:not(.button) {
-    @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
+    @apply font-medium text-primary underline underline-offset-4 decoration-1 hover:decoration-2;
   }
 
   /* Muted links that stay muted until hover - override prose styling */
   .muted-links a:not(.button) {
-    @apply text-muted-foreground underline underline-offset-4 decoration-muted-foreground/70 hover:decoration-2 hover:text-primary hover:decoration-primary transition-colors !important;
+    @apply text-muted-foreground! underline! underline-offset-4! decoration-muted-foreground/70! hover:decoration-2! hover:text-primary! hover:decoration-primary! transition-colors!;
   }
 
   mark {
@@ -496,11 +541,11 @@ a {
     
     /* Override prose img margins for floated images */
     img.float-left {
-      @apply !ml-0 !mr-6;
+      @apply ml-0! mr-6!;
     }
     
     img.float-right {
-      @apply !mr-0 !ml-6;
+      @apply mr-0! ml-6!;
     }
 
     /* Inline code */
@@ -510,7 +555,7 @@ a {
 
     /* Links */
     a:not(.button) {
-      @apply font-medium text-primary underline underline-offset-4 decoration-[1px] hover:decoration-2;
+      @apply font-medium text-primary underline underline-offset-4 decoration-1 hover:decoration-2;
     }
 
     /* Make links in do/dont sections inherit font weight */
@@ -556,11 +601,11 @@ a {
     }
 
     th {
-      @apply border px-4 py-2 bg-foreground text-background text-left font-bold text-xs uppercase [&[align=center]]:text-center [&[align=right]]:text-right;
+      @apply border px-4 py-2 bg-foreground text-background text-left font-bold text-xs uppercase [[align=center]]:text-center [[align=right]]:text-right;
     }
 
     td {
-      @apply border px-4 py-2 text-left align-top [&[align=center]]:text-center [&[align=right]]:text-right;
+      @apply border px-4 py-2 text-left align-top [[align=center]]:text-center [[align=right]]:text-right;
     }
 
     tbody tr {

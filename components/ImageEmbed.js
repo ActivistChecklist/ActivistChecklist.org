@@ -27,7 +27,7 @@ export const ImageEmbed = ({
 
   const getSizeClass = () => {
     switch (size) {
-      case 'xs':     return 'max-w-[12rem] sm:max-w-[16rem]';
+      case 'xs':     return 'max-w-48 sm:max-w-[16rem]';
       case 'small':  return 'max-w-xs sm:max-w-sm';
       case 'medium': return 'max-w-sm sm:max-w-md';
       case 'large':  return 'max-w-md sm:max-w-2xl';
@@ -52,7 +52,7 @@ export const ImageEmbed = ({
       alt={alt || 'Embedded image'}
       width={800}
       height={600}
-      className={cn("rounded-lg shadow-sm w-full h-auto", getSizeClass(), getAlignmentClass())}
+      className={cn("rounded-lg shadow-xs w-full h-auto", getSizeClass(), getAlignmentClass())}
       loading="lazy"
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       {...props}

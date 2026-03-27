@@ -128,7 +128,7 @@ const ContactForm = ({
                         "w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                         "ring-offset-background",
                         "placeholder:text-muted-foreground",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                         form.formState.errors.message && [
                           "border-destructive",
                           "focus-visible:ring-destructive",

@@ -39,7 +39,7 @@ const InfoItemIcon = () => {
         <TooltipContent 
           side="top"
           sideOffset={5}
-          className="z-[100]"
+          className="z-100"
         >
           Informational item
         </TooltipContent>
@@ -298,7 +298,7 @@ const ChecklistItem = ({
       ref={cardRef}
       className={cn(
         "checklist-item group/checklist-item",
-        "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t-1",
+        "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t",
         "hover:z-20 relative",
         !isExpanded && !isChecked && "hover:bg-muted/40",
         isExpanded && "mb-4 rounded-lg border-transparent",
@@ -460,7 +460,7 @@ const ChecklistItem = ({
                   )}
                 >
                   <Check className={cn(
-                    "h-4 w-4 transition-all duration-300 font-bold stroke-[3]",
+                    "h-4 w-4 transition-all duration-300 font-bold stroke-3",
                     // Unchecked state - primary checkmark
                     !isChecked && "text-primary",
                     // Checked state - primary-foreground checkmark

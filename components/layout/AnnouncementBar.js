@@ -85,7 +85,7 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
         <div className="md:hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium flex items-center gap-2 flex-1">
-              {Icon && <Icon size={18} className="flex-shrink-0" />}
+              {Icon && <Icon size={18} className="shrink-0" />}
               <span>
                 {announcement.title && (
                   <span className="font-bold mr-1">{announcement.title}:</span>
@@ -96,7 +96,7 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
             {allowDismiss && (
               <button
                 onClick={handleDismiss}
-                className="p-1 hover:opacity-80 transition-opacity ml-2 flex-shrink-0"
+                className="p-1 hover:opacity-80 transition-opacity ml-2 shrink-0"
                 aria-label="Close announcement"
               >
                 <X size={16} />
@@ -123,7 +123,7 @@ const AnnouncementBar = ({ announcementKey = ACTIVE_ANNOUNCEMENT }) => {
         {/* Desktop layout: inline */}
         <div className="hidden md:flex items-center justify-between">
           <div className="text-sm font-medium text-center flex-1 flex items-center justify-center gap-3">
-            {Icon && <Icon size={18} className="flex-shrink-0" />}
+            {Icon && <Icon size={18} className="shrink-0" />}
             <span>
               {announcement.title && (
                 <span className="font-bold mr-1">{announcement.title}</span>

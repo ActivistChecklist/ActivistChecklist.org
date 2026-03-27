@@ -1,3 +1,5 @@
+@reference "./globals.css";
+
 /* Risk Level block - tinted background, no border. Bullets rendered as arrows. */
 .riskLevel {
   @apply relative w-full rounded-md p-4 [&:not(:first-child)]:mt-3 !text-inherit;

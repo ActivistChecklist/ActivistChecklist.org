@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 /** Visual only; no position — avoids overlapping interactive checklist chrome. */
 const baseButtonClassName =
-  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground';
+  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-xs hover:bg-accent hover:text-foreground';
 
 const positionClassName = {
   /** Own row / toolbar — does not stack over the preview (default). */

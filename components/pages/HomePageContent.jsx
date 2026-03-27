@@ -22,7 +22,7 @@ const TrustPoint = ({ icon: Icon, title, description }) => (
   <Card className="bg-transparent border-0 shadow-none transition-all duration-300">
     <CardHeader className="flex flex-row items-start gap-6 space-y-0">
       <div className="p-2 rounded-lg bg-primary/10">
-        <Icon className="h-6 w-6 text-primary flex-shrink-0" />
+        <Icon className="h-6 w-6 text-primary shrink-0" />
       </div>
       <div>
         <CardTitle className="text-lg">{title}</CardTitle>
@@ -56,19 +56,19 @@ export default function HomePageContent({ children, changelogEntries = [], lates
           <div className="">
             <header className={cn(
               "not-prose relative left-1/2 w-dvw max-w-none -translate-x-1/2",
-              "relative mb-16 -mt-8 py-16 px-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background overflow-hidden",
+              "relative mb-16 -mt-8 py-16 px-4 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/20 via-background to-background overflow-hidden",
               "before:content-[''] before:fixed before:inset-0 before:bg-[linear-gradient(to_right,var(--tw-gradient-stops))] before:from-primary/10 before:via-accent/5 before:to-primary/10 before:opacity-70 before:pointer-events-none"
             )}>
               <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--tw-gradient-stops))] from-primary/10 via-accent/5 to-primary/10 opacity-70"></div>
               <div className="relative max-w-4xl mx-auto text-center">
-                <h1 className="text-5xl md:text-6xl font-heavy mb-6 bg-gradient-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent text-balance">
+                <h1 className="text-5xl md:text-6xl font-heavy mb-6 bg-linear-to-br from-primary via-primary to-primary/70 bg-clip-text text-transparent text-balance">
                   {t('hero.title')}
                 </h1>
                 <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-2xl mx-auto">
                   {t('hero.description')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild variant="default" size="xl" className="group bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all">
+                  <Button asChild variant="default" size="xl" className="group bg-linear-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all">
                     <Link href={ROUTES.CHECKLISTS.ESSENTIALS} className="block group">
                       {t('hero.primaryCta')}
                       <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
@@ -106,10 +106,10 @@ export default function HomePageContent({ children, changelogEntries = [], lates
           </section>
 
           {/* Why Trust Us Section */}
-          <section className="mb-16 bg-gradient-to-br from-muted via-muted to-accent/5 p-8 rounded-lg">
+          <section className="mb-16 bg-linear-to-br from-muted via-muted to-accent/5 p-8 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-6">
-                <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
+                <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
                 <p className="text-xl text-muted-foreground">{t('homepage.trustDescription')}</p>
               </div>
               <div className="space-y-0">
