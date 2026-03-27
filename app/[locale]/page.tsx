@@ -4,6 +4,8 @@ import { getAllChangelogEntries, getAllNewsItems, toChangelogListEntry, toNewsLi
 import { NEWS_BLOCK_DEFAULT_LIMIT } from '@/components/NewsBlock';
 import HomePageContent from '@/components/pages/HomePageContent';
 import { DEFAULT_LOCALE } from '@/lib/i18n-config';
+import { getBaseUrl } from '@/lib/utils';
+import { getOgImagePathForSlug } from '@/lib/og-image';
 
 function getMessageValue(messages, keyPath) {
   return keyPath.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), messages);
@@ -24,9 +26,31 @@ export async function generateMetadata({ params }) {
     getMessageValue(messages, 'site.description') ||
     'Plain language steps for digital security, because protecting yourself helps keep your whole community safer.';
 
+  const baseUrl = getBaseUrl();
+  const canonical =
+    locale === DEFAULT_LOCALE ? `${baseUrl}/` : `${baseUrl}/${locale}/`;
+  const ogImageUrl = `${baseUrl}${getOgImagePathForSlug('')}`;
+
   return {
     title,
     description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: 'website',
+      siteName: 'Activist Checklist',
+      images: [ogImageUrl],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
+    },
   };
 }
 
