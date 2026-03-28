@@ -2,6 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
+import { LOCALES } from '../lib/i18n-config.mjs';
+import { sectionStart, sectionEnd, detail, subsection } from './lib/build-cli.mjs';
+
+const LOCALE_SEGMENTS = new Set(Object.keys(LOCALES));
+
+/** Same logical page across builds (e.g. en/foo + es/foo), ignoring locale prefix. */
+function canonicalPageKey(relativeFile) {
+  const norm = relativeFile.replace(/\\/g, '/');
+  const parts = norm.split('/');
+  if (parts.length >= 2 && LOCALE_SEGMENTS.has(parts[0])) {
+    return parts.slice(1).join('/');
+  }
+  return norm;
+}
+
+function isTranslationDuplicateGroup(files) {
+  if (files.length < 2) return false;
+  const keys = new Set(files.map(canonicalPageKey));
+  return keys.size === 1;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -127,14 +147,18 @@ function extractPaths(htmlContent) {
 
 function main() {
   if (!fs.existsSync(OUT_DIR)) {
-    console.error(chalk.red(`Output directory '${OUT_DIR}' does not exist. Run buildstatic first.`));
+    sectionStart('🔗', 'Check internal links & local assets');
+    detail(`No out/ at ${OUT_DIR}`);
+    detail('Skipping (run yarn buildstatic to produce out/)');
+    sectionEnd(true, ['Skipped — no output directory']);
     process.exit(0);
   }
 
-  console.log(chalk.blue(`\nChecking internal links and images in ${chalk.bold(OUT_DIR)}...\n`));
+  sectionStart('🔗', 'Check internal links & local assets');
+  detail(`Scanning ${OUT_DIR} (href, src, srcset)`);
 
   const htmlFiles = getAllHtmlFiles(OUT_DIR);
-  console.log(chalk.gray(`  Found ${htmlFiles.length} HTML files to check`));
+  detail(`${htmlFiles.length} HTML file(s)`);
 
   const brokenLinks = [];
   const brokenResources = [];
@@ -181,54 +205,70 @@ function main() {
   const uniqueBrokenLinks = dedup(brokenLinks);
   const uniqueBrokenResources = dedup(brokenResources);
 
-  // Report
+  const totalBroken = uniqueBrokenLinks.length + uniqueBrokenResources.length;
+  const totalChecked = checkedPaths.size;
+
   if (uniqueBrokenLinks.length > 0) {
-    console.error(chalk.red.bold(`\n  Broken internal links (${uniqueBrokenLinks.length}):`));
-    // Group by broken path
+    subsection('🚫', `Broken internal links (${uniqueBrokenLinks.length})`);
     const byPath = {};
     for (const entry of uniqueBrokenLinks) {
       if (!byPath[entry.path]) byPath[entry.path] = [];
       byPath[entry.path].push(entry.sourceFile);
     }
     for (const [brokenPath, files] of Object.entries(byPath)) {
-      console.error(chalk.red(`    ${brokenPath}`));
+      console.error(chalk.red(`     ${brokenPath}`));
+      if (isTranslationDuplicateGroup(files)) {
+        console.error(
+          chalk.gray(`        (${files.length} locale build(s) — same route, pages omitted)`)
+        );
+        continue;
+      }
       for (const f of files.slice(0, 5)) {
-        console.error(chalk.gray(`      in ${f}`));
+        console.error(chalk.gray(`        in ${f}`));
       }
       if (files.length > 5) {
-        console.error(chalk.gray(`      ... and ${files.length - 5} more files`));
+        console.error(chalk.gray(`        … and ${files.length - 5} more file(s)`));
       }
     }
   }
 
   if (uniqueBrokenResources.length > 0) {
-    console.error(chalk.red.bold(`\n  Broken local images/resources (${uniqueBrokenResources.length}):`));
+    subsection('🚫', `Broken images / assets (${uniqueBrokenResources.length})`);
     const byPath = {};
     for (const entry of uniqueBrokenResources) {
       if (!byPath[entry.path]) byPath[entry.path] = [];
       byPath[entry.path].push(entry.sourceFile);
     }
     for (const [brokenPath, files] of Object.entries(byPath)) {
-      console.error(chalk.red(`    ${brokenPath}`));
+      console.error(chalk.red(`     ${brokenPath}`));
+      if (isTranslationDuplicateGroup(files)) {
+        console.error(
+          chalk.gray(`        (${files.length} locale build(s) — same route, pages omitted)`)
+        );
+        continue;
+      }
       for (const f of files.slice(0, 5)) {
-        console.error(chalk.gray(`      in ${f}`));
+        console.error(chalk.gray(`        in ${f}`));
       }
       if (files.length > 5) {
-        console.error(chalk.gray(`      ... and ${files.length - 5} more files`));
+        console.error(chalk.gray(`        … and ${files.length - 5} more file(s)`));
       }
     }
   }
 
-  const totalBroken = uniqueBrokenLinks.length + uniqueBrokenResources.length;
-  const totalChecked = checkedPaths.size;
-
   if (totalBroken === 0) {
-    console.log(chalk.green.bold(`\n  All ${totalChecked} local paths verified.\n`));
+    sectionEnd(true, [
+      `Local paths verified: ${totalChecked} unique path(s)`,
+      `HTML files scanned: ${htmlFiles.length}`,
+    ]);
     process.exit(0);
-  } else {
-    console.error(chalk.red.bold(`\n  ${totalBroken} broken paths found out of ${totalChecked} checked.\n`));
-    process.exit(1);
   }
+
+  sectionEnd(false, [
+    `Broken paths: ${totalBroken} (links + assets)`,
+    `Checked ${totalChecked} unique local path(s)`,
+  ]);
+  process.exit(1);
 }
 
 main();

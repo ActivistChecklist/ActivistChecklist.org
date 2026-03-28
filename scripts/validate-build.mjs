@@ -10,6 +10,7 @@ import {
   getAllNewsItems,
 } from '../lib/content.js';
 import { LOCALES, DEFAULT_LOCALE } from '../lib/i18n-config.mjs';
+import { sectionStart, sectionEnd, subsection, detail } from './lib/build-cli.mjs';
 
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, 'out');
@@ -307,9 +308,14 @@ function run() {
   };
 
   if (!fs.existsSync(OUT_DIR)) {
-    console.error(chalk.red(`Output directory "${OUT_DIR}" does not exist. Run yarn buildstatic first.`));
+    sectionStart('✅', 'Validate build — content, routes & HTML shape');
+    detail(`Expected out/ at ${OUT_DIR}`);
+    sectionEnd(false, ['Missing out/ — run yarn buildstatic first']);
     process.exit(1);
   }
+
+  sectionStart('✅', 'Validate build — content, routes & HTML shape');
+  detail(`Output: ${path.relative(ROOT, OUT_DIR) || 'out'}`);
 
   // 1) Page inventory + dynamic checks for guides/pages per locale.
   for (const locale of locales) {
@@ -484,57 +490,66 @@ function run() {
     }
   }
 
-  // Final report
-  console.log(chalk.blue.bold('Validate Build Summary'));
-  console.log(chalk.blue(`- HTML scanned: ${htmlFiles.length}`));
-  console.log(chalk.blue(`- Route/file existence checks: ${stats.routeFilesChecked}`));
-  console.log(chalk.blue(`- Title content comparisons: ${stats.titleContentChecks}`));
-  console.log(chalk.blue(`- Body content comparisons: ${stats.bodyContentChecks}`));
-  console.log(chalk.blue(`- Homepage key-text comparisons: ${stats.homepageKeyTextChecks}`));
-  console.log(chalk.blue(`- Structural HTML checks (<main>/<nav>): ${stats.structuralChecks}`));
+  subsection('📊', 'Scan summary');
+  detail(`HTML files: ${htmlFiles.length}`);
+  detail(`Route / file checks: ${stats.routeFilesChecked}`);
+  detail(`Title comparisons: ${stats.titleContentChecks}`);
+  detail(`Body comparisons: ${stats.bodyContentChecks}`);
+  detail(`Homepage key-text checks: ${stats.homepageKeyTextChecks}`);
+  detail(`Structural (<main> / <nav>): ${stats.structuralChecks}`);
   if (stats.keystaticStructuralSkipped > 0) {
-    console.log(chalk.gray(`- Structural checks skipped for Keystatic: ${stats.keystaticStructuralSkipped}`));
+    detail(`Keystatic pages skipped (structural): ${stats.keystaticStructuralSkipped}`);
   }
-  console.log(chalk.gray('- Locale file counts:'));
   for (const locale of locales) {
-    console.log(chalk.gray(`  ${locale}: ${localeCounts[locale] || 0} files`));
+    detail(`Locale ${locale}: ${localeCounts[locale] || 0} HTML file(s)`);
   }
 
   if (warnings.length > 0) {
-    console.log(chalk.yellow(`Warnings: ${warnings.length}`));
+    subsection('⚠️', `Warnings (${warnings.length})`);
     warnings.slice(0, 20).forEach((w, index) => {
       if (typeof w === 'string') {
-        console.log(chalk.yellow(`  ${index + 1}. ${w}`));
+        console.log(chalk.yellow(`     ${index + 1}. ${w}`));
         return;
       }
       if (w?.type === 'content-miss') {
         printContentMiss(w, 'warning', index + 1);
         return;
       }
-      console.log(chalk.yellow(`  ${index + 1}. ${String(w)}`));
+      console.log(chalk.yellow(`     ${index + 1}. ${String(w)}`));
     });
     if (warnings.length > 20) {
-      console.log(chalk.yellow(`  ... and ${warnings.length - 20} more`));
+      detail(`… and ${warnings.length - 20} more warning(s)`);
     }
   }
 
   if (failures.length > 0) {
-    console.error(chalk.red(`Validation failed with ${failures.length} issue(s):`));
+    subsection('🚫', `Failures (${failures.length})`);
     failures.forEach((f, index) => {
       if (typeof f === 'string') {
-        console.error(chalk.red(`  ${index + 1}. ${f}`));
+        console.error(chalk.red(`     ${index + 1}. ${f}`));
         return;
       }
       if (f?.type === 'content-miss') {
         printContentMiss(f, 'failure', index + 1);
         return;
       }
-      console.error(chalk.red(`  ${index + 1}. ${String(f)}`));
+      console.error(chalk.red(`     ${index + 1}. ${String(f)}`));
     });
+    sectionEnd(false, [
+      `Validation failed: ${failures.length} issue(s)`,
+      `HTML files scanned: ${htmlFiles.length}`,
+    ]);
     process.exit(1);
   }
 
-  console.log(chalk.green('Build validation passed.'));
+  const okLines = [
+    `HTML files: ${htmlFiles.length}`,
+    `Routes & content checks completed`,
+  ];
+  if (warnings.length > 0) {
+    okLines.push(`Warnings: ${warnings.length} (non-fatal — see above)`);
+  }
+  sectionEnd(true, okLines);
 }
 
 function printContentMiss(issue, level, index) {
@@ -549,18 +564,18 @@ function printContentMiss(issue, level, index) {
   const marker = diffAt >= 0 ? `${' '.repeat(diffAt)}^` : '';
 
   const prefix = issue.severity ? `${issue.severity}: ` : '';
-  console.log(headerColor(`  ${index}. ${prefix}${issue.description}`));
-  console.log(`     ${keyColor('out:      ')}${valueColor(issue.outputFile || '-')}`);
-  console.log(`     ${keyColor('source:   ')}${valueColor(issue.sourceFile || '-')}`);
+  console.log(headerColor(`     ${index}. ${prefix}${issue.description}`));
+  console.log(`        ${keyColor('out:      ')}${valueColor(issue.outputFile || '-')}`);
+  console.log(`        ${keyColor('source:   ')}${valueColor(issue.sourceFile || '-')}`);
   if (issue.sourceLine) {
-    console.log(`     ${keyColor('src line:')}${valueColor(` ${issue.sourceLine}`)}`);
+    console.log(`        ${keyColor('src line:')}${valueColor(` ${issue.sourceLine}`)}`);
   }
-  console.log(`     ${keyColor('expected:')}${chalk.cyan(` ${expected || '-'}`)}`);
-  console.log(`     ${keyColor('actual:  ')}${chalk.magenta(` ${actual || '(no nearby text found)'}`)}`);
+  console.log(`        ${keyColor('expected:')}${chalk.cyan(` ${expected || '-'}`)}`);
+  console.log(`        ${keyColor('actual:  ')}${chalk.magenta(` ${actual || '(no nearby text found)'}`)}`);
   if (marker) {
-    console.log(`     ${keyColor('diff:    ')}${chalk.green(marker)}`);
+    console.log(`        ${keyColor('diff:    ')}${chalk.green(marker)}`);
   }
-  console.log(`     ${keyColor('needle:   ')}${chalk.gray(issue.expectedNormalized || '-')}`);
+  console.log(`        ${keyColor('needle:   ')}${chalk.gray(issue.expectedNormalized || '-')}`);
 }
 
 run();

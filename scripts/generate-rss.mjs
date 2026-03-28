@@ -3,11 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { applyPaywallBypassHref } from '../lib/paywall-bypass-url.js';
+import { sectionStart, sectionEnd, detail } from './lib/build-cli.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-// Import content functions (uses process.cwd() internally, works from root)
 const { getAllChangelogEntries, getAllNewsItems } = await import('../lib/content.js');
 
 const SITE_URL = 'https://activistchecklist.org';
@@ -17,14 +17,15 @@ function writeFeed(feed, filename) {
   fs.mkdirSync(outDir, { recursive: true });
   const rssPath = path.join(outDir, filename);
   fs.writeFileSync(rssPath, feed.rss2());
-  console.log(`✅ RSS feed written: ${rssPath}`);
+  detail(`Wrote ${path.relative(ROOT, rssPath)}`);
+  return rssPath;
 }
 
 /**
  * Generate changelog RSS feed from MDX content files.
  */
 async function generateChangelogRSS() {
-  const entries = getAllChangelogEntries('en'); // sorted newest-first
+  const entries = getAllChangelogEntries('en');
 
   const feed = new Feed({
     title: 'Activist Checklist - Recent Updates',
@@ -56,14 +57,14 @@ async function generateChangelogRSS() {
   }
 
   writeFeed(feed, 'changelog.xml');
-  console.log(`✅ Changelog RSS: ${entries.length} entries`);
+  return entries.length;
 }
 
 /**
  * Generate news RSS feed from MDX content files.
  */
 async function generateNewsRSS() {
-  const items = getAllNewsItems('en'); // sorted newest-first
+  const items = getAllNewsItems('en');
 
   const feed = new Feed({
     title: 'Activist Checklist - News',
@@ -105,19 +106,29 @@ async function generateNewsRSS() {
   }
 
   writeFeed(feed, 'news.xml');
-  console.log(`✅ News RSS: ${items.length} items`);
+  return items.length;
 }
 
-// CLI entry point
 const feedType = process.argv[2];
 
+sectionStart('📡', 'Generate RSS feeds');
+detail(`Output: out/rss/`);
+
+let changelogCount = 0;
+let newsCount = 0;
+
 if (feedType === 'news') {
-  await generateNewsRSS();
+  newsCount = await generateNewsRSS();
+  sectionEnd(true, [`News feed: ${newsCount} item(s)`, 'changelog.xml skipped (news-only run)']);
 } else if (feedType === 'changelog') {
-  await generateChangelogRSS();
+  changelogCount = await generateChangelogRSS();
+  sectionEnd(true, [`Changelog feed: ${changelogCount} entry(ies)`, 'news.xml skipped (changelog-only run)']);
 } else {
-  await Promise.all([generateChangelogRSS(), generateNewsRSS()]);
-  console.log('✅ All RSS feeds generated');
+  [changelogCount, newsCount] = await Promise.all([generateChangelogRSS(), generateNewsRSS()]);
+  sectionEnd(true, [
+    `Changelog: ${changelogCount} entry(ies)`,
+    `News: ${newsCount} item(s)`,
+  ]);
 }
 
 export { generateChangelogRSS, generateNewsRSS };
