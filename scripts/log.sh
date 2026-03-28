@@ -2,9 +2,18 @@
 #
 # Shared logging helpers for cron and deploy scripts.
 #
+# Server log directory (cron / healthchecks): set once in env:
+#   LOG_DIR=/path/to/logs
+#   (defaults to <repo>/logs)
+#   resolve_server_log_dir "$PROJECT_DIR"
+#
+# Tail trim size for rotated log files:
+#   LOG_LINES_KEEP=500
+#   resolve_server_log_lines_keep
+#
 # File logging (health checks, etc.):
 #   source "$SCRIPT_DIR/log.sh"
-#   init_scripts_file_log "$PROJECT_DIR/logs" "my-script.log" "${MY_LOG_LINES_KEEP:-500}"
+#   init_scripts_file_log "$(resolve_server_log_dir "$PROJECT_DIR")" "my-script.log" "$(resolve_server_log_lines_keep)"
 #   log "line"
 #   log_echo "line"    # stdout + file
 #   trim_log
@@ -14,6 +23,25 @@
 #   source "$SCRIPT_DIR/log.sh"
 #   log() { log_stderr_utc "$@"; }
 #
+
+# LOG_DIR (env) > <repo>/logs
+resolve_server_log_dir() {
+  local project_dir="$1"
+  if [[ -n "${LOG_DIR:-}" ]]; then
+    printf '%s' "$LOG_DIR"
+  else
+    printf '%s' "$project_dir/logs"
+  fi
+}
+
+# LOG_LINES_KEEP (env) > 500
+resolve_server_log_lines_keep() {
+  if [[ -n "${LOG_LINES_KEEP:-}" ]]; then
+    printf '%s' "$LOG_LINES_KEEP"
+  else
+    printf '%s' "500"
+  fi
+}
 
 # Sets LOG_DIR, LOG_FILE, LOG_LINES_KEEP and creates LOG_DIR.
 init_scripts_file_log() {
