@@ -24,7 +24,7 @@
     "og-images:clean": "node scripts/generate-og-images.mjs --clean",
     "index": "NODE_ENV=${NODE_ENV} bash scripts/build-search-index.sh",
     "rss": "node scripts/generate-rss.mjs",
-    "buildbackup": "node scripts/build-backup.js",
+    "buildbackup": "node scripts/build-backup.mjs",
     "check-links": "node scripts/check-links.mjs",
     "healthcheck-ssl": "bash scripts/healthcheck-ssl.sh",
     "healthcheck-domain": "bash scripts/healthcheck-domain.sh",

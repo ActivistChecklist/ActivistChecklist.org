@@ -3,6 +3,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import readline from 'readline';
+import {
+  sectionStart,
+  sectionEnd,
+  detail,
+  attention,
+  subsection,
+} from './lib/build-cli.mjs';
 
 const OUTPUT_DIR = 'out';
 const APPROVED_URLS_FILE = '.approved-urls.json';
@@ -41,23 +48,23 @@ function saveApprovedUrls(approvedUrls) {
 
 // Ask for URL approval
 async function approveUrls(urls) {
-  console.log(chalk.yellow.bold('\n🔍 New URLs found that need approval:'));
-  // Sort URLs alphabetically
   const sortedUrls = [...urls].sort();
-  sortedUrls.forEach((url, index) => {
-    const files = Array.from(urlLocations.get(url));
-    console.log(`\n   ${chalk.gray(`${index + 1}.`)} ${chalk.bold(url)}`);
-    files.forEach(file => console.log(`      ${chalk.gray(file)}`));
-  });
 
   if (!isInteractive) {
-    // Non-interactive mode: allow deploy to proceed without saving approvals.
-    // We still print the URLs so they can be reviewed later.
-    console.log(chalk.blue('\nℹ️  CHECKBUILD_URL_APPROVAL is not "prompt"; continuing without approving/saving.'));
+    detail(
+      `${sortedUrls.length} new external URL(s) — acknowledged without listing (CHECKBUILD_URL_APPROVAL≠prompt)`
+    );
     return true;
   }
 
-  const answer = await question(chalk.yellow('\nWould you like to approve all these URLs? (y/n): '));
+  attention('🔍', 'New URLs found that need approval');
+  sortedUrls.forEach((url, index) => {
+    const files = Array.from(urlLocations.get(url));
+    detail(`${index + 1}. ${url}`);
+    files.forEach((file) => detail(`   ${file}`));
+  });
+
+  const answer = await question(chalk.yellow('\nApprove all these URLs? (y/n): '));
   return answer.toLowerCase().startsWith('y');
 }
 
@@ -262,29 +269,34 @@ try {
   const approvedUrls = loadApprovedUrls();
 
   if (!fs.existsSync(outputDir)) {
-    console.error(chalk.red(`⚠️  Output directory '${chalk.bold(outputDir)}' does not exist. Run buildstatic first. (This scripts attempts to run on every build so that it is in the correct place before indexing. So if you don't need a static build right now, that's okay.)`));
+    sectionStart('🔒', 'Check build — scrub output & scan');
+    detail(`No out/ at ${outputDir}`);
+    detail('Skipping (normal when you are not doing a static export)');
+    sectionEnd(true, ['Skipped — no output directory']);
     process.exit(0);
   }
 
-  console.log(chalk.blue(`Scanning ${chalk.bold(outputDir)} for forbidden strings and URLs...`));
+  sectionStart('🔒', 'Check build — scrub output & scan');
+  detail(`Scanning ${outputDir} (HTML/JS for tokens & external URLs)`);
   await scanDirectory(outputDir);
 
-  // Check for new URLs and ask for approval
   const newUrls = Array.from(urlLocations.keys()).filter(url => !approvedUrls.has(url));
+  let newUrlsApproved = true;
 
   if (newUrls.length > 0) {
     const areApproved = await approveUrls(newUrls);
+    newUrlsApproved = areApproved;
 
     if (areApproved) {
       if (isInteractive) {
         newUrls.forEach(url => approvedUrls.add(url));
-        console.log(chalk.green(`✅ Added ${newUrls.length} URLs to approved list (total: ${approvedUrls.size})`));
+        detail(`Added ${newUrls.length} URL(s) to approved list (total ${approvedUrls.size})`);
       } else {
-        console.log(chalk.green(`✅ Proceeding with ${newUrls.length} new URLs (not saved to ${APPROVED_URLS_FILE})`));
+        detail(`Proceeding with ${newUrls.length} new URL(s) — not saved to ${APPROVED_URLS_FILE}`);
       }
     } else {
       newUrls.forEach(url => {
-        console.log(chalk.red(`❌ URL rejected: ${url}`));
+        detail(`Rejected URL: ${url}`);
         findings.push({
           file: Array.from(urlLocations.get(url))[0],
           string: url,
@@ -293,31 +305,29 @@ try {
       });
     }
 
-    // Save updated approved URLs
     if (isInteractive && areApproved) {
       saveApprovedUrls(approvedUrls);
     }
   } else {
-    console.log(chalk.blue(`ℹ️  All ${approvedUrls.size} URLs already approved`));
+    detail(`External URLs: no new links (${approvedUrls.size} already in approved list)`);
   }
 
-  // Print replacement stats
-  console.log('\n' + chalk.blue.bold('🔄 Replacement Statistics:'));
+  subsection('🔄', 'Replacement statistics');
   if (replacementStats.size > 0) {
     REPLACEMENTS.forEach(({ pattern, replacement }) => {
       const count = replacementStats.get(pattern.toString()) || 0;
       if (count > 0) {
-        console.log(`   ${chalk.gray('•')} Replaced ${chalk.bold(count)} occurrences of ${chalk.yellow(pattern)} with ${chalk.green(replacement)}`);
+        detail(`${count}× ${String(pattern).slice(0, 48)}… → ${replacement}`);
       }
     });
   } else {
-    console.log(chalk.yellow('   No replacements made'));
+    detail('No pattern replacements applied');
   }
 
-  if (findings.length > 0) {
-    console.error(chalk.red.bold('❌ Found forbidden strings:'));
+  const replacementTotal = [...replacementStats.values()].reduce((a, b) => a + b, 0);
 
-    // Group findings by file
+  if (findings.length > 0) {
+    subsection('🚫', 'Forbidden strings & blocked URLs');
     const groupedFindings = findings.reduce((acc, finding) => {
       if (!acc[finding.file]) {
         acc[finding.file] = [];
@@ -326,22 +336,45 @@ try {
       return acc;
     }, {});
 
-    // Output grouped findings
     Object.entries(groupedFindings).forEach(([file, fileFindings], fileIndex) => {
-      console.error(`\n${chalk.yellow.bold(`File ${fileIndex + 1}:`)} ${chalk.yellow(file)}`);
+      console.error(`\n${chalk.yellow.bold(`  File ${fileIndex + 1}:`)} ${chalk.yellow(file)}`);
       fileFindings.forEach((finding, index) => {
-        console.error(`   ${chalk.red(`${index + 1}. Found "${chalk.bold(finding.string)}"`)}`)
-        console.error(`      ${chalk.gray('Context:')} ${finding.context}`);
+        console.error(`     ${chalk.red(`${index + 1}. "${chalk.bold(finding.string)}"`)}`);
+        console.error(`        ${chalk.gray(finding.context)}`);
       });
     });
   } else {
-    console.log(chalk.green.bold('✅ No forbidden strings found'));
+    subsection('🚫', 'Forbidden strings');
+    detail('None found');
   }
+
+  const summary = [];
+  if (newUrls.length === 0) {
+    summary.push(`External URLs: ${approvedUrls.size} known, none new`);
+  } else if (newUrlsApproved) {
+    summary.push(
+      `External URLs: ${newUrls.length} new — ${isInteractive ? 'approved' : 'acknowledged (CI/non-interactive)'}`
+    );
+  } else {
+    summary.push(`External URLs: ${newUrls.length} new — rejected`);
+  }
+  summary.push(
+    replacementTotal > 0
+      ? `Rewrites: ${replacementTotal} substitution(s) in output`
+      : 'Rewrites: none'
+  );
+  summary.push(
+    findings.length === 0
+      ? 'Forbidden / policy: clean'
+      : `Forbidden / policy: ${findings.length} issue(s)`
+  );
+
+  sectionEnd(findings.length === 0, summary);
 
   if (rl) rl.close();
   process.exit(findings.length > 0 ? 1 : 0);
 } catch (error) {
-  console.error(chalk.red.bold('❌ Error:'), chalk.red(error.message));
+  console.error(chalk.red.bold('Check build error:'), chalk.red(error.message));
   if (rl) rl.close();
   process.exit(1);
 }
