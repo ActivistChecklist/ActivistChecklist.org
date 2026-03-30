@@ -47,6 +47,11 @@ const AnnouncementBar = () => {
 
   if (!announcement || !isVisible) return null;
 
+  if (announcement.disableAfterDate) {
+    const cutoff = new Date(announcement.disableAfterDate + 'T23:59:59');
+    if (!isNaN(cutoff) && new Date() > cutoff) return null;
+  }
+
   const Icon = ICON_MAP[announcement.icon] ?? IoMegaphone;
   const allowDismiss = announcement.allowDismiss ?? true;
   const theme = colorSchemes[announcement.colorScheme] ?? colorSchemes.primary;

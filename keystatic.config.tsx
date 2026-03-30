@@ -499,6 +499,10 @@ export default config({
           ],
           defaultValue: 'megaphone',
         }),
+        disableAfterDate: fields.text({
+          label: 'Auto-hide after date',
+          description: 'Optional. YYYY-MM-DD format. The announcement will stop showing after this date.',
+        }),
       },
     }),
   },
