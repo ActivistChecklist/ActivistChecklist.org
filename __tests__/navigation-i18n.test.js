@@ -31,7 +31,7 @@ describe('navigation i18n translation mapping', () => {
     };
 
     const translated = translateMainNavigation(navigationConfig.mainNav, t);
-    const checklists = translated.find((item) => item.key === 'security-checklists');
+    const checklists = translated.find((item) => item.key === 'checklists');
     const essentials = checklists.items.find((item) => item.key === 'essentials');
 
     expect(essentials.title).toBe('Fundamentos de seguridad');
@@ -44,7 +44,7 @@ describe('navigation i18n translation mapping', () => {
     const translated = translateMainNavigation(navigationConfig.mainNav, t);
 
     const home = translated.find((item) => item.key === 'home');
-    const resources = translated.find((item) => item.key === 'resources-section');
+    const resources = translated.find((item) => item.key === 'resources');
 
     expect(home.label).toBe('Home');
     expect(resources.label).toBe('Resources');

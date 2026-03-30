@@ -75,7 +75,7 @@ describe('findActiveSection', () => {
   it('returns SECURITY_CHECKLISTS for a checklist path', () => {
     const result = findActiveSection('/essentials')
     expect(result).toBeDefined()
-    expect(result.key).toBe('security-checklists')
+    expect(result.key).toBe('checklists')
   })
 
   it('returns undefined for unrecognized path', () => {

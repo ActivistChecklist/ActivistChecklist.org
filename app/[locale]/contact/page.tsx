@@ -4,7 +4,7 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { IoLogoGithub, IoKeyOutline } from "react-icons/io5";
 import ContactForm from '@/components/forms/ContactForm';
-import { ROUTES } from '@/config/routes';
+import { STATIC_PATHS } from '@/config/navigation';
 
 export const metadata = {
   title: 'Contact Us | Activist Checklist',
@@ -87,7 +87,7 @@ export default async function ContactPage({ params }) {
                   contact@activistchecklist.org
                 </a>
                 <a
-                  href={ROUTES.PGP_KEY_FILE}
+                  href={STATIC_PATHS.pgpKeyFile}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-primary hover:underline"

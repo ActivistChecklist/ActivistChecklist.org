@@ -6,8 +6,7 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, getBaseUrl } from '@/lib/utils';
-import { ROUTES } from '@/config/routes';
-import { SECURITY_CHECKLISTS } from '@/config/navigation';
+import { NAV_ITEMS, SECURITY_CHECKLISTS } from '@/config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
 import Markdown from '@/components/Markdown';
@@ -71,13 +70,13 @@ export default function HomePageContent({ children, changelogEntries = [], lates
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild variant="default" size="xl" className="group bg-linear-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all">
-                    <Link href={ROUTES.CHECKLISTS.ESSENTIALS} className="block group">
+                    <Link href={NAV_ITEMS.ESSENTIALS.href} className="block group">
                       {t('hero.primaryCta')}
                       <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                     </Link>
                   </Button>
                   <Button asChild variant="muted" size="xl">
-                    <Link href={ROUTES.CHECKLISTS.LIST}>{t('hero.secondaryCta')}</Link>
+                    <Link href={SECURITY_CHECKLISTS.href}>{t('hero.secondaryCta')}</Link>
                   </Button>
                 </div>
                 {latestMajorBodyText && (
@@ -100,7 +99,7 @@ export default function HomePageContent({ children, changelogEntries = [], lates
             </div>
             <div className="mt-8 text-center">
               <Button asChild variant="outline" size="lg">
-                <Link href={ROUTES.CHECKLISTS.LIST} className="group">
+                <Link href={SECURITY_CHECKLISTS.href} className="group">
                   {t('homepage.browseAll')} <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                 </Link>
               </Button>
@@ -149,7 +148,7 @@ export default function HomePageContent({ children, changelogEntries = [], lates
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">{t('homepage.recentUpdatesHeading')}</h2>
               <Button asChild variant="outline" size="sm">
-                <Link href={ROUTES.CHANGELOG} className="group">
+                <Link href={NAV_ITEMS.CHANGELOG.href} className="group">
                   {t('homepage.viewAllUpdates')} <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                 </Link>
               </Button>
