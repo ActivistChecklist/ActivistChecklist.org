@@ -39,6 +39,9 @@ jobs:
       - name: Unit tests
         run: yarn test
 
+      - name: Internal paths (trailing slashes)
+        run: yarn lint:paths
+
       - name: Static export build (production path)
         env:
           CHECKBUILD_URL_APPROVAL: allow

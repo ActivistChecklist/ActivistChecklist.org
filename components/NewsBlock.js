@@ -24,7 +24,7 @@ const NewsBlock = ({ newsItems = [], limit = HOMEPAGE_NEWS_LIMIT }) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">{t('homepage.latestNewsHeading')}</h2>
         <Button asChild variant="outline" size="sm">
-          <Link href="/news" className="group">
+          <Link href="/news/" className="group">
             {t('homepage.viewAllNews')} <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
           </Link>
         </Button>

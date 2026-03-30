@@ -12,7 +12,7 @@ import { Sparkles } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/config/routes';
+import { NAV_ITEMS } from '@/config/navigation';
 
 const VARIATIONS = [
   {
@@ -120,7 +120,7 @@ export default function NotFoundContent({ messages }) {
 
             <div className={cn("flex justify-center items-center relative", !mounted && "invisible")}>
               <Button asChild variant="default" size="lg" className="group">
-                <Link href={ROUTES.HOME}>
+                <Link href={NAV_ITEMS.HOME.href}>
                   <FaArrowLeft className="mr-2 transition-transform duration-300 ease-out group-hover:-translate-x-1" />
                   Back to Home
                 </Link>

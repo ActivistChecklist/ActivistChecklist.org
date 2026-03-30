@@ -19,7 +19,7 @@ import {
 import { Landmark } from "lucide-react"
 
 // Map guide keys to their icons (solid variants)
-// Keys should match the slug patterns used in routes.js
+// Keys should match item keys in config/navigation.json (checklist slugs)
 export const GUIDE_ICONS = {
   'essentials': IoShield,
   'protest': IoPeople,

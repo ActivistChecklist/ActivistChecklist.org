@@ -23,9 +23,24 @@ const DynamicIcon = ({ iconName, className, ...props }) => {
 };
 
 export const ButtonEmbed = (props) => {
-  const { title, url, variant, size, className, icon, iconPosition, download, alignment, target: targetProp } = props;
+  const {
+    title,
+    href: hrefProp,
+    url: urlLegacy,
+    variant,
+    size,
+    className,
+    icon,
+    iconPosition,
+    download,
+    alignment,
+    target: targetProp,
+  } = props;
 
-  const href = (typeof url === 'string' ? url : null) || '#';
+  const raw =
+    (typeof hrefProp === 'string' ? hrefProp : null) ??
+    (typeof urlLegacy === 'string' ? urlLegacy : null);
+  const href = raw || '#';
   const target = targetProp || (href.startsWith('http') ? '_blank' : undefined);
   
   const iconElement = icon ? <DynamicIcon iconName={icon} /> : null;

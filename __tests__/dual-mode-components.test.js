@@ -1,27 +1,34 @@
 /**
- * Tests for MDX content embed helpers (e.g. button URL as string).
+ * Tests for MDX ButtonEmbed link resolution (href primary, legacy url fallback).
  */
 import { describe, it, expect } from 'vitest';
 
-function getButtonHref(url) {
-  return (typeof url === 'string' ? url : null) || '#';
+function resolveButtonHref({ href, url }) {
+  const raw =
+    (typeof href === 'string' ? href : null) ??
+    (typeof url === 'string' ? url : null);
+  return raw || '#';
 }
 
 describe('ButtonEmbed href (string URLs only)', () => {
   it('returns plain string URL as-is', () => {
-    expect(getButtonHref('https://example.com')).toBe('https://example.com');
+    expect(resolveButtonHref({ href: 'https://example.com' })).toBe('https://example.com');
   });
 
   it('returns internal path as-is', () => {
-    expect(getButtonHref('/guides/protest')).toBe('/guides/protest');
+    expect(resolveButtonHref({ href: '/guides/protest/' })).toBe('/guides/protest/');
+  });
+
+  it('falls back to legacy url', () => {
+    expect(resolveButtonHref({ url: '/legacy/' })).toBe('/legacy/');
   });
 
   it('returns # for empty string', () => {
-    expect(getButtonHref('')).toBe('#');
+    expect(resolveButtonHref({ href: '' })).toBe('#');
   });
 
-  it('returns # when url is not a string', () => {
-    expect(getButtonHref(undefined)).toBe('#');
-    expect(getButtonHref({ url: 'https://x.com' })).toBe('#');
+  it('returns # when href/url missing or not a string', () => {
+    expect(resolveButtonHref({})).toBe('#');
+    expect(resolveButtonHref({ href: undefined, url: undefined })).toBe('#');
   });
 });

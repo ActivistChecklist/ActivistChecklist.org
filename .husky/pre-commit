@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+set -e
+
+echo "→ pre-commit: strip media metadata (staged files)"
+node scripts/pre-commit-metadata.cjs
+
+# Fix internal paths to use trailing slashes (Next.js trailingSlash: true).
+# Run per staged file from the shell so git context matches `git commit` (IDE or CLI).
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(mdx|md|js|jsx|ts|tsx|mjs|cjs|json|yaml|yml)$' || true)
+if [ -n "$STAGED" ]; then
+  echo "→ pre-commit: trailing slashes on internal paths"
+  echo "$STAGED" | while IFS= read -r rel; do
+    [ -z "$rel" ] && continue
+    [ -f "$rel" ] || continue
+    node scripts/trailing-slash-paths.mjs --fix "$rel"
+    git add -- "$rel"
+  done
+fi
+
+echo "→ pre-commit: unit tests"
+yarn test

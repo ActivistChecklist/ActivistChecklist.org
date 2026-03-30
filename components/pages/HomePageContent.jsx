@@ -6,8 +6,7 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, getBaseUrl } from '@/lib/utils';
-import { ROUTES } from '@/config/routes';
-import { SECURITY_CHECKLISTS } from '@/config/navigation';
+import { NAV_ITEMS, SECURITY_CHECKLISTS } from '@/config/navigation';
 import ChangeLogRecentEntries from '@/components/ChangeLogRecentEntries';
 import GuideCard from '@/components/GuideCard';
 import Markdown from '@/components/Markdown';
@@ -20,7 +19,7 @@ const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
 
 const TrustPoint = ({ icon: Icon, title, description }) => (
   <Card className="bg-transparent border-0 shadow-none transition-all duration-300">
-    <CardHeader className="flex flex-row items-start gap-6 space-y-0">
+    <CardHeader className="flex flex-row items-start gap-3 sm:gap-6 space-y-0 p-3 sm:p-6">
       <div className="p-2 rounded-lg bg-primary/10">
         <Icon className="h-6 w-6 text-primary shrink-0" />
       </div>
@@ -71,13 +70,13 @@ export default function HomePageContent({ children, changelogEntries = [], lates
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild variant="default" size="xl" className="group bg-linear-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all">
-                    <Link href={ROUTES.CHECKLISTS.ESSENTIALS} className="block group">
+                    <Link href={NAV_ITEMS.ESSENTIALS.href} className="block group">
                       {t('hero.primaryCta')}
                       <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                     </Link>
                   </Button>
                   <Button asChild variant="muted" size="xl">
-                    <Link href={ROUTES.CHECKLISTS.LIST}>{t('hero.secondaryCta')}</Link>
+                    <Link href={SECURITY_CHECKLISTS.href}>{t('hero.secondaryCta')}</Link>
                   </Button>
                 </div>
                 {latestMajorBodyText && (
@@ -100,7 +99,7 @@ export default function HomePageContent({ children, changelogEntries = [], lates
             </div>
             <div className="mt-8 text-center">
               <Button asChild variant="outline" size="lg">
-                <Link href={ROUTES.CHECKLISTS.LIST} className="group">
+                <Link href={SECURITY_CHECKLISTS.href} className="group">
                   {t('homepage.browseAll')} <ArrowRight className="ml-2 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                 </Link>
               </Button>
@@ -108,11 +107,11 @@ export default function HomePageContent({ children, changelogEntries = [], lates
           </section>
 
           {/* Why Trust Us Section */}
-          <section className="mb-16 bg-linear-to-br from-muted via-muted to-accent/5 p-8 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
-                <p className="text-xl text-muted-foreground">{t('homepage.trustDescription')}</p>
+          <section className="mb-16 bg-linear-to-br from-muted via-muted to-accent/5 p-5 sm:p-6 md:p-8 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+              <div className="space-y-4 md:space-y-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
+                <p className="text-lg sm:text-xl text-muted-foreground">{t('homepage.trustDescription')}</p>
               </div>
               <div className="space-y-0">
                 <TrustPoint icon={Users} title={t('trustPoints.experienceTitle')} description={t('trustPoints.experienceDescription')} />
@@ -149,7 +148,7 @@ export default function HomePageContent({ children, changelogEntries = [], lates
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">{t('homepage.recentUpdatesHeading')}</h2>
               <Button asChild variant="outline" size="sm">
-                <Link href={ROUTES.CHANGELOG} className="group">
+                <Link href={NAV_ITEMS.CHANGELOG.href} className="group">
                   {t('homepage.viewAllUpdates')} <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
                 </Link>
               </Button>

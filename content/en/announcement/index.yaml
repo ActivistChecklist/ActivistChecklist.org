@@ -1,12 +1,12 @@
-active: false
-dismissKey: noKingsProtest
-title: Headed to No Kings this Saturday?
+active: true
+disableAfterDate: 2026-04-14
+dismissKey: contribute-page
+title: Want to help this project?
 message: >-
-  Prep your phone before you go, then bring printable flyers to share.
-buttonText: Protest checklist
-buttonUrl: /protest
-secondaryButtonText: Download flyer
-secondaryButtonUrl: /flyer
+  We're looking for contributors — writers, translators, designers, and
+  security researchers.
+buttonText: Learn more
+buttonUrl: /contribute/
 allowDismiss: true
 colorScheme: primary
 icon: megaphone
