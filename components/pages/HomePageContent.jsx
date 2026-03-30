@@ -20,7 +20,7 @@ const ACTION_GUIDES = SECURITY_CHECKLISTS.items.slice(0, 8);
 
 const TrustPoint = ({ icon: Icon, title, description }) => (
   <Card className="bg-transparent border-0 shadow-none transition-all duration-300">
-    <CardHeader className="flex flex-row items-start gap-6 space-y-0">
+    <CardHeader className="flex flex-row items-start gap-3 sm:gap-6 space-y-0 p-3 sm:p-6">
       <div className="p-2 rounded-lg bg-primary/10">
         <Icon className="h-6 w-6 text-primary shrink-0" />
       </div>
@@ -108,11 +108,11 @@ export default function HomePageContent({ children, changelogEntries = [], lates
           </section>
 
           {/* Why Trust Us Section */}
-          <section className="mb-16 bg-linear-to-br from-muted via-muted to-accent/5 p-8 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
-                <p className="text-xl text-muted-foreground">{t('homepage.trustDescription')}</p>
+          <section className="mb-16 bg-linear-to-br from-muted via-muted to-accent/5 p-5 sm:p-6 md:p-8 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+              <div className="space-y-4 md:space-y-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-br from-primary to-primary/70 bg-clip-text text-transparent">{t('homepage.trustHeading')}</h2>
+                <p className="text-lg sm:text-xl text-muted-foreground">{t('homepage.trustDescription')}</p>
               </div>
               <div className="space-y-0">
                 <TrustPoint icon={Users} title={t('trustPoints.experienceTitle')} description={t('trustPoints.experienceDescription')} />
