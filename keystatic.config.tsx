@@ -53,7 +53,7 @@ const buttonComponent = block({
   description: 'Call-to-action button',
   schema: {
     title: fields.text({ label: 'Title', validation: { isRequired: true } }),
-    url: fields.url({ label: 'URL', validation: { isRequired: true } }),
+    href: fields.url({ label: 'URL', validation: { isRequired: true } }),
     variant: fields.select({
       label: 'Variant',
       options: [
@@ -115,7 +115,7 @@ const buttonComponent = block({
         }}
       >
         {props.value.title || 'Button'}
-        {props.value.url && <span style={{ color: '#64748b', marginLeft: 6 }}>→ {props.value.url}</span>}
+        {props.value.href && <span style={{ color: '#64748b', marginLeft: 6 }}>→ {props.value.href}</span>}
       </div>
     );
   },
