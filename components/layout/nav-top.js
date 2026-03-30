@@ -134,7 +134,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                           ))}
                           {item.items.length > 0 && item.key === "security-checklists" && (
                             <Link
-                              href="/checklists"
+                              href="/checklists/"
                               className={cn(
                                 "flex items-center gap-2 pl-4 py-2 text-md border-l-2 border-l-transparent hover:border-l-foreground/20 text-muted-foreground group",
                                 item.footerLink?.className

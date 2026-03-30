@@ -100,18 +100,25 @@ export const footerConfig = {
   socialLinks: navData.footer.social.map(resolveSocialLink),
 }
 
-// --- Active-state helpers ---
+// --- Active-state helpers (normalize for Next.js trailingSlash: true vs bare paths) ---
+
+function normalizePathForMatch(p) {
+  if (p == null || p === '') return ''
+  if (p === '/') return '/'
+  return p.endsWith('/') ? p : `${p}/`
+}
+
+function pathsEqual(a, b) {
+  return normalizePathForMatch(a) === normalizePathForMatch(b)
+}
 
 export function isNavItemActive(item, pathname) {
   if (item.href?.startsWith('#')) return false
   if (item.items) {
-    return item.items.some(subItem => {
-      if (subItem.href?.startsWith('#')) return false
-      if (subItem.href === pathname) return true
-      return subItem.href !== '/' && pathname.startsWith(subItem.href)
-    })
+    return item.items.some(subItem => isSubItemActive(subItem, pathname))
   }
-  return item.href === pathname || (item.href === '/' && pathname === '')
+  if (item.href === '/' && (pathname === '/' || pathname === '')) return true
+  return pathsEqual(item.href, pathname)
 }
 
 export function findActiveSection(pathname) {
@@ -120,6 +127,12 @@ export function findActiveSection(pathname) {
 
 export function isSubItemActive(item, pathname) {
   if (item.href?.startsWith('#')) return false
-  if (item.href === pathname) return true
-  return item.href !== '/' && pathname.startsWith(item.href)
+  if (item.href === '/' || item.href === '') {
+    return pathname === '/' || pathname === ''
+  }
+  if (pathsEqual(item.href, pathname)) return true
+  const base = normalizePathForMatch(item.href)
+  const full = normalizePathForMatch(pathname)
+  if (base === '/') return false
+  return full.startsWith(base)
 }

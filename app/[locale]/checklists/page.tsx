@@ -15,7 +15,7 @@ function buildSlugToNavItem() {
   Object.values(NAV_ITEMS).forEach(item => {
     if (item.href && item.icon) {
       // Extract slug from href (e.g., "/security-essentials" -> "security-essentials")
-      const slug = item.href.replace(/^\//, '');
+      const slug = item.href.replace(/^\/+|\/+$/g, '');
       map[slug] = item;
     }
   });
@@ -23,7 +23,7 @@ function buildSlugToNavItem() {
 }
 
 // Get the top 8 slugs for categorization
-const TOP_8_SLUGS = SECURITY_CHECKLISTS.items.map(item => item.href.replace(/^\//, ''));
+const TOP_8_SLUGS = SECURITY_CHECKLISTS.items.map(item => item.href.replace(/^\/+|\/+$/g, ''));
 
 export default async function ChecklistsPage({ params }) {
   const { locale } = await params;

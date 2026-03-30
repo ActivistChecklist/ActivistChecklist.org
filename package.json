@@ -12,6 +12,8 @@
     "next:dev": "next dev",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint:paths": "node scripts/trailing-slash-paths.mjs --check",
+    "fix:paths": "node scripts/trailing-slash-paths.mjs --fix",
     "fetch-news": "node scripts/fetch-news-images.js",
     "news": "node scripts/news-wizard.js",
     "metadata": "node scripts/metadata-cli.cjs",

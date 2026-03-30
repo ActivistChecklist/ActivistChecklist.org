@@ -81,7 +81,7 @@ export default async function NewsPage({ params }) {
           <p className="text-sm text-muted-foreground">
             Have news you think should be included?{' '}
             <Link
-              href="/contact"
+              href="/contact/"
               className="link text-sm"
             >
               Send us a tip
