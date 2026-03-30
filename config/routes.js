@@ -21,6 +21,7 @@ export const ROUTES = {
   POLICE_DOOR_POSTER: '/police',
   ABOUT: {
     INDEX: '/about',
+    CONTRIBUTE: '/contribute',
     CONTACT: '/contact',
     PRIVACY: '/privacy'
   },

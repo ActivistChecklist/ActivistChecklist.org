@@ -162,6 +162,12 @@ export const NAV_ITEMS = {
     href: ROUTES.ABOUT.INDEX,
     title: "About this site"
   },
+  CONTRIBUTE: {
+    key: 'contribute',
+    label: "Contribute",
+    href: ROUTES.ABOUT.CONTRIBUTE,
+    title: "Contribute"
+  },
   CONTACT: {
     key: 'contact',
     label: "Contact",
@@ -250,6 +256,7 @@ export const ABOUT_SECTION = {
   type: "dropdown",
   items: [
     NAV_ITEMS.ABOUT,
+    NAV_ITEMS.CONTRIBUTE,
     NAV_ITEMS.CHANGELOG,
     NAV_ITEMS.CONTACT,
     NAV_ITEMS.PRIVACY
