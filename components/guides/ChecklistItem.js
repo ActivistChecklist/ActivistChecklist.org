@@ -51,11 +51,20 @@ const InfoItemIcon = () => {
 const CopyLinkButton = ({ slug, onCopy }) => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState(() => `#${slug}`);
+
+  useEffect(() => {
+    const pathWithSearch = `${window.location.pathname}${window.location.search}`;
+    setLinkHref(`${window.location.origin}${pathWithSearch}#${slug}`);
+  }, [slug]);
 
   const handleCopy = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}${window.location.pathname}#${slug}`;
-    
+    const pathWithSearch = `${window.location.pathname}${window.location.search}`;
+    const url = `${window.location.origin}${pathWithSearch}#${slug}`;
+    window.history.replaceState(null, "", `${pathWithSearch}#${slug}`);
+
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -80,26 +89,34 @@ const CopyLinkButton = ({ slug, onCopy }) => {
     <TooltipProvider>
       <Tooltip delayDuration={0} open={tooltipOpen} onOpenChange={setTooltipOpen}>
         <TooltipTrigger asChild>
-          <button
+          <a
+            href={linkHref}
             onClick={handleCopy}
             className={cn(
-              "relative inline-block p-1.5 rounded-md transition-all duration-200 ml-2 align-middle",
+              "relative inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md align-middle transition-colors duration-200",
               "hover:bg-neutral-200/60",
               "text-neutral-500 hover:text-neutral-700",
+              "no-underline",
               "print:hidden",
               linkCopied && "text-green-600"
             )}
             aria-label="Copy link to this item"
           >
-            <Link2 className={cn(
-              "h-4 w-4 transition-all",
-              linkCopied && "opacity-0 scale-0"
-            )} />
-            <Check className={cn(
-              "h-4 w-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all text-green-600",
-              linkCopied ? "opacity-100 scale-100" : "opacity-0 scale-0"
-            )} />
-          </button>
+            <Link2
+              aria-hidden
+              className={cn(
+                "absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200",
+                linkCopied && "opacity-0"
+              )}
+            />
+            <Check
+              aria-hidden
+              className={cn(
+                "absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 text-green-600 transition-opacity duration-200",
+                linkCopied ? "opacity-100" : "opacity-0"
+              )}
+            />
+          </a>
         </TooltipTrigger>
         <TooltipContent side="top" sideOffset={5}>
           {linkCopied ? "Link copied!" : "Copy link to this item"}
@@ -297,7 +314,7 @@ const ChecklistItem = ({
     <Card
       ref={cardRef}
       className={cn(
-        "checklist-item group/checklist-item",
+        "checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t",
         "hover:z-20 relative",
         !isExpanded && !isChecked && "hover:bg-muted/40",
@@ -308,20 +325,20 @@ const ChecklistItem = ({
     >
       <CardHeader 
         className={cn(
-          "p-3 pl-3 md:pl-5 cursor-pointer group",
+          "p-3 pl-3 md:pl-5 cursor-pointer",
           isExpanded && "rounded-t-lg"
         )}
+        aria-expanded={isExpanded}
         onClick={toggleExpanded}
         onClickCapture={handleLinkClick}
       >
-        <div className={cn(
-          "grid grid-cols-[auto_1fr_auto] gap-3",
-          itemWhy ? "items-start" : "items-center"
-        )}>
-          <div className={cn(
-            "w-5 h-5 relative",
-            itemWhy ? "mt-1" : "mt-0"
-          )}>
+        <div className="flex gap-3 items-start">
+          <div
+            className={cn(
+              "w-5 h-5 shrink-0 relative",
+              itemWhy ? "mt-1" : "mt-0.5"
+            )}
+          >
             {itemType === 'info' ? (
               <InfoItemIcon />
             ) : (
@@ -336,78 +353,129 @@ const ChecklistItem = ({
               </div>
             )}
           </div>
-          
-          <div>
-            <CardTitle 
+
+          <div className="min-w-0 flex-1 flex flex-col gap-2">
+            <div
               className={cn(
-                isChecked && "text-muted-foreground",
-                isChecked && `opacity-${checkedOpacity}`,
+                "flex gap-3",
+                itemWhy ? "items-start" : "items-start sm:items-center"
               )}
             >
-              <h3 className="inline mt-0 text-lg"
-                id={hasMounted ? itemSlug : undefined}
-                data-slug={itemSlug}
+              <div className="min-w-0 flex-1 flex flex-col gap-1">
+                <CardTitle 
+                  className={cn(
+                    "min-w-0",
+                    isChecked && "text-muted-foreground",
+                    isChecked && `opacity-${checkedOpacity}`,
+                  )}
+                >
+                  <h3
+                    className="inline mt-0 text-lg"
+                    id={hasMounted ? itemSlug : undefined}
+                    data-slug={itemSlug}
+                  >
+                    {itemTitleBadges && itemTitleBadges.length > 0 && (
+                      <>
+                        {itemTitleBadges.map((badgeType, index) => {
+                          const badgeConfig = TITLE_BADGE_TYPES[badgeType];
+                          if (!badgeConfig) return null;
+                          
+                          return (
+                            <Badge 
+                              key={index}
+                              variant={badgeConfig.variant}
+                              className={cn(
+                                "text-xs inline mr-2 align-middle",
+                                isChecked && "opacity-50"
+                              )}
+                            >
+                              {badgeConfig.label}
+                            </Badge>
+                          );
+                        })}
+                      </>
+                    )}
+                    {itemTitle}
+                    <span
+                      className={cn(
+                        "inline-flex h-7 shrink-0 items-center justify-center align-middle ml-2 print:hidden",
+                        isExpanded ? "w-7" : "w-px"
+                      )}
+                      aria-hidden={!isExpanded}
+                    >
+                      {isExpanded && (
+                        <CopyLinkButton
+                          slug={itemSlug}
+                          onCopy={handleLinkCopy}
+                        />
+                      )}
+                    </span>
+                  </h3>
+                </CardTitle>
+
+                <CardDescription 
+                  className={cn(
+                    isChecked && "text-muted-foreground",
+                    isChecked && `opacity-${checkedOpacity}`,
+                  )}
+                >
+                  <Markdown content={itemWhy} isProse={false} />
+                </CardDescription>
+              </div>
+
+              <span
+                className={cn(
+                  "hidden sm:inline-flex shrink-0 items-center justify-center",
+                  "h-8 w-8 mt-1 rounded-full bg-transparent p-1 hover:bg-primary/15",
+                  "text-muted-foreground hover:text-primary",
+                  isExpanded && "text-primary",
+                  "transition-[background-color,color] duration-300 ease-out",
+                  "print:hidden",
+                  isChecked && `opacity-${checkedOpacity}`,
+                )}
               >
-                {/* Render title badges inline at the beginning */}
-                {itemTitleBadges && itemTitleBadges.length > 0 && (
-                  <>
-                    {itemTitleBadges.map((badgeType, index) => {
-                      const badgeConfig = TITLE_BADGE_TYPES[badgeType];
-                      if (!badgeConfig) return null;
-                      
-                      return (
-                        <Badge 
-                          key={index}
-                          variant={badgeConfig.variant}
-                          className={cn(
-                            "text-xs inline mr-2 align-middle",
-                            isChecked && "opacity-50"
-                          )}
-                        >
-                          {badgeConfig.label}
-                        </Badge>
-                      );
-                    })}
-                  </>
-                )}
-                {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
-                {/* <Markdown inlineOnly={true} content={block.title} /> */}
-                {itemTitle}
+                <span
+                  className={cn(
+                    "inline-flex size-6 origin-center items-center justify-center transition-transform duration-300 ease-out",
+                    isExpanded && "rotate-180",
+                  )}
+                >
+                  <ChevronDown aria-hidden className="h-6 w-6" />
+                </span>
+              </span>
+            </div>
 
-                {/* Copy link button - inline, only visible when expanded */}
-                {isExpanded && (
-                  <span className="inline-block ml-2">
-                    <CopyLinkButton slug={itemSlug} onCopy={handleLinkCopy} />
-                  </span>
-                )}
-              </h3>
-            </CardTitle>
-            <CardDescription 
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-expanded={isExpanded}
+              aria-controls={`checklist-body-${itemSlug}`}
               className={cn(
-                isChecked && "text-muted-foreground",
+                "flex h-9 w-full justify-start gap-2 px-2 sm:hidden",
+                "-ml-2",
+                "text-muted-foreground hover:bg-primary/10 hover:text-muted-foreground",
+                "print:hidden",
+                enableTransitions ? "transition-colors duration-300" : "transition-none",
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <Markdown content={itemWhy} isProse={false} />
-            </CardDescription>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 origin-center transition-transform duration-300 ease-out",
+                  isExpanded && "rotate-180",
+                )}
+              >
+                <ChevronDown aria-hidden className="h-4 w-4" />
+              </span>
+              {isExpanded ? "Collapse" : "Expand"}
+            </Button>
           </div>
-
-          <ChevronDown 
-            className={cn(
-              "h-8 w-8 mt-1 text-neutral-500",
-              enableTransitions ? "transition-transform duration-300" : "transition-none",
-              "p-1 rounded-full group-hover:bg-neutral-200/60",
-              "print:hidden",
-              isExpanded && "rotate-180",
-              isExpanded && "group-hover:bg-neutral-300/50",
-              isChecked && "text-muted-foreground",
-              isChecked && `opacity-${checkedOpacity}`,
-            )}
-          />
         </div>
       </CardHeader>
       
       <div
+        id={`checklist-body-${itemSlug}`}
         className={cn(
           "grid mt-2",
           enableTransitions ? "transition-all duration-300" : "transition-none",
@@ -416,7 +484,7 @@ const ChecklistItem = ({
         )}
       >
       <div className="overflow-hidden">
-        <div className="ml-4 md:ml-12 pl-0 mb-6">
+        <div className="ml-4 md:ml-9 pl-0 mb-6">
           <CardContent className={cn(
             "py-0 pt-0 pl-0 md:pl-4 pr-4 md:pr-6",
             "prose prose-slate max-w-none",
