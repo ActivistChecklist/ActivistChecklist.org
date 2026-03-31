@@ -297,7 +297,7 @@ const ChecklistItem = ({
     <Card
       ref={cardRef}
       className={cn(
-        "checklist-item group/checklist-item",
+        "checklist-item",
         "transform mb-0 shadow-none bg-none rounded-none border-muted border-b-0 border-r-0 border-l-0 border-t",
         "hover:z-20 relative",
         !isExpanded && !isChecked && "hover:bg-muted/40",
@@ -308,20 +308,20 @@ const ChecklistItem = ({
     >
       <CardHeader 
         className={cn(
-          "p-3 pl-3 md:pl-5 cursor-pointer group",
+          "p-3 pl-3 md:pl-5 cursor-pointer",
           isExpanded && "rounded-t-lg"
         )}
+        aria-expanded={isExpanded}
         onClick={toggleExpanded}
         onClickCapture={handleLinkClick}
       >
-        <div className={cn(
-          "grid grid-cols-[auto_1fr_auto] gap-3",
-          itemWhy ? "items-start" : "items-center"
-        )}>
-          <div className={cn(
-            "w-5 h-5 relative",
-            itemWhy ? "mt-1" : "mt-0"
-          )}>
+        <div className="flex gap-3 items-start">
+          <div
+            className={cn(
+              "w-5 h-5 shrink-0 relative",
+              itemWhy ? "mt-1" : "mt-0.5"
+            )}
+          >
             {itemType === 'info' ? (
               <InfoItemIcon />
             ) : (
@@ -336,19 +336,20 @@ const ChecklistItem = ({
               </div>
             )}
           </div>
-          
-          <div>
+
+          <div className="min-w-0 flex-1 flex flex-col gap-2">
             <CardTitle 
               className={cn(
+                "min-w-0",
                 isChecked && "text-muted-foreground",
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <h3 className="inline mt-0 text-lg"
+              <h3
+                className="mt-0 text-lg"
                 id={hasMounted ? itemSlug : undefined}
                 data-slug={itemSlug}
               >
-                {/* Render title badges inline at the beginning */}
                 {itemTitleBadges && itemTitleBadges.length > 0 && (
                   <>
                     {itemTitleBadges.map((badgeType, index) => {
@@ -370,11 +371,8 @@ const ChecklistItem = ({
                     })}
                   </>
                 )}
-                {/* Had to remove markdown because our search indexer doesn't know the names of subitems unless the header text is an immediate child (and markdown wraps it in other elements like a div and span) */}
-                {/* <Markdown inlineOnly={true} content={block.title} /> */}
                 {itemTitle}
 
-                {/* Copy link button - inline, only visible when expanded */}
                 {isExpanded && (
                   <span className="inline-block ml-2">
                     <CopyLinkButton slug={itemSlug} onCopy={handleLinkCopy} />
@@ -382,6 +380,7 @@ const ChecklistItem = ({
                 )}
               </h3>
             </CardTitle>
+
             <CardDescription 
               className={cn(
                 isChecked && "text-muted-foreground",
@@ -390,24 +389,37 @@ const ChecklistItem = ({
             >
               <Markdown content={itemWhy} isProse={false} />
             </CardDescription>
-          </div>
 
-          <ChevronDown 
-            className={cn(
-              "h-8 w-8 mt-1 text-neutral-500",
-              enableTransitions ? "transition-transform duration-300" : "transition-none",
-              "p-1 rounded-full group-hover:bg-neutral-200/60",
-              "print:hidden",
-              isExpanded && "rotate-180",
-              isExpanded && "group-hover:bg-neutral-300/50",
-              isChecked && "text-muted-foreground",
-              isChecked && `opacity-${checkedOpacity}`,
-            )}
-          />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-expanded={isExpanded}
+              aria-controls={`checklist-body-${itemSlug}`}
+              className={cn(
+                "-ml-2 h-9 w-full justify-start gap-2 px-2 sm:w-auto",
+                "text-muted-foreground hover:bg-primary/10 hover:text-muted-foreground",
+                "print:hidden",
+                enableTransitions ? "transition-colors duration-300" : "transition-none",
+                isChecked && `opacity-${checkedOpacity}`,
+              )}
+            >
+              <ChevronDown
+                aria-hidden
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  enableTransitions ? "transition-transform duration-300" : "transition-none",
+                  isExpanded && "rotate-180",
+                )}
+              />
+              {isExpanded ? "Collapse" : "Expand"}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
       <div
+        id={`checklist-body-${itemSlug}`}
         className={cn(
           "grid mt-2",
           enableTransitions ? "transition-all duration-300" : "transition-none",
