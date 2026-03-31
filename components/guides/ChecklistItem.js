@@ -351,80 +351,89 @@ const ChecklistItem = ({
                 itemWhy ? "items-start" : "items-start sm:items-center"
               )}
             >
-              <CardTitle 
-                className={cn(
-                  "min-w-0 flex-1",
-                  isChecked && "text-muted-foreground",
-                  isChecked && `opacity-${checkedOpacity}`,
-                )}
-              >
-                <h3
-                  className="inline mt-0 text-lg"
-                  id={hasMounted ? itemSlug : undefined}
-                  data-slug={itemSlug}
-                >
-                  {itemTitleBadges && itemTitleBadges.length > 0 && (
-                    <>
-                      {itemTitleBadges.map((badgeType, index) => {
-                        const badgeConfig = TITLE_BADGE_TYPES[badgeType];
-                        if (!badgeConfig) return null;
-                        
-                        return (
-                          <Badge 
-                            key={index}
-                            variant={badgeConfig.variant}
-                            className={cn(
-                              "text-xs inline mr-2 align-middle",
-                              isChecked && "opacity-50"
-                            )}
-                          >
-                            {badgeConfig.label}
-                          </Badge>
-                        );
-                      })}
-                    </>
+              <div className="min-w-0 flex-1 flex flex-col gap-1">
+                <CardTitle 
+                  className={cn(
+                    "min-w-0",
+                    isChecked && "text-muted-foreground",
+                    isChecked && `opacity-${checkedOpacity}`,
                   )}
-                  {itemTitle}
-                  <span
-                    className={cn(
-                      "inline-flex h-7 shrink-0 items-center justify-center align-middle ml-2 print:hidden",
-                      isExpanded ? "w-7" : "w-px"
-                    )}
-                    aria-hidden={!isExpanded}
+                >
+                  <h3
+                    className="inline mt-0 text-lg"
+                    id={hasMounted ? itemSlug : undefined}
+                    data-slug={itemSlug}
                   >
-                    {isExpanded && (
-                      <CopyLinkButton
-                        slug={itemSlug}
-                        onCopy={handleLinkCopy}
-                      />
+                    {itemTitleBadges && itemTitleBadges.length > 0 && (
+                      <>
+                        {itemTitleBadges.map((badgeType, index) => {
+                          const badgeConfig = TITLE_BADGE_TYPES[badgeType];
+                          if (!badgeConfig) return null;
+                          
+                          return (
+                            <Badge 
+                              key={index}
+                              variant={badgeConfig.variant}
+                              className={cn(
+                                "text-xs inline mr-2 align-middle",
+                                isChecked && "opacity-50"
+                              )}
+                            >
+                              {badgeConfig.label}
+                            </Badge>
+                          );
+                        })}
+                      </>
                     )}
-                  </span>
-                </h3>
-              </CardTitle>
+                    {itemTitle}
+                    <span
+                      className={cn(
+                        "inline-flex h-7 shrink-0 items-center justify-center align-middle ml-2 print:hidden",
+                        isExpanded ? "w-7" : "w-px"
+                      )}
+                      aria-hidden={!isExpanded}
+                    >
+                      {isExpanded && (
+                        <CopyLinkButton
+                          slug={itemSlug}
+                          onCopy={handleLinkCopy}
+                        />
+                      )}
+                    </span>
+                  </h3>
+                </CardTitle>
 
-              <ChevronDown
-                aria-hidden
+                <CardDescription 
+                  className={cn(
+                    isChecked && "text-muted-foreground",
+                    isChecked && `opacity-${checkedOpacity}`,
+                  )}
+                >
+                  <Markdown content={itemWhy} isProse={false} />
+                </CardDescription>
+              </div>
+
+              <span
                 className={cn(
-                  "hidden sm:block shrink-0",
+                  "hidden sm:inline-flex shrink-0 items-center justify-center",
                   "h-8 w-8 mt-1 rounded-full bg-transparent p-1 hover:bg-primary/15",
                   "text-muted-foreground hover:text-primary",
                   isExpanded && "text-primary",
-                  enableTransitions ? "transition-[background-color,color,transform] duration-300" : "transition-none",
+                  "transition-[background-color,color] duration-300 ease-out",
                   "print:hidden",
-                  isExpanded && "rotate-180",
                   isChecked && `opacity-${checkedOpacity}`,
                 )}
-              />
+              >
+                <span
+                  className={cn(
+                    "inline-flex size-6 origin-center items-center justify-center transition-transform duration-300 ease-out",
+                    isExpanded && "rotate-180",
+                  )}
+                >
+                  <ChevronDown aria-hidden className="h-6 w-6" />
+                </span>
+              </span>
             </div>
-
-            <CardDescription 
-              className={cn(
-                isChecked && "text-muted-foreground",
-                isChecked && `opacity-${checkedOpacity}`,
-              )}
-            >
-              <Markdown content={itemWhy} isProse={false} />
-            </CardDescription>
 
             <Button
               type="button"
@@ -441,14 +450,14 @@ const ChecklistItem = ({
                 isChecked && `opacity-${checkedOpacity}`,
               )}
             >
-              <ChevronDown
-                aria-hidden
+              <span
                 className={cn(
-                  "h-4 w-4 shrink-0",
-                  enableTransitions ? "transition-transform duration-300" : "transition-none",
+                  "inline-flex shrink-0 origin-center transition-transform duration-300 ease-out",
                   isExpanded && "rotate-180",
                 )}
-              />
+              >
+                <ChevronDown aria-hidden className="h-4 w-4" />
+              </span>
               {isExpanded ? "Collapse" : "Expand"}
             </Button>
           </div>
@@ -465,7 +474,7 @@ const ChecklistItem = ({
         )}
       >
       <div className="overflow-hidden">
-        <div className="ml-4 md:ml-12 pl-0 mb-6">
+        <div className="ml-4 md:ml-9 pl-0 mb-6">
           <CardContent className={cn(
             "py-0 pt-0 pl-0 md:pl-4 pr-4 md:pr-6",
             "prose prose-slate max-w-none",
