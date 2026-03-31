@@ -51,11 +51,20 @@ const InfoItemIcon = () => {
 const CopyLinkButton = ({ slug, onCopy }) => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState(() => `#${slug}`);
+
+  useEffect(() => {
+    const pathWithSearch = `${window.location.pathname}${window.location.search}`;
+    setLinkHref(`${window.location.origin}${pathWithSearch}#${slug}`);
+  }, [slug]);
 
   const handleCopy = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}${window.location.pathname}#${slug}`;
-    
+    const pathWithSearch = `${window.location.pathname}${window.location.search}`;
+    const url = `${window.location.origin}${pathWithSearch}#${slug}`;
+    window.history.replaceState(null, "", `${pathWithSearch}#${slug}`);
+
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -80,13 +89,14 @@ const CopyLinkButton = ({ slug, onCopy }) => {
     <TooltipProvider>
       <Tooltip delayDuration={0} open={tooltipOpen} onOpenChange={setTooltipOpen}>
         <TooltipTrigger asChild>
-          <button
-            type="button"
+          <a
+            href={linkHref}
             onClick={handleCopy}
             className={cn(
-              "relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md align-middle transition-colors duration-200",
+              "relative inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md align-middle transition-colors duration-200",
               "hover:bg-neutral-200/60",
               "text-neutral-500 hover:text-neutral-700",
+              "no-underline",
               "print:hidden",
               linkCopied && "text-green-600"
             )}
@@ -106,7 +116,7 @@ const CopyLinkButton = ({ slug, onCopy }) => {
                 linkCopied ? "opacity-100" : "opacity-0"
               )}
             />
-          </button>
+          </a>
         </TooltipTrigger>
         <TooltipContent side="top" sideOffset={5}>
           {linkCopied ? "Link copied!" : "Copy link to this item"}
