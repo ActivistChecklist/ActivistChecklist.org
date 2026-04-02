@@ -35,8 +35,7 @@ return [
 
   // Optional: require this exact repo (stops stray webhooks if URL leaks).
   // This is the GitHub "full_name" field, NOT a URL.
-  // Example: 'ActivistChecklist/ActivistChecklist.org'
-  'allowed_repository' => 'ActivistChecklist/ActivistChecklist.org',
+  'allowed_repository' => 'ActivistChecklist/ActivistChecklist',
 
   // Only deploy on this branch push.
   'allowed_ref' => 'refs/heads/main',
