@@ -1,9 +1,9 @@
 // @ts-nocheck
 /**
- * Keystatic admin UI is dev-only and is omitted from static export (BUILD_MODE=static).
+ * Keystatic admin UI is omitted only for static HTML export (BUILD_MODE=static), where there is no API.
+ * Server and preview deployments run it whenever not exporting static.
  */
-export const showKeystaticUI =
-  process.env.NODE_ENV === 'development' && process.env.BUILD_MODE !== 'static';
+export const showKeystaticUI = process.env.BUILD_MODE !== 'static';
 
 import { config, collection, fields, singleton } from '@keystatic/core';
 import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';
