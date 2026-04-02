@@ -3,78 +3,215 @@
     "title": "Activist Checklist",
     "description": "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
   },
-
   "staticPaths": {
     "pgpKeyFile": "/files/publickey.contact@activistchecklist.org.asc"
   },
-
   "items": {
-    "home":               { "label": "Home",                          "href": "/" },
-    "essentials":         { "label": "Security essentials",           "href": "/essentials/",  "description": "Core security practices every activist should follow." },
-    "protest":            { "label": "Prepare for a protest",         "href": "/protest/",     "description": "Digital security for anyone attending a protest." },
-    "travel":             { "label": "Travel & flight security",      "href": "/travel/",      "description": "Digital security practices for activists traveling." },
-    "signal":             { "label": "Signal security",               "href": "/signal/",      "description": "Secure your Signal messaging app for safer communications." },
-    "secondary":          { "label": "Secondary phone",               "href": "/secondary/",   "description": "Set up an extra phone for activism and protests." },
-    "emergency":          { "label": "Emergency planning",            "href": "/emergency/",   "description": "Establish an emergency support network in case you're detained or threatened." },
-    "spyware":            { "label": "Spyware protection",            "href": "/spyware/",     "description": "Protect yourself from spyware and surveillance software." },
-    "organizing":         { "label": "Action organizer checklist",    "href": "/organizing/",  "description": "For movement organizers and coordinators." },
-    "research":           { "label": "Action research & scouting",    "href": "/research/",    "description": "How to conduct research and browse the web anonymously." },
-    "federal":            { "label": "Federal workers",               "href": "/federal/",     "description": "Digital security guidance for federal employees." },
-    "doxxing":            { "label": "Doxxing defense",               "href": "/doxxing/",     "description": "Protect yourself from doxxing and online harassment." },
-    "action":             { "label": "Prepare for a direct action",   "href": "/action/",      "description": "Digital security for direct actions and civil disobedience." },
-    "ice":                { "label": "ICE watch digital security",    "href": "/ice/",         "description": "Digital security for ICE watch and rapid response networks." },
-    "movies":             { "label": "Movies, books, & podcasts",     "href": "/movies/" },
-    "resources":          { "label": "Resources",                     "href": "/resources/" },
-    "police-door-poster": { "label": "\"Police at the door\" poster", "href": "/police/" },
-    "about":              { "label": "About",                         "href": "/about/" },
-    "contribute":         { "label": "Contribute",                    "href": "/contribute/" },
-    "contact":            { "label": "Contact",                       "href": "/contact/" },
-    "privacy":            { "label": "Privacy",                       "href": "/privacy/" },
-    "changelog":          { "label": "Recent site updates",           "href": "/changelog/" },
-    "news":               { "label": "News",                          "href": "/news/" },
-    "flyer":              { "label": "Printable flyer",               "href": "/flyer/" },
-    "links":              { "label": "Remove link tracking",          "href": "/links/" }
+    "home": {
+      "label": "Home",
+      "href": "/"
+    },
+    "essentials": {
+      "label": "Security essentials",
+      "href": "/essentials/",
+      "description": "Core security practices every activist should follow."
+    },
+    "protest": {
+      "label": "Prepare for a protest",
+      "href": "/protest/",
+      "description": "Digital security for anyone attending a protest."
+    },
+    "travel": {
+      "label": "Travel & flight security",
+      "href": "/travel/",
+      "description": "Digital security practices for activists traveling."
+    },
+    "signal": {
+      "label": "Signal security",
+      "href": "/signal/",
+      "description": "Secure your Signal messaging app for safer communications."
+    },
+    "secondary": {
+      "label": "Secondary phone",
+      "href": "/secondary/",
+      "description": "Set up an extra phone for activism and protests."
+    },
+    "emergency": {
+      "label": "Emergency planning",
+      "href": "/emergency/",
+      "description": "Establish an emergency support network in case you're detained or threatened."
+    },
+    "spyware": {
+      "label": "Spyware protection",
+      "href": "/spyware/",
+      "description": "Protect yourself from spyware and surveillance software."
+    },
+    "organizing": {
+      "label": "Action organizer checklist",
+      "href": "/organizing/",
+      "description": "For movement organizers and coordinators."
+    },
+    "research": {
+      "label": "Action research & scouting",
+      "href": "/research/",
+      "description": "How to conduct research and browse the web anonymously."
+    },
+    "federal": {
+      "label": "Federal workers",
+      "href": "/federal/",
+      "description": "Digital security guidance for federal employees."
+    },
+    "doxxing": {
+      "label": "Doxxing defense",
+      "href": "/doxxing/",
+      "description": "Protect yourself from doxxing and online harassment."
+    },
+    "action": {
+      "label": "Prepare for a direct action",
+      "href": "/action/",
+      "description": "Digital security for direct actions and civil disobedience."
+    },
+    "ice": {
+      "label": "ICE watch digital security",
+      "href": "/ice/",
+      "description": "Digital security for ICE watch and rapid response networks."
+    },
+    "movies": {
+      "label": "Movies, books, & podcasts",
+      "href": "/movies/"
+    },
+    "resources": {
+      "label": "Resources",
+      "href": "/resources/"
+    },
+    "police-door-poster": {
+      "label": "\"Police at the door\" poster",
+      "href": "/police/"
+    },
+    "about": {
+      "label": "About",
+      "href": "/about/"
+    },
+    "contribute": {
+      "label": "Contribute",
+      "href": "/contribute/"
+    },
+    "contact": {
+      "label": "Contact",
+      "href": "/contact/"
+    },
+    "privacy": {
+      "label": "Privacy",
+      "href": "/privacy/"
+    },
+    "changelog": {
+      "label": "Recent site updates",
+      "href": "/changelog/"
+    },
+    "news": {
+      "label": "News",
+      "href": "/news/"
+    },
+    "flyer": {
+      "label": "Printable flyer",
+      "href": "/flyer/"
+    },
+    "links": {
+      "label": "Remove link tracking",
+      "href": "/links/"
+    }
   },
-
   "menus": {
     "checklists": {
       "label": "Security Checklists",
       "href": "/checklists/",
       "columns": 2,
-      "items": ["essentials", "signal", "protest", "ice", "doxxing", "travel", "emergency", "secondary"],
+      "items": [
+        "essentials",
+        "signal",
+        "protest",
+        "ice",
+        "doxxing",
+        "travel",
+        "emergency",
+        "secondary"
+      ],
       "footerLinkLabel": "Browse all checklists"
     },
     "resources": {
       "label": "Resources",
       "href": "/resources/",
-      "items": ["links", "police-door-poster", "flyer", "movies", "resources"]
+      "items": [
+        "links",
+        "police-door-poster",
+        "flyer",
+        "movies",
+        "resources"
+      ]
     },
     "about": {
       "label": "About",
       "href": "/about/",
-      "items": ["about", "contribute", "changelog", "contact", "privacy"]
+      "items": [
+        "about",
+        "contribute",
+        "changelog",
+        "contact",
+        "privacy"
+      ]
     }
   },
-
-  "mainNav": ["home", "checklists", "news", "resources", "about"],
-
+  "mainNav": [
+    "home",
+    "checklists",
+    "news",
+    "resources",
+    "about"
+  ],
   "footer": {
     "sections": [
       {
         "title": "Navigation",
-        "items": ["home", "essentials", "news", "about", "movies", "resources", "changelog", "contact", "privacy"]
+        "items": [
+          "home",
+          "essentials",
+          "news",
+          "about",
+          "movies",
+          "resources",
+          "changelog",
+          "contact",
+          "privacy"
+        ]
       },
       {
         "title": "Top Checklists",
         "fromMenu": "checklists"
       }
     ],
-    "social": ["bluesky", "github"]
+    "social": [
+      "bluesky",
+      "github"
+    ]
   },
-
   "social": {
-    "bluesky":  { "label": "Bluesky",  "username": "@activistchecklist.org", "href": "https://bsky.app/profile/activistchecklist.org",            "ariaLabel": "Follow us on Bluesky" },
-    "mastodon": { "label": "Mastodon", "username": "@ActivistChecklist",     "href": "https://kolektiva.social/@activistchecklist",               "ariaLabel": "Follow us on Mastodon" },
-    "github":   { "label": "GitHub",   "username": "ActivistChecklist",      "href": "https://github.com/ActivistChecklist/ActivistChecklist.org", "ariaLabel": "View our GitHub repository" }
+    "bluesky": {
+      "label": "Bluesky",
+      "username": "@activistchecklist.org",
+      "href": "https://bsky.app/profile/activistchecklist.org",
+      "ariaLabel": "Follow us on Bluesky"
+    },
+    "mastodon": {
+      "label": "Mastodon",
+      "username": "@ActivistChecklist",
+      "href": "https://kolektiva.social/@activistchecklist",
+      "ariaLabel": "Follow us on Mastodon"
+    },
+    "github": {
+      "label": "GitHub",
+      "username": "ActivistChecklist",
+      "href": "https://github.com/ActivistChecklist/ActivistChecklist",
+      "ariaLabel": "View our GitHub repository"
+    }
   }
 }
