@@ -1,0 +1,10 @@
+# https://docs.railway.app/guides/config-as-code
+# Builder: Railpack + ./railpack.json (Node 22). Husky is skipped on Railway via scripts/prepare.js.
+# Optional service variable: RAILPACK_INSTALL_CMD=yarn run install:ci (frozen lockfile, prefer-offline).
+
+[build]
+builder = "RAILPACK"
+buildCommand = "yarn build"
+
+[deploy]
+startCommand = "yarn start"

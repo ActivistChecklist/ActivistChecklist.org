@@ -34,7 +34,7 @@ jobs:
             next-cache-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
 
       - name: Yarn install
-        run: yarn install --frozen-lockfile --production=false
+        run: yarn run install:ci
 
       - name: Unit tests
         run: yarn test
