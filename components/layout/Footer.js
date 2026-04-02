@@ -90,7 +90,7 @@ export function Footer() {
                 ),
                 github: (chunks) => (
                   <Link
-                    href="https://github.com/ActivistChecklist/ActivistChecklist.org"
+                    href="https://github.com/ActivistChecklist/ActivistChecklist"
                     className="hover:text-gray-800 underline underline-offset-2"
                   >
                     {chunks}

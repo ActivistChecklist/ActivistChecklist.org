@@ -26,7 +26,7 @@ corepack enable
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/ActivistChecklist/ActivistChecklist.org.git
+git clone https://github.com/ActivistChecklist/ActivistChecklist.git
 cd ActivistChecklist.org
 ```
 

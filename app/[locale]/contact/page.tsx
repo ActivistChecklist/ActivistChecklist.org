@@ -58,7 +58,7 @@ export default async function ContactPage({ params }) {
               </CardHeader>
               <CardFooter>
                 <a
-                  href="https://github.com/ActivistChecklist/ActivistChecklist.org"
+                  href="https://github.com/ActivistChecklist/ActivistChecklist"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-primary hover:underline"
