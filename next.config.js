@@ -18,7 +18,8 @@ const baseConfig = {
     optimizePackageImports: ['lucide-react', 'react-icons'],
   },
   // Native / ESM-heavy deps: bundling breaks default export interop (e.g. "(0 , cH.default) is not a function" during OG image generation).
-  serverExternalPackages: ['sharp', 'satori'],
+  // Keystatic must read KEYSTATIC_* from real process.env at runtime (Railway secrets), not from build-time inlining.
+  serverExternalPackages: ['sharp', 'satori', '@keystatic/core', '@keystatic/next'],
   transpilePackages: ['next-mdx-remote'],
   trailingSlash: true,
   images: {
