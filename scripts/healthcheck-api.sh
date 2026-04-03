@@ -32,10 +32,19 @@ APP_NAME="${API_APP_NAME:-ac-api}"
 API_HEALTHCHECK_PING_URL="${API_HEALTHCHECK_PING_URL:-}"
 PM2_HOME="${API_HEALTH_PM2_HOME:-$PROJECT_DIR/.pm2}"
 export PM2_HOME
-API_HEALTH_USE_NVM="${API_HEALTH_USE_NVM:-1}"
-API_HEALTH_NVM_DIR="${API_HEALTH_NVM_DIR:-$HOME/.nvm}"
-API_HEALTH_NODE_VERSION="${API_HEALTH_NODE_VERSION:-}"
-API_HEALTH_PATH_EXTRA="${API_HEALTH_PATH_EXTRA:-}"
+
+# Shared nvm-yarn lib (scripts/lib/nvm-yarn.sh): prefer NVM_YARN_* from .env;
+# API_HEALTH_* nvm vars are legacy aliases only.
+export NVM_YARN_PROJECT_DIR="$PROJECT_DIR"
+export NVM_YARN_USE_NVM="${NVM_YARN_USE_NVM:-${API_HEALTH_USE_NVM:-0}}"
+export NVM_YARN_NVM_DIR="${NVM_YARN_NVM_DIR:-${API_HEALTH_NVM_DIR:-$HOME/.nvm}}"
+export NVM_YARN_NODE_VERSION="${NVM_YARN_NODE_VERSION:-${API_HEALTH_NODE_VERSION:-}}"
+export NVM_YARN_PATH_EXTRA="${NVM_YARN_PATH_EXTRA:-${API_HEALTH_PATH_EXTRA:-}}"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/nvm-yarn.sh"
+nvm_yarn_err() {
+  log_echo "$1"
+}
 
 init_scripts_file_log "$(resolve_server_log_dir "$PROJECT_DIR")" "api-health-monitor.log" "$(resolve_server_log_lines_keep)"
 mkdir -p "$PM2_HOME" "$PM2_HOME/logs" "$PM2_HOME/pids" "$PM2_HOME/modules"
@@ -61,28 +70,6 @@ hc_ok() {
   fi
 }
 
-# Load nvm / PATH before resolving `yarn`. Otherwise a system-wide yarn (e.g. from
-# Node 18) wins and we never run `nvm use`, so `yarn` hits the engines check with
-# the wrong Node version.
-ensure_yarn() {
-  if [[ -n "$API_HEALTH_PATH_EXTRA" ]]; then
-    export PATH="$API_HEALTH_PATH_EXTRA:$PATH"
-  fi
-  export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
-
-  if [[ "$API_HEALTH_USE_NVM" == "1" ]] && [[ -s "$API_HEALTH_NVM_DIR/nvm.sh" ]]; then
-    # shellcheck disable=SC1090
-    source "$API_HEALTH_NVM_DIR/nvm.sh"
-    if [[ -n "$API_HEALTH_NODE_VERSION" ]]; then
-      nvm use "$API_HEALTH_NODE_VERSION" >/dev/null 2>&1 || true
-    elif [[ -f "$PROJECT_DIR/.nvmrc" ]]; then
-      nvm use >/dev/null 2>&1 || true
-    fi
-  fi
-
-  command -v yarn >/dev/null 2>&1
-}
-
 log_echo "=== API Health Monitor Started ==="
 log_echo "Project: $PROJECT_DIR"
 log_echo "App: $APP_NAME"
@@ -98,7 +85,7 @@ fi
 
 cd "$PROJECT_DIR"
 
-if ! ensure_yarn; then
+if ! nvm_yarn_init; then
   msg=$(
     printf "api-health failed (%s)\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     printf "reason=yarn_not_found\n"
@@ -109,10 +96,14 @@ if ! ensure_yarn; then
   exit 1
 fi
 
-YARN_PATH="$(command -v yarn)"
-log_echo "Yarn: $YARN_PATH"
+if [[ -n "${NVM_YARN_RESOLVED_VERSION:-}" ]]; then
+  log_echo "Node: $(nvm exec "$NVM_YARN_RESOLVED_VERSION" node -v) (nvm exec $NVM_YARN_RESOLVED_VERSION)"
+  log_echo "Yarn: $(nvm exec "$NVM_YARN_RESOLVED_VERSION" command -v yarn)"
+else
+  log_echo "Yarn: $(command -v yarn)"
+fi
 
-PM2_OUTPUT="$("$YARN_PATH" run pm2 status "$APP_NAME" --no-color 2>&1 || true)"
+PM2_OUTPUT="$(nvm_yarn run pm2 status "$APP_NAME" --no-color 2>&1 || true)"
 echo "$PM2_OUTPUT" >> "$LOG_FILE"
 
 if echo "$PM2_OUTPUT" | grep -q "online"; then
@@ -120,10 +111,10 @@ if echo "$PM2_OUTPUT" | grep -q "online"; then
   SERVICE_ONLINE=1
 else
   log_echo "WARN: $APP_NAME is not online; attempting start/restart"
-  START_OUTPUT="$("$YARN_PATH" api:start 2>&1 || true)"
+  START_OUTPUT="$(nvm_yarn api:start 2>&1 || true)"
   echo "$START_OUTPUT" >> "$LOG_FILE"
   sleep 5
-  RECHECK_OUTPUT="$("$YARN_PATH" run pm2 status "$APP_NAME" --no-color 2>&1 || true)"
+  RECHECK_OUTPUT="$(nvm_yarn run pm2 status "$APP_NAME" --no-color 2>&1 || true)"
   echo "$RECHECK_OUTPUT" >> "$LOG_FILE"
 
   if echo "$RECHECK_OUTPUT" | grep -q "online"; then

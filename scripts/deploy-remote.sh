@@ -48,9 +48,8 @@ fi
 if [[ "$REMOTE_SKIP_API" == "1" ]]; then
   echo "===> Skipping API restart (REMOTE_SKIP_API=1)."
 else
-  echo "===> Restarting API (yarn api:restart)..."
-  # Login shell so nvm/yarn from ~/.bashrc are on PATH.
-  ssh "$REMOTE_SSH_HOST" "bash -lc \"cd $(printf %q "$REMOTE_REPO_PATH") && yarn api:restart\""
+  echo "===> Restarting API (run-with-repo-node.sh api:restart)..."
+  ssh "$REMOTE_SSH_HOST" "bash -lc \"cd $(printf %q "$REMOTE_REPO_PATH") && ./scripts/run-with-repo-node.sh api:restart\""
 fi
 
 echo "===> Deploy complete."

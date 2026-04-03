@@ -22,41 +22,10 @@ log() {
   log_stderr_utc "$@"
 }
 
-ensure_yarn() {
-  if command -v yarn >/dev/null 2>&1; then
-    return 0
-  fi
-
-  # Try common user-installed locations (shared hosts often don't expose these to non-login shells).
-  export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-
-  if command -v yarn >/dev/null 2>&1; then
-    return 0
-  fi
-
-  # Try nvm if present.
-  if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-    # shellcheck disable=SC1090
-    source "$HOME/.nvm/nvm.sh"
-    if command -v node >/dev/null 2>&1; then
-      # Use .nvmrc if present; otherwise keep current.
-      if [[ -f "$REPO_DIR/.nvmrc" ]]; then
-        nvm use >/dev/null 2>&1 || true
-      fi
-    fi
-  fi
-
-  # If corepack exists, try it (Node 16+).
-  if command -v corepack >/dev/null 2>&1; then
-    corepack enable >/dev/null 2>&1 || true
-  fi
-
-  if command -v yarn >/dev/null 2>&1; then
-    return 0
-  fi
-
-  log "ERROR: yarn not found. whoami=$(whoami) HOME=$HOME PATH=$PATH"
-  return 127
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/nvm-yarn.sh"
+nvm_yarn_err() {
+  log "$1"
 }
 
 exec 9>"$LOCK_FILE"
@@ -73,10 +42,23 @@ fi
 
 cd "$REPO_DIR"
 
-log "Deploy user=$(whoami) HOME=$HOME"
-log "Node=$(command -v node || echo missing) Yarn=$(command -v yarn || echo missing)"
+export NVM_YARN_PROJECT_DIR="$REPO_DIR"
+export NVM_YARN_USE_NVM="${BUILD_DEPLOY_USE_NVM:-${NVM_YARN_USE_NVM:-0}}"
+export NVM_YARN_NVM_DIR="${BUILD_DEPLOY_NVM_DIR:-${NVM_YARN_NVM_DIR:-$HOME/.nvm}}"
+export NVM_YARN_NODE_VERSION="${BUILD_DEPLOY_NODE_VERSION:-${NVM_YARN_NODE_VERSION:-}}"
+export NVM_YARN_PATH_EXTRA="${BUILD_DEPLOY_PATH_EXTRA:-${NVM_YARN_PATH_EXTRA:-}}"
 
-ensure_yarn
+if ! nvm_yarn_init; then
+  log "ERROR: nvm_yarn_init failed. whoami=$(whoami) HOME=$HOME PATH=$PATH"
+  exit 127
+fi
+
+log "Deploy user=$(whoami) HOME=$HOME"
+if [[ -n "${NVM_YARN_RESOLVED_VERSION:-}" ]]; then
+  log "Node=$(nvm exec "$NVM_YARN_RESOLVED_VERSION" node -v) Yarn=$(nvm exec "$NVM_YARN_RESOLVED_VERSION" command -v yarn)"
+else
+  log "Node=$(command -v node || echo missing) Yarn=$(command -v yarn || echo missing)"
+fi
 
 GIT_BRANCH="${GIT_BRANCH:-main}"
 git fetch origin --prune
@@ -86,11 +68,11 @@ git pull --ff-only "origin" "$GIT_BRANCH"
 # Install must include devDependencies because `yarn buildstatic` runs Next build,
 # which needs build-time tools like postcss/autoprefixer and other dev deps.
 # Yarn v1 will skip devDependencies when NODE_ENV=production, so force them on.
-YARN_PRODUCTION=false yarn install --frozen-lockfile --production=false
+YARN_PRODUCTION=false nvm_yarn install --frozen-lockfile --production=false
 export NODE_ENV=production
 
 # Non-interactive: no URL approval prompt; does not write .approved-urls.json
-CHECKBUILD_URL_APPROVAL=allow BUILD_MODE=static yarn buildstatic
+CHECKBUILD_URL_APPROVAL=allow BUILD_MODE=static nvm_yarn buildstatic
 
 if [[ ! -d "$REPO_DIR/out" ]]; then
   log "Build did not produce out/: $REPO_DIR/out"
