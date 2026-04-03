@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { makePage } from '@keystatic/next/ui/app';
 import keystaticConfig from '../../../keystatic.config';
+import PreviewForkSync from '@/components/keystatic/PreviewForkSync';
 
 const KeystaticPage = makePage(keystaticConfig);
 
@@ -19,6 +20,11 @@ export default function PageClient() {
     }
   }, []);
 
-  return <KeystaticPage />;
+  return (
+    <>
+      <PreviewForkSync />
+      <KeystaticPage />
+    </>
+  );
 }
 
