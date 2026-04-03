@@ -436,14 +436,17 @@ const relatedGuideComponent = block({
 });
 
 // ─── Config ───────────────────────────────────────────────────────────────────
+// PageClient imports this file; use NEXT_PUBLIC_KEYSTATIC_STORAGE so server and browser agree.
+// Default: local (unset, empty, or anything other than "github").
+const keystaticStorageKind =
+  process.env.NEXT_PUBLIC_KEYSTATIC_STORAGE === 'github' ? 'github' : 'local';
 
 export default config({
   storage: {
-    // Local mode unless GitHub env vars are configured
-    kind: process.env.KEYSTATIC_GITHUB_CLIENT_ID ? 'github' : 'local',
+    kind: keystaticStorageKind,
     repo: {
       owner: process.env.KEYSTATIC_GITHUB_REPO_OWNER || 'ActivistChecklist',
-      name: process.env.KEYSTATIC_GITHUB_REPO_NAME || 'ActivistChecklist.org',
+      name: process.env.KEYSTATIC_GITHUB_REPO_NAME || 'ActivistChecklist',
     },
   },
 
