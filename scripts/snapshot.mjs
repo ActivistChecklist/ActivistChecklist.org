@@ -1,16 +1,28 @@
 #!/usr/bin/env node
 /**
  * yarn snapshot [commit-ish]
- * If the working tree is dirty, changes are stashed (including untracked) before the
- * build and restored with git stash pop at the end.
- * Optionally checks out commit-ish, runs buildstatic, renames the newest
- * buildbackups/out-* folder to snapshot-DATETIME-SHORTHASH, then restores the previous HEAD/branch.
+ *
+ * Builds in a detached git worktree under buildbackups/.worktrees/ (never checks out
+ * another ref in your main clone — no stash, no branch switching).
+ *
+ * Default commit-ish is HEAD. Symlinks the main clone’s node_modules into the worktree,
+ * runs yarn buildstatic, then moves the newest buildbackups/out-* into
+ * buildbackups/snapshot-DATETIME-SHORTHASH.
  */
 
 import fs from 'fs';
 import path from 'path';
-import { execFileSync, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+
+import {
+  addDetachedWorktree,
+  linkNodeModulesFromMain,
+  listOutBackups,
+  moveDirPreferRename,
+  removeWorktree,
+  snapshotBuildEnv
+} from './snapshot-worktree.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -21,112 +33,50 @@ function getTimestamp() {
   return now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
 }
 
-function isDirtyGit() {
-  return !!execSync('git status --porcelain', {
-    encoding: 'utf8',
-    cwd: ROOT
-  }).trim();
-}
+const targetCommit = process.argv[2] || 'HEAD';
+const ref = targetCommit;
 
-function git(args, opts = {}) {
-  return execSync(`git ${args}`, {
-    encoding: 'utf8',
-    cwd: ROOT,
-    ...opts
-  }).trim();
-}
-
-function listOutBackups() {
-  if (!fs.existsSync(BACKUP_DIR)) {
-    return [];
-  }
-  return fs
-    .readdirSync(BACKUP_DIR)
-    .filter((name) => name.startsWith('out-'))
-    .map((name) => {
-      const full = path.join(BACKUP_DIR, name);
-      return { name, path: full, mtime: fs.statSync(full).mtimeMs };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-}
-
-const targetCommit = process.argv[2] || null;
-
-let stashed = false;
-if (isDirtyGit()) {
-  console.log('📦 Stashing local changes (tracked + untracked, not ignored)…');
-  execFileSync(
-    'git',
-    ['stash', 'push', '-m', 'yarn snapshot (auto-stash)', '-u'],
-    { cwd: ROOT, stdio: 'inherit' }
-  );
-  stashed = true;
-}
-
-const headSha = git('rev-parse HEAD');
-let symbolicRef = null;
-try {
-  symbolicRef = git('symbolic-ref -q HEAD');
-} catch {
-  symbolicRef = null;
-}
+const env = snapshotBuildEnv();
 
 let exitCode = 0;
-let checkedOut = false;
-let buildOk = false;
-let builtShort = '';
+let wtPath = null;
 
 try {
-  try {
-    if (targetCommit) {
-      console.log(`📌 Checking out ${targetCommit}…`);
-      execFileSync('git', ['checkout', targetCommit], { cwd: ROOT, stdio: 'inherit' });
-      checkedOut = true;
-    }
+  console.log(`🌿 Worktree for ${ref} (detached, main clone unchanged)…`);
+  const wt = addDetachedWorktree(ROOT, ref, 'snapshot');
+  wtPath = wt.path;
+  const builtShort = wt.short;
 
-    execSync('yarn buildstatic', { cwd: ROOT, stdio: 'inherit' });
-    builtShort = git('rev-parse --short HEAD');
-    buildOk = true;
-  } finally {
-    if (checkedOut) {
-      if (symbolicRef) {
-        console.log(`📌 Restoring ${symbolicRef}…`);
-        execFileSync('git', ['checkout', symbolicRef], { cwd: ROOT, stdio: 'inherit' });
-      } else {
-        console.log(`📌 Restoring detached HEAD ${headSha}…`);
-        execFileSync('git', ['checkout', headSha], { cwd: ROOT, stdio: 'inherit' });
-      }
-    }
-  }
+  console.log('📎 Symlink node_modules ← main clone (skip yarn install)…');
+  linkNodeModulesFromMain(ROOT, wtPath);
 
-  if (!buildOk) {
+  console.log('🔨 yarn buildstatic…');
+  execSync('yarn buildstatic', { cwd: wtPath, stdio: 'inherit', env });
+
+  const wtBackups = path.join(wtPath, 'buildbackups');
+  const newest = listOutBackups(wtBackups)[0];
+  if (!newest) {
+    console.error('❌ No buildbackups/out-* backup found after build.');
     exitCode = 1;
   } else {
-    const newest = listOutBackups()[0];
-    if (!newest) {
-      console.error('❌ No buildbackups/out-* backup found after build.');
+    const snapshotName = `snapshot-${getTimestamp()}-${builtShort}`;
+    const dest = path.join(BACKUP_DIR, snapshotName);
+    if (fs.existsSync(dest)) {
+      console.error(`❌ Target already exists: ${snapshotName}`);
       exitCode = 1;
     } else {
-      const snapshotName = `snapshot-${getTimestamp()}-${builtShort}`;
-      const dest = path.join(BACKUP_DIR, snapshotName);
-      if (fs.existsSync(dest)) {
-        console.error(`❌ Target already exists: ${snapshotName}`);
-        exitCode = 1;
-      } else {
-        fs.renameSync(newest.path, dest);
-        console.log(`📸 Snapshot: ${snapshotName}`);
-      }
+      fs.mkdirSync(BACKUP_DIR, { recursive: true });
+      moveDirPreferRename(newest.path, dest);
+      console.log(`📸 Snapshot: ${snapshotName}`);
     }
   }
+} catch (e) {
+  console.error('❌', e.message || e);
+  exitCode = 1;
 } finally {
-  if (stashed) {
-    console.log('📦 Restoring stashed changes (git stash pop)…');
-    try {
-      execFileSync('git', ['stash', 'pop'], { cwd: ROOT, stdio: 'inherit' });
-    } catch {
-      exitCode = exitCode || 1;
-      console.error('❌ git stash pop failed (resolve conflicts if any).');
-    }
+  if (wtPath) {
+    console.log('🧹 Removing build worktree…');
+    removeWorktree(ROOT, wtPath);
   }
 }
 
