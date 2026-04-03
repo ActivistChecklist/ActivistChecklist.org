@@ -78,6 +78,11 @@ nvm_yarn_init() {
     return 1
   fi
 
+  # Cron and Yarn sometimes export npm_config_prefix (e.g. ~/.config/yarn). nvm
+  # refuses to run until it is unset. See: nvm.sh "not compatible with npm_config_prefix".
+  unset npm_config_prefix
+  unset NPM_CONFIG_PREFIX
+
   # shellcheck disable=SC1090
   source "$nvm_dir/nvm.sh"
 
@@ -107,6 +112,8 @@ nvm_yarn_init() {
 
 nvm_yarn() {
   if [[ -n "${NVM_YARN_RESOLVED_VERSION:-}" ]]; then
+    unset npm_config_prefix
+    unset NPM_CONFIG_PREFIX
     nvm exec "$NVM_YARN_RESOLVED_VERSION" yarn "$@"
   else
     command yarn "$@"
