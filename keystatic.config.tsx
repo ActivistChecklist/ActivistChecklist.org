@@ -2,8 +2,12 @@
 /**
  * Keystatic admin UI is omitted only for static HTML export (BUILD_MODE=static), where there is no API.
  * Server and preview deployments run it whenever not exporting static.
+ *
+ * Alias `showAdminUI` matches Keystatic docs naming; this project uses BUILD_MODE, not NODE_ENV,
+ * because we ship GitHub-backed admin on production servers while static FTP export has no server.
  */
 export const showKeystaticUI = process.env.BUILD_MODE !== 'static';
+export const showAdminUI = showKeystaticUI;
 
 import { config, collection, fields, singleton } from '@keystatic/core';
 import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';

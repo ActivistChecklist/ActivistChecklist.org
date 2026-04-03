@@ -2,6 +2,16 @@ const path = require('path');
 const webpack = require('webpack');
 const createNextIntlPlugin = require('next-intl/plugin');
 
+/** When `BUILD_MODE=static`, real app modules are swapped for `lib/stubs/*` (see comment in webpack). */
+const STATIC_EXPORT_STUBS = [
+  [/app[\\/]keystatic[\\/]layout\.tsx$/, 'keystatic-layout-static.tsx'],
+  [/app[\\/]keystatic[\\/]\[\[\.\.\.params\]\][\\/]page\.tsx$/, 'keystatic-page-static.tsx'],
+  [/app[\\/]api[\\/]keystatic[\\/]\[\.\.\.params\][\\/]route\.ts$/, 'keystatic-api-catchall.ts'],
+  [/app[\\/]api[\\/]keystatic[\\/]checklist-item-preview[\\/]route\.ts$/, 'keystatic-checklist-preview.ts'],
+  [/app[\\/]preview[\\/]start[\\/]route\.ts$/, 'preview-start-static.ts'],
+  [/app[\\/]preview[\\/]end[\\/]route\.ts$/, 'preview-end-static.ts'],
+];
+
 const baseConfig = {
   // Smaller server/client bundles and faster compiles for barrel-import icon packages.
   experimental: {
@@ -26,27 +36,19 @@ const baseConfig = {
       fs: false,
     };
 
-    // Static export cannot run Keystatic API routes; swap in 404 stubs at build time.
+    // Static export: Keystatic admin UI still pulls @keystatic/next via PageClient unless we
+    // replace page + layout. API route must be stubbed too: `output: 'export'` requires literal
+    // `dynamic = 'force-static'` (can't branch in source), and the real route uses force-dynamic.
     if (process.env.BUILD_MODE === 'static') {
       const stubDir = path.join(__dirname, 'lib', 'stubs');
-      config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(
-          /[\\/]app[\\/]api[\\/]keystatic[\\/]\[\.\.\.params\][\\/]route\.ts$/,
-          path.join(stubDir, 'keystatic-api-catchall.ts')
-        ),
-        new webpack.NormalModuleReplacementPlugin(
-          /[\\/]app[\\/]api[\\/]keystatic[\\/]checklist-item-preview[\\/]route\.ts$/,
-          path.join(stubDir, 'keystatic-checklist-preview.ts')
-        ),
-        new webpack.NormalModuleReplacementPlugin(
-          /[\\/]app[\\/]preview[\\/]start[\\/]route\.ts$/,
-          path.join(stubDir, 'preview-start-static.ts')
-        ),
-        new webpack.NormalModuleReplacementPlugin(
-          /[\\/]app[\\/]preview[\\/]end[\\/]route\.ts$/,
-          path.join(stubDir, 'preview-end-static.ts')
-        )
-      );
+      for (const [segment, file] of STATIC_EXPORT_STUBS) {
+        config.plugins.push(
+          new webpack.NormalModuleReplacementPlugin(
+            new RegExp(`[\\\\/]${segment.source}`),
+            path.join(stubDir, file)
+          )
+        );
+      }
     }
 
     return config;

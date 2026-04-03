@@ -1,16 +1,25 @@
 import { makeRouteHandler } from '@keystatic/next/route-handler';
 import type { NextRequest } from 'next/server';
-import keystaticConfig from '../../../../keystatic.config';
+import keystaticConfig, { showKeystaticUI } from '../../../../keystatic.config';
 import { rewriteRequestUrlForPublicOrigin } from '@/lib/keystatic-public-request-url';
 
-const { GET: keystaticGET, POST: keystaticPOST } = makeRouteHandler({
-  config: keystaticConfig,
-});
+/** Server deployments (OAuth, GitHub API). Static export swaps this file for `lib/stubs/keystatic-api-catchall.ts`. */
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  return keystaticGET(rewriteRequestUrlForPublicOrigin(request));
+/** When admin is off, never call `makeRouteHandler` (matches Keystatic docs; avoids init when disabled). */
+function notFoundRouteHandler() {
+  return new Response(null, { status: 404 });
 }
 
-export async function POST(request: NextRequest) {
-  return keystaticPOST(rewriteRequestUrlForPublicOrigin(request));
-}
+export const { GET, POST } = (() => {
+  if (!showKeystaticUI) {
+    return { GET: notFoundRouteHandler, POST: notFoundRouteHandler };
+  }
+  const { GET: keystaticGET, POST: keystaticPOST } = makeRouteHandler({
+    config: keystaticConfig,
+  });
+  return {
+    GET: (request: NextRequest) => keystaticGET(rewriteRequestUrlForPublicOrigin(request)),
+    POST: (request: NextRequest) => keystaticPOST(rewriteRequestUrlForPublicOrigin(request)),
+  };
+})();
