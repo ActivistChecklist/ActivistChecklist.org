@@ -3,6 +3,10 @@ const webpack = require('webpack');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const baseConfig = {
+  // Smaller server/client bundles and faster compiles for barrel-import icon packages.
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-icons'],
+  },
   // Native / ESM-heavy deps: bundling breaks default export interop (e.g. "(0 , cH.default) is not a function" during OG image generation).
   serverExternalPackages: ['sharp', 'satori'],
   transpilePackages: ['next-mdx-remote'],

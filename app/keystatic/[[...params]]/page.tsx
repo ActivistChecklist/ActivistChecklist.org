@@ -6,8 +6,8 @@ export const metadata = {
 
 /**
  * Optional catch-all requires at least one entry for static export; `params: undefined` is the
- * /keystatic root. Default dynamicParams=true still allows deeper /keystatic/* in dev.
- * Layout calls notFound when Keystatic is disabled (static export / production).
+ * /keystatic root. Default dynamicParams=true still allows deeper /keystatic/* when Keystatic runs.
+ * Layout calls notFound when Keystatic is disabled (static export only).
  */
 export function generateStaticParams() {
   return [{ params: undefined }];

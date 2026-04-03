@@ -4,8 +4,12 @@
   "description": "ActivistChecklist.org",
   "license": "GPL-3.0",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "node scripts/prepare.js",
+    "install:ci": "yarn install --frozen-lockfile --production=false --prefer-offline --network-timeout 100000",
     "start": "next start",
     "clean": "rm -rf .next build node_modules out && yarn cache clean && yarn install",
     "dev": "concurrently -n \"API,NEXT\" -c \"blue,green\" \"NODE_NO_WARNINGS=1 yarn api:dev\" \"yarn next dev\"",

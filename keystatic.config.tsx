@@ -1,9 +1,9 @@
 // @ts-nocheck
 /**
- * Keystatic admin UI is dev-only and is omitted from static export (BUILD_MODE=static).
+ * Keystatic admin UI is omitted only for static HTML export (BUILD_MODE=static), where there is no API.
+ * Server and preview deployments run it whenever not exporting static.
  */
-export const showKeystaticUI =
-  process.env.NODE_ENV === 'development' && process.env.BUILD_MODE !== 'static';
+export const showKeystaticUI = process.env.BUILD_MODE !== 'static';
 
 import { config, collection, fields, singleton } from '@keystatic/core';
 import { wrapper, block, inline, repeating, mark } from '@keystatic/core/content-components';
@@ -436,14 +436,17 @@ const relatedGuideComponent = block({
 });
 
 // ─── Config ───────────────────────────────────────────────────────────────────
+// PageClient imports this file; use NEXT_PUBLIC_KEYSTATIC_STORAGE so server and browser agree.
+// Default: local (unset, empty, or anything other than "github").
+const keystaticStorageKind =
+  process.env.NEXT_PUBLIC_KEYSTATIC_STORAGE === 'github' ? 'github' : 'local';
 
 export default config({
   storage: {
-    // Local mode unless GitHub env vars are configured
-    kind: process.env.KEYSTATIC_GITHUB_CLIENT_ID ? 'github' : 'local',
+    kind: keystaticStorageKind,
     repo: {
       owner: process.env.KEYSTATIC_GITHUB_REPO_OWNER || 'ActivistChecklist',
-      name: process.env.KEYSTATIC_GITHUB_REPO_NAME || 'ActivistChecklist.org',
+      name: process.env.KEYSTATIC_GITHUB_REPO_NAME || 'ActivistChecklist',
     },
   },
 
