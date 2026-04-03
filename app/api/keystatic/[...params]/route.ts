@@ -2,6 +2,7 @@ import { makeRouteHandler } from '@keystatic/next/route-handler';
 import type { NextRequest } from 'next/server';
 import keystaticConfig, { showKeystaticUI } from '../../../../keystatic.config';
 import { rewriteRequestUrlForPublicOrigin } from '@/lib/keystatic-public-request-url';
+import { beautifyGithubOauthCallbackCloseIfNeeded } from '@/lib/keystatic-github-oauth-callback-response';
 
 /** Server deployments (OAuth, GitHub API). Static export swaps this file for `lib/stubs/keystatic-api-catchall.ts`. */
 export const dynamic = 'force-dynamic';
@@ -22,8 +23,8 @@ function hasGithubKeystaticSecrets() {
   const env = process.env;
   return Boolean(
     env['KEYSTATIC_GITHUB_CLIENT_ID'] &&
-      env['KEYSTATIC_GITHUB_CLIENT_SECRET'] &&
-      env['KEYSTATIC_SECRET']
+    env['KEYSTATIC_GITHUB_CLIENT_SECRET'] &&
+    env['KEYSTATIC_SECRET']
   );
 }
 
@@ -62,7 +63,8 @@ export async function GET(request: NextRequest) {
   if (!handlers) {
     return !showKeystaticUI ? notFoundRouteHandler() : missingSecretsResponse();
   }
-  return handlers.GET(request);
+  const res = await handlers.GET(request);
+  return beautifyGithubOauthCallbackCloseIfNeeded(request, res);
 }
 
 export async function POST(request: NextRequest) {
