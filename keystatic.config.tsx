@@ -438,6 +438,12 @@ const relatedGuideComponent = block({
 // ─── Config ───────────────────────────────────────────────────────────────────
 // PageClient imports this file; use NEXT_PUBLIC_KEYSTATIC_STORAGE so server and browser agree.
 // Default: local (unset, empty, or anything other than "github").
+
+/** Draft preview links in Admin (app/preview/start, lib/content-draft.js, lib/github-content.mjs). */
+const KEYSTATIC_PREVIEW_TO_ENTRY = '/preview/start?branch={branch}&to=/{slug}/';
+/** Singletons have no `{slug}` — open site root so the bar can appear on any page. */
+const KEYSTATIC_PREVIEW_TO_HOME = '/preview/start?branch={branch}&to=/';
+
 const keystaticStorageKind =
   process.env.NEXT_PUBLIC_KEYSTATIC_STORAGE === 'github' ? 'github' : 'local';
 
@@ -460,6 +466,7 @@ export default config({
     announcementBar: singleton({
       label: 'Announcement bar',
       path: 'content/en/announcement/',
+      previewUrl: KEYSTATIC_PREVIEW_TO_HOME,
       schema: {
         active: fields.checkbox({
           label: 'Show announcement bar',
@@ -516,6 +523,7 @@ export default config({
       label: 'Guides',
       slugField: 'title',
       path: 'content/en/guides/*',
+      previewUrl: KEYSTATIC_PREVIEW_TO_ENTRY,
       entryLayout: 'content',
       format: { contentField: 'body' },
       columns: ['title', 'lastUpdated'],
@@ -554,6 +562,7 @@ export default config({
       label: 'Checklist Items',
       slugField: 'title',
       path: 'content/en/checklist-items/*',
+      previewUrl: KEYSTATIC_PREVIEW_TO_ENTRY,
       entryLayout: 'content',
       format: { contentField: 'body' },
       columns: ['title'],
@@ -608,6 +617,7 @@ export default config({
       label: 'Pages',
       slugField: 'title',
       path: 'content/en/pages/*',
+      previewUrl: KEYSTATIC_PREVIEW_TO_ENTRY,
       entryLayout: 'content',
       format: { contentField: 'body' },
       columns: ['title', 'lastUpdated'],
@@ -641,6 +651,7 @@ export default config({
       label: 'News',
       slugField: 'title',
       path: 'content/en/news/*',
+      previewUrl: KEYSTATIC_PREVIEW_TO_ENTRY,
       format: { contentField: 'body' },
       columns: ['title', 'date'],
       schema: {
@@ -670,6 +681,7 @@ export default config({
       label: 'Changelog',
       slugField: 'slug',
       path: 'content/en/changelog/*',
+      previewUrl: KEYSTATIC_PREVIEW_TO_ENTRY,
       format: { contentField: 'body' },
       columns: ['type', 'date'],
       schema: {

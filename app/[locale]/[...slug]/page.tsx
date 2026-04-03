@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { unstable_noStore as noStore } from 'next/cache';
+import { draftMode } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { serialize } from 'next-mdx-remote/serialize';
@@ -8,14 +10,16 @@ import ContentPage from '@/components/pages/Page';
 import TranslationFallbackBanner from '@/components/TranslationFallbackBanner';
 import { mdxOptions } from '@/lib/mdx-options';
 import {
-  getGuide,
-  getPage,
   getAllGuides,
   getAllPages,
-  getChecklistItem,
   extractChecklistItems,
   serializeFrontmatter,
 } from '@/lib/content';
+import {
+  resolveChecklistItem,
+  resolveGuide,
+  resolvePage,
+} from '@/lib/content-draft';
 import { getBaseUrl } from '@/lib/utils';
 import { getOgImagePathForSlug } from '@/lib/og-image';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-config';
@@ -47,10 +51,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { locale, slug: slugParts } = await params;
   const slug = slugParts?.join('/') || '';
+  if ((await draftMode()).isEnabled) {
+    noStore();
+  }
   const baseUrl = getBaseUrl();
 
-  const guide = getGuide(slug, locale);
-  const content = guide || getPage(slug, locale);
+  const guide = await resolveGuide(slug, locale);
+  const content = guide || (await resolvePage(slug, locale));
   if (!content) return {};
 
   const { frontmatter } = content;
@@ -105,9 +112,12 @@ export default async function SlugPage({ params }) {
   const { locale, slug: slugParts } = await params;
   setRequestLocale(locale);
   const slug = slugParts?.join('/') || '';
+  if ((await draftMode()).isEnabled) {
+    noStore();
+  }
 
   // ── Try guide ──────────────────────────────────────────────
-  const guide = getGuide(slug, locale);
+  const guide = await resolveGuide(slug, locale);
   if (guide) {
     const { frontmatter, content, isFallback } = guide;
     const firstSectionIndex = content.indexOf('<Section');
@@ -124,7 +134,7 @@ export default async function SlugPage({ params }) {
     const checklistItems = {};
     await Promise.all(
       itemSlugs.map(async (itemSlug) => {
-        const item = getChecklistItem(itemSlug, locale);
+        const item = await resolveChecklistItem(itemSlug, locale);
         if (item) {
           try {
             const serializedItemBody = await serialize(item.content, mdxOptions);
@@ -166,7 +176,7 @@ export default async function SlugPage({ params }) {
   }
 
   // ── Try page ───────────────────────────────────────────────
-  const page = getPage(slug, locale);
+  const page = await resolvePage(slug, locale);
   if (page) {
     const { frontmatter, content, isFallback } = page;
 
