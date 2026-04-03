@@ -445,6 +445,7 @@ const relatedGuideComponent = block({
 // Default: local (unset, empty, or anything other than "github").
 
 /** Draft preview links in Admin (app/preview/start, lib/content-draft.js, lib/github-content.mjs). */
+/** Fork vs upstream for preview is synced from GitHub when the admin loads (`PreviewForkSync` + /api/preview/sync-repo). Optional `&repo=` to override. */
 const KEYSTATIC_PREVIEW_TO_ENTRY = '/preview/start?branch={branch}&to=/{slug}/';
 /** Singletons have no `{slug}` — open site root so the bar can appear on any page. */
 const KEYSTATIC_PREVIEW_TO_HOME = '/preview/start?branch={branch}&to=/';

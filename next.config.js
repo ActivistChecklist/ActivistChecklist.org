@@ -3,15 +3,11 @@ const webpack = require('webpack');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 /**
- * Omit Keystatic from the webpack graph when BUILD_MODE=static, or on Railway when
- * RAILWAY_ENVIRONMENT_NAME is set and not "production" (Railway injects this; no NEXT_PUBLIC needed).
+ * Omit Keystatic from the webpack graph only for static export (BUILD_MODE=static).
  * Real routes stay in source; stubs replace them at compile time.
  */
 function shouldStubKeystaticWebpackModules() {
-  if (process.env.BUILD_MODE === 'static') return true;
-  const name = process.env.RAILWAY_ENVIRONMENT_NAME;
-  if (name == null || name === '') return false;
-  return String(name).trim() !== 'production';
+  return process.env.BUILD_MODE === 'static';
 }
 
 /** When stubs apply, real app modules are swapped for `lib/stubs/*` (see webpack block below). */

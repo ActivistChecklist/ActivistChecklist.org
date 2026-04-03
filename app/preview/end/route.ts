@@ -11,8 +11,11 @@ export async function POST(req: Request) {
     return new Response('Missing Referer', { status: 400 });
   }
 
+  const store = await cookies();
   (await draftMode()).disable();
-  (await cookies()).delete('ks-branch');
+  store.delete('ks-branch');
+  store.delete('ks-preview-owner');
+  store.delete('ks-preview-repo');
 
   return Response.redirect(referrer, 303);
 }

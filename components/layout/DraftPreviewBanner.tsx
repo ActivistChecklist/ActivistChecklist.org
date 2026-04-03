@@ -18,6 +18,10 @@ import { getGuide, getPage } from '@/lib/content';
 import { getPreviewVsDefaultFileStatus } from '@/lib/github-preview-diff-status.mjs';
 import { keystaticItemEditPath } from '@/lib/keystatic-admin-url';
 import { githubBlobUrl } from '@/lib/github-web-url';
+import {
+  getCanonicalGithubRepo,
+  getGithubRepoForContentFetch
+} from '@/lib/preview-github-repo';
 
 type Props = {
   locale: string;
@@ -88,12 +92,20 @@ export default async function DraftPreviewBanner({ locale, slug }: Props) {
   }
 
   const branch = (await cookies()).get('ks-branch')?.value;
+  const previewRepo = await getGithubRepoForContentFetch();
+  const canonicalRepo = getCanonicalGithubRepo();
+  const isForkPreview =
+    previewRepo.owner !== canonicalRepo.owner ||
+    previewRepo.name !== canonicalRepo.name;
+  const repoLabel = `${previewRepo.owner}/${previewRepo.name}`;
 
   const relativePath = relativeMdxPathForSlug(slug, locale);
   const contentPath =
     relativePath != null ? `content/${locale}/${relativePath}` : null;
   const githubUrl =
-    branch && relativePath ? githubBlobUrl(branch, locale, relativePath) : null;
+    branch && relativePath
+      ? githubBlobUrl(branch, locale, relativePath, previewRepo)
+      : null;
   const ksParts = relativePath ? keystaticPartsFromRelativePath(relativePath) : null;
   const keystaticUrl =
     branch && ksParts
@@ -121,6 +133,18 @@ export default async function DraftPreviewBanner({ locale, slug }: Props) {
           <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
             <span className="text-sm font-semibold tracking-tight text-amber-950 dark:text-amber-50">
               Draft preview
+            </span>
+            <span
+              className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-md border border-amber-700/25 bg-amber-100/40 px-2 py-0.5 font-mono text-[11px] text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/35 dark:text-amber-100/90"
+              title={`Preview content from GitHub: ${repoLabel}`}
+            >
+              <FaGithub className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+              <span className="min-w-0 truncate">{repoLabel}</span>
+              {isForkPreview ? (
+                <span className="shrink-0 rounded bg-amber-800/15 px-1 py-px text-[10px] font-sans font-medium uppercase tracking-wide text-amber-900 dark:bg-amber-400/15 dark:text-amber-100">
+                  fork
+                </span>
+              ) : null}
             </span>
             {breadcrumbTitle ? (
               <span
@@ -169,7 +193,7 @@ export default async function DraftPreviewBanner({ locale, slug }: Props) {
                 href={githubUrl}
                 target="_blank"
                 rel="noreferrer"
-                title={`Open ${contentPath} on GitHub`}
+                title={`Open ${contentPath} on ${repoLabel}@${branch}`}
               >
                 <FaGithub className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 GitHub
