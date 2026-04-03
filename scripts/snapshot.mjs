@@ -6,8 +6,10 @@
  * another ref in your main clone — no stash, no branch switching).
  *
  * Default commit-ish is HEAD. Symlinks the main clone’s node_modules into the worktree,
- * runs yarn buildstatic, then moves the newest buildbackups/out-* into
- * buildbackups/snapshot-DATETIME-SHORTHASH.
+ * runs yarn buildstatic, then copies from buildbackups/.cache/static-<sha>/ into
+ * buildbackups/snapshot-DATETIME-SHORTHASH (cache is filled on first build per commit).
+ *
+ * SNAPSHOT_CACHE=0 disables reuse of .cache.
  */
 
 import fs from 'fs';
@@ -16,10 +18,17 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 import {
+  isSnapshotCacheDisabled,
+  isValidStaticCache,
+  moveBuildOutputToCache,
+  staticBuildCacheDir
+} from './snapshot-build-cache.mjs';
+import {
   addDetachedWorktree,
+  gitRevParse,
+  gitShortSha,
   linkNodeModulesFromMain,
   listOutBackups,
-  moveDirPreferRename,
   removeWorktree,
   snapshotBuildEnv
 } from './snapshot-worktree.mjs';
@@ -42,32 +51,51 @@ let exitCode = 0;
 let wtPath = null;
 
 try {
-  console.log(`🌿 Worktree for ${ref} (detached, main clone unchanged)…`);
-  const wt = addDetachedWorktree(ROOT, ref, 'snapshot');
-  wtPath = wt.path;
-  const builtShort = wt.short;
+  const fullSha = gitRevParse(ROOT, ref);
+  const cacheDir = staticBuildCacheDir(ROOT, fullSha);
 
-  console.log('📎 Symlink node_modules ← main clone (skip yarn install)…');
-  linkNodeModulesFromMain(ROOT, wtPath);
-
-  console.log('🔨 yarn buildstatic…');
-  execSync('yarn buildstatic', { cwd: wtPath, stdio: 'inherit', env });
-
-  const wtBackups = path.join(wtPath, 'buildbackups');
-  const newest = listOutBackups(wtBackups)[0];
-  if (!newest) {
-    console.error('❌ No buildbackups/out-* backup found after build.');
-    exitCode = 1;
-  } else {
-    const snapshotName = `snapshot-${getTimestamp()}-${builtShort}`;
+  if (!isSnapshotCacheDisabled() && isValidStaticCache(cacheDir)) {
+    const short = gitShortSha(ROOT, fullSha);
+    const snapshotName = `snapshot-${getTimestamp()}-${short}`;
     const dest = path.join(BACKUP_DIR, snapshotName);
     if (fs.existsSync(dest)) {
       console.error(`❌ Target already exists: ${snapshotName}`);
       exitCode = 1;
     } else {
+      console.log(`♻️  Cache hit ${fullSha.slice(0, 12)} — skip build, copy from .cache`);
       fs.mkdirSync(BACKUP_DIR, { recursive: true });
-      moveDirPreferRename(newest.path, dest);
+      fs.cpSync(cacheDir, dest, { recursive: true });
       console.log(`📸 Snapshot: ${snapshotName}`);
+    }
+  } else {
+    console.log(`🌿 Worktree for ${ref} (detached, main clone unchanged)…`);
+    const wt = addDetachedWorktree(ROOT, ref, 'snapshot');
+    wtPath = wt.path;
+    const builtShort = wt.short;
+
+    console.log('📎 Symlink node_modules ← main clone (skip yarn install)…');
+    linkNodeModulesFromMain(ROOT, wtPath);
+
+    console.log('🔨 yarn buildstatic…');
+    execSync('yarn buildstatic', { cwd: wtPath, stdio: 'inherit', env });
+
+    const wtBackups = path.join(wtPath, 'buildbackups');
+    const newest = listOutBackups(wtBackups)[0];
+    if (!newest) {
+      console.error('❌ No buildbackups/out-* backup found after build.');
+      exitCode = 1;
+    } else {
+      moveBuildOutputToCache(ROOT, fullSha, newest.path);
+      const snapshotName = `snapshot-${getTimestamp()}-${builtShort}`;
+      const dest = path.join(BACKUP_DIR, snapshotName);
+      if (fs.existsSync(dest)) {
+        console.error(`❌ Target already exists: ${snapshotName}`);
+        exitCode = 1;
+      } else {
+        fs.mkdirSync(BACKUP_DIR, { recursive: true });
+        fs.cpSync(staticBuildCacheDir(ROOT, fullSha), dest, { recursive: true });
+        console.log(`📸 Snapshot: ${snapshotName}`);
+      }
     }
   }
 } catch (e) {
