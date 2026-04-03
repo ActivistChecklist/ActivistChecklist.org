@@ -73,3 +73,4 @@ public/webhooks/deploy-webhook.error.log
 
 # GitHub webhook deploy log (default path written by public/webhooks/deploy.php)
 .deploy-webhook.log
+.deploy-webhook-auth.log
