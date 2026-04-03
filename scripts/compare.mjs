@@ -7,6 +7,9 @@
  *
  * Prompts for two snapshot labels (unless --name-a / --name-b or --no-prompt), normalizes
  * both trees, writes a diff, removes temp static copies, prints where the diff is.
+ *
+ * Reuses buildbackups/.cache/static-<fullSha>/ when present (same commit already built).
+ * SNAPSHOT_CACHE=0 forces a fresh build for both refs.
  */
 
 import fs from 'fs';
@@ -19,10 +22,17 @@ import { fileURLToPath } from 'url';
 import { getTimestamp } from './snapshot-normalize-lib.mjs';
 import { runSnapshotCompare } from './snapshot-compare.mjs';
 import {
+  isSnapshotCacheDisabled,
+  isValidStaticCache,
+  moveBuildOutputToCache,
+  staticBuildCacheDir,
+  symlinkDir
+} from './snapshot-build-cache.mjs';
+import {
   addDetachedWorktree,
+  gitRevParse,
   linkNodeModulesFromMain,
   listOutBackups,
-  moveDirPreferRename,
   removeWorktree,
   snapshotBuildEnv
 } from './snapshot-worktree.mjs';
@@ -90,7 +100,10 @@ Options:
 
 Examples:
   yarn compare main HEAD
-  yarn compare main feature/x --name-a main --name-b feature-x`;
+  yarn compare main feature/x --name-a main --name-b feature-x
+
+Env:
+  SNAPSHOT_CACHE=0   Always run yarn buildstatic (ignore .cache)`;
 }
 
 async function promptLabels(ref1, ref2, nameA, nameB, noPrompt) {
@@ -124,9 +137,24 @@ async function promptLabels(ref1, ref2, nameA, nameB, noPrompt) {
 }
 
 /**
- * Build ref in a worktree; move newest out-* backup into destStatic under main BACKUP_DIR.
+ * Materialize static tree under destStatic: reuse buildbackups/.cache/static-<sha>/ if valid,
+ * else build in a worktree, move out-* into cache, then symlink destStatic → cache.
  */
 function buildRefToStatic(ref, label, destStatic) {
+  const fullSha = gitRevParse(ROOT, ref);
+  const cacheDir = staticBuildCacheDir(ROOT, fullSha);
+
+  if (!isSnapshotCacheDisabled() && isValidStaticCache(cacheDir)) {
+    console.log(`\n♻️  Cache hit ${fullSha.slice(0, 12)} — skip build, reuse static tree`);
+    if (fs.existsSync(destStatic)) {
+      fs.rmSync(destStatic, { recursive: true, force: true });
+    }
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    symlinkDir(cacheDir, destStatic);
+    console.log(`   📁 Static tree: ${path.relative(ROOT, destStatic)} → .cache`);
+    return;
+  }
+
   let wtPath = null;
   try {
     console.log(`\n🌿 Worktree for ${ref} (detached)…`);
@@ -143,12 +171,13 @@ function buildRefToStatic(ref, label, destStatic) {
     if (!newest) {
       throw new Error('No buildbackups/out-* backup found after build.');
     }
+    moveBuildOutputToCache(ROOT, fullSha, newest.path);
     if (fs.existsSync(destStatic)) {
       fs.rmSync(destStatic, { recursive: true, force: true });
     }
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
-    moveDirPreferRename(newest.path, destStatic);
-    console.log(`   📁 Static tree: ${path.relative(ROOT, destStatic)}`);
+    symlinkDir(staticBuildCacheDir(ROOT, fullSha), destStatic);
+    console.log(`   📁 Static tree: ${path.relative(ROOT, destStatic)} → .cache`);
   } finally {
     if (wtPath) {
       console.log('🧹 Removing build worktree…');

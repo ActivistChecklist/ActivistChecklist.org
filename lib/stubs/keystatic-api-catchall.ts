@@ -1,4 +1,4 @@
-/** Replaces Keystatic route handler when BUILD_MODE=static (static HTML export has no API). */
+/** Replaces Keystatic route handler when BUILD_MODE=static (`output: 'export'` requires literal `force-static`). */
 
 export const dynamic = 'force-static';
 

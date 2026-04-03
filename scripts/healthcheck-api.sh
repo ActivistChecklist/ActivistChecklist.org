@@ -61,11 +61,10 @@ hc_ok() {
   fi
 }
 
+# Load nvm / PATH before resolving `yarn`. Otherwise a system-wide yarn (e.g. from
+# Node 18) wins and we never run `nvm use`, so `yarn` hits the engines check with
+# the wrong Node version.
 ensure_yarn() {
-  if command -v yarn >/dev/null 2>&1; then
-    return 0
-  fi
-
   if [[ -n "$API_HEALTH_PATH_EXTRA" ]]; then
     export PATH="$API_HEALTH_PATH_EXTRA:$PATH"
   fi
