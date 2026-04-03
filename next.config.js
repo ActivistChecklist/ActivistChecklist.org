@@ -41,10 +41,11 @@ const baseConfig = {
     // `dynamic = 'force-static'` (can't branch in source), and the real route uses force-dynamic.
     if (process.env.BUILD_MODE === 'static') {
       const stubDir = path.join(__dirname, 'lib', 'stubs');
-      for (const [segment, file] of STATIC_EXPORT_STUBS) {
+      for (const [pathRe, file] of STATIC_EXPORT_STUBS) {
         config.plugins.push(
           new webpack.NormalModuleReplacementPlugin(
-            new RegExp(`[\\\\/]${segment.source}`),
+            // Match `.../app/...` on POSIX or Windows (same as original `/[\\/]app…/` patterns).
+            new RegExp(`[\\\\/]${pathRe.source}`),
             path.join(stubDir, file)
           )
         );
