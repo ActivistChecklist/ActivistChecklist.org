@@ -3836,12 +3836,12 @@ chokidar@3.6.0, chokidar@^3.5.3:
   optionalDependencies:
     fsevents "~2.3.2"
 
-chokidar@^4.0.0:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-4.0.3.tgz#7be37a4c03c9aee1ecfe862a4a23b2c70c205d30"
-  integrity sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==
+chokidar@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-5.0.0.tgz#949c126a9238a80792be9a0265934f098af369a5"
+  integrity sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==
   dependencies:
-    readdirp "^4.0.1"
+    readdirp "^5.0.0"
 
 class-variance-authority@^0.7.1:
   version "0.7.1"
@@ -4176,11 +4176,6 @@ domutils@^3.0.1, domutils@^3.2.2:
     dom-serializer "^2.0.0"
     domelementtype "^2.3.0"
     domhandler "^5.0.3"
-
-dotenv@^16.0.0:
-  version "16.4.7"
-  resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz"
-  integrity sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==
 
 dotenv@^17.4.0:
   version "17.4.0"
@@ -4519,17 +4514,16 @@ fast-uri@^3.0.0, fast-uri@^3.0.1:
   resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.1.0.tgz#66eecff6c764c0df9b762e62ca7edcfb53b4edfa"
   integrity sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==
 
-fastify-cli@^7.4.1:
-  version "7.4.1"
-  resolved "https://registry.yarnpkg.com/fastify-cli/-/fastify-cli-7.4.1.tgz#98d982ed5b247f50afe99f1b50f7699f470de067"
-  integrity sha512-7Jsfj2uLuGWvnxjrGDrHWpSm65+OcVx0ZbTD2wwkz6Wt6KjGm6+ZYwwpdXdwAlzbJYq+LCEMNvDJc4485AQ1vQ==
+fastify-cli@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/fastify-cli/-/fastify-cli-8.0.0.tgz#e6bd05ccfd13a9634a1eca20cb9a3ccb05fa3c7d"
+  integrity sha512-7Jme/6on3e+IbEGr7D9S1QF1KAahNnsTOcS8rcKzwluCtr54+UA8BetdFxRYyN+zO1yNQnM1NlD00xfwkLYLjw==
   dependencies:
     "@fastify/deepmerge" "^3.0.0"
     chalk "^4.1.2"
-    chokidar "^4.0.0"
+    chokidar "^5.0.0"
     close-with-grace "^2.1.0"
     commist "^3.0.0"
-    dotenv "^16.0.0"
     fastify "^5.0.0"
     fastify-plugin "^5.0.0"
     generify "^4.0.0"
@@ -6905,10 +6899,10 @@ readable-stream@^3.0.0:
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
 
-readdirp@^4.0.1:
-  version "4.1.2"
-  resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-4.1.2.tgz#eb85801435fbf2a7ee58f19e0921b068fc69948d"
-  integrity sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==
+readdirp@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-5.0.0.tgz#fbf1f71a727891d685bb1786f9ba74084f6e2f91"
+  integrity sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==
 
 readdirp@~3.6.0:
   version "3.6.0"
