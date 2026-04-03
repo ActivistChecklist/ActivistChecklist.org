@@ -90,8 +90,11 @@ jobs:
           console.log(body);
           if (httpCode !== '200') {
             console.error(
-              '\nDeploy webhook did not return 200. The message above is from the server (if any). ' +
-                'For details, check the host deploy log (build-deploy / .deploy-webhook.log).'
+              '\nDeploy webhook did not return 200. The message above is from the server (if any).\n' +
+                'Host logs: .deploy-webhook.log is only written after auth passes and the deploy script runs.\n' +
+                'On 403 Forbidden, compare GitHub secret DEPLOY_SECRET with server webhook-secrets (HMAC),\n' +
+                'and allowed_repository with github.repository. Also check include/logs/deploy-webhook.error.log\n' +
+                'and the PHP/Apache error log on the server.'
             );
             process.exit(1);
           }

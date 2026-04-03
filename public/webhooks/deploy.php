@@ -31,6 +31,7 @@
  *   - Signature verified with hash_equals before parsing JSON.
  *   - Deploy output is not echoed to the client (reduces information leakage).
  *   - Each run is appended to repo root .deploy-webhook.log by default (override or disable in config).
+ *   - Failed auth (403) may append to repo root .deploy-webhook-auth.log and include/logs/deploy-webhook.error.log.
  *   - Deploy script defaults to repo scripts/build-deploy.sh; must stay under repo root.
  *   - If www-data cannot run your deploy (git/yarn in $HOME), either:
  *       a) Run this pool as your deploy user (PHP-FPM user = you), or
@@ -116,6 +117,26 @@ function earlyLog(string $event, array $meta = []): void {
   ];
   $record = array_merge($base, $meta);
   rotateAndAppendLog($path, (json_encode($record, JSON_UNESCAPED_SLASHES) ?: '{}') . "\n");
+}
+
+/** Best-effort: repo root .deploy-webhook-auth.log for 403s (writable by PHP; gitignored). */
+function appendRepoAuthLog(?string $repoRootConfigured, string $event, array $meta): void {
+  if (!is_string($repoRootConfigured) || $repoRootConfigured === '') {
+    return;
+  }
+  $rp = realpath($repoRootConfigured);
+  if ($rp === false || !is_dir($rp)) {
+    return;
+  }
+  $path = $rp . DIRECTORY_SEPARATOR . '.deploy-webhook-auth.log';
+  $base = [
+    'ts' => gmdate('c'),
+    'event' => $event,
+    'ip' => getClientIp(),
+    'delivery' => $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '',
+  ];
+  $line = (json_encode(array_merge($base, $meta), JSON_UNESCAPED_SLASHES) ?: '{}') . "\n";
+  @file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
 }
 
 function failConfig(string $event, array $meta = []): void {
@@ -212,14 +233,17 @@ $signed = $timestamp . "\n" . $payload;
 $expected = 'sha256=' . hash_hmac('sha256', $signed, $secret);
 if (!is_string($sigHeader) || !hash_equals($expected, $sigHeader)) {
   // Safe debug: never print secrets; avoid printing full signatures.
-  earlyLog('signature_mismatch', [
+  $sigMeta = [
     'received_sig_prefix' => is_string($sigHeader) ? substr($sigHeader, 0, 16) : null,
     'expected_sig_prefix' => substr($expected, 0, 16),
     'payload_len' => strlen($payload),
     'payload_sha256' => hash('sha256', $payload),
     'timestamp' => $timestamp,
     'now' => $now,
-  ]);
+  ];
+  earlyLog('signature_mismatch', $sigMeta);
+  appendRepoAuthLog($config['repo_root'] ?? null, 'signature_mismatch', $sigMeta);
+  error_log('deploy-webhook: signature_mismatch (check DEPLOY_SECRET matches server secret; see deploy-webhook.error.log if configured)');
   http_response_code(403);
   exit('Forbidden');
 }
@@ -239,6 +263,13 @@ if (($data['ref'] ?? '') !== $allowedRef) {
 if (!empty($config['allowed_repository'])) {
   $full = $data['repository']['full_name'] ?? '';
   if ($full !== $config['allowed_repository']) {
+    $repoMeta = [
+      'received_repository' => is_string($full) ? $full : null,
+      'allowed_repository' => $config['allowed_repository'],
+    ];
+    earlyLog('repository_forbidden', $repoMeta);
+    appendRepoAuthLog($config['repo_root'] ?? null, 'repository_forbidden', $repoMeta);
+    error_log('deploy-webhook: repository_forbidden (payload repository.full_name must match allowed_repository in webhook config)');
     http_response_code(403);
     exit('Forbidden');
   }
