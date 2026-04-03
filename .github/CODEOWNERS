@@ -1,9 +1,2 @@
-# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-#
-# This repo is under a personal GitHub account, so owners must be @username entries.
-# Org-style @MyOrg/team-name does not apply on personal accounts.
-#
-# Listed users need write access for automatic review requests to behave as expected.
-# Add more @handles for collaborators who should always be requested on content PRs.
-
-/content/ @ActivistChecklist
+# Default
+* @nimble-turtle
