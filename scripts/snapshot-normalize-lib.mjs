@@ -68,6 +68,31 @@ export function compareNormalizedDirNames(absPath1, absPath2) {
   };
 }
 
+/** Safe folder/diff segment for user-provided compare labels (e.g. branch names). */
+export function sanitizeCompareLabel(str) {
+  const s = String(str || 'snap')
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const out = s.slice(0, 80);
+  return out || 'snap';
+}
+
+/**
+ * Normalized subfolders + diff filename segments from two display names.
+ * Example: "main" / "feature-x" → 1-main, 2-feature-x
+ */
+export function compareNormalizedDirNamesFromLabels(label1, label2) {
+  const slug1 = sanitizeCompareLabel(label1);
+  const slug2 = sanitizeCompareLabel(label2);
+  return {
+    dir1: `1-${slug1}`,
+    dir2: `2-${slug2}`,
+    hash1: slug1,
+    hash2: slug2
+  };
+}
+
 function getFreePort() {
   return new Promise((resolve, reject) => {
     const s = net.createServer();
