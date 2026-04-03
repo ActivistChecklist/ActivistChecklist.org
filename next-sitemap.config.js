@@ -19,6 +19,7 @@ module.exports = {
   exclude: [
     '/api/*',
     '/keystatic*',
+    '/preview*',
     '/_next/*',
     '/404*',
   ],

@@ -37,6 +37,14 @@ const baseConfig = {
         new webpack.NormalModuleReplacementPlugin(
           /[\\/]app[\\/]api[\\/]keystatic[\\/]checklist-item-preview[\\/]route\.ts$/,
           path.join(stubDir, 'keystatic-checklist-preview.ts')
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+          /[\\/]app[\\/]preview[\\/]start[\\/]route\.ts$/,
+          path.join(stubDir, 'preview-start-static.ts')
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+          /[\\/]app[\\/]preview[\\/]end[\\/]route\.ts$/,
+          path.join(stubDir, 'preview-end-static.ts')
         )
       );
     }
