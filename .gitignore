@@ -17,6 +17,7 @@
 /out-dev
 
 # misc
+*.tsbuildinfo
 .DS_Store
 *.pem
 .agents
