@@ -2,7 +2,19 @@ const path = require('path');
 const webpack = require('webpack');
 const createNextIntlPlugin = require('next-intl/plugin');
 
-/** When `BUILD_MODE=static`, real app modules are swapped for `lib/stubs/*` (see comment in webpack). */
+/**
+ * Omit Keystatic from the webpack graph when BUILD_MODE=static, or on Railway when
+ * RAILWAY_ENVIRONMENT_NAME is set and not "production" (Railway injects this; no NEXT_PUBLIC needed).
+ * Real routes stay in source; stubs replace them at compile time.
+ */
+function shouldStubKeystaticWebpackModules() {
+  if (process.env.BUILD_MODE === 'static') return true;
+  const name = process.env.RAILWAY_ENVIRONMENT_NAME;
+  if (name == null || name === '') return false;
+  return String(name).trim() !== 'production';
+}
+
+/** When stubs apply, real app modules are swapped for `lib/stubs/*` (see webpack block below). */
 const STATIC_EXPORT_STUBS = [
   [/app[\\/]keystatic[\\/]layout\.tsx$/, 'keystatic-layout-static.tsx'],
   [/app[\\/]keystatic[\\/]\[\[\.\.\.params\]\][\\/]page\.tsx$/, 'keystatic-page-static.tsx'],
@@ -40,7 +52,7 @@ const baseConfig = {
     // Static export: Keystatic admin UI still pulls @keystatic/next via PageClient unless we
     // replace page + layout. API route must be stubbed too: `output: 'export'` requires literal
     // `dynamic = 'force-static'` (can't branch in source), and the real route uses force-dynamic.
-    if (process.env.BUILD_MODE === 'static') {
+    if (shouldStubKeystaticWebpackModules()) {
       const stubDir = path.join(__dirname, 'lib', 'stubs');
       for (const [pathRe, file] of STATIC_EXPORT_STUBS) {
         config.plugins.push(
