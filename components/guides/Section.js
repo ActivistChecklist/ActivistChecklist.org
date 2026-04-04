@@ -1,7 +1,10 @@
 'use client';
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { ChevronsDown, ChevronsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RiskLevelBadge } from '@/components/RiskLevel';
 import { SectionContext } from '@/contexts/SectionContext';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 /** Sticky offset below viewport top — matches `h-14` top nav */
@@ -39,7 +42,9 @@ const Section = ({ slug, title, description, children }) => {
   const [heroOpacity, setHeroOpacity] = useState(1);
   const [compactOpacity, setCompactOpacity] = useState(0);
   const [dock, setDock] = useState({ left: 0, width: 0 });
-  const [desktopMd, setDesktopMd] = useState(false);
+  /** Hero: full text below sm; icon-only sm–md; icon + label md+ */
+  const [smUp, setSmUp] = useState(false);
+  const [mdUp, setMdUp] = useState(false);
 
   const sectionRef = useRef(null);
   /** Title row only — drives crossfade and scroll math (not description / intro). */
@@ -85,6 +90,16 @@ const Section = ({ slug, title, description, children }) => {
     [childrenArray]
   );
 
+  /** First `<RiskLevel>` in this section (MDX), for the floating header. */
+  const sectionRiskLevel = useMemo(() => {
+    for (const child of childrenArray) {
+      if (React.isValidElement(child) && child.type?.isRiskLevel === true) {
+        return child.props.level ?? 'everyone';
+      }
+    }
+    return null;
+  }, [childrenArray]);
+
   const hasChecklist = checklistItemCount >= 1;
   const showExpandAll = checklistItemCount > 1;
 
@@ -96,15 +111,23 @@ const Section = ({ slug, title, description, children }) => {
   }, []);
 
   useEffect(() => {
-    const mql = window.matchMedia('(min-width: 768px)');
-    const onMq = () => setDesktopMd(mql.matches);
-    onMq();
-    mql.addEventListener('change', onMq);
-    return () => mql.removeEventListener('change', onMq);
+    const mqSm = window.matchMedia('(min-width: 640px)');
+    const mqMd = window.matchMedia('(min-width: 768px)');
+    const sync = () => {
+      setSmUp(mqSm.matches);
+      setMdUp(mqMd.matches);
+    };
+    sync();
+    mqSm.addEventListener('change', sync);
+    mqMd.addEventListener('change', sync);
+    return () => {
+      mqSm.removeEventListener('change', sync);
+      mqMd.removeEventListener('change', sync);
+    };
   }, []);
 
   const onScrollOrResize = useCallback(() => {
-    if (!desktopMd || !hasChecklist) {
+    if (!hasChecklist) {
       setHeroOpacity(1);
       setCompactOpacity(0);
       return;
@@ -145,10 +168,10 @@ const Section = ({ slug, title, description, children }) => {
 
     setHeroOpacity(hero);
     setCompactOpacity(compact);
-  }, [desktopMd, hasChecklist, updateDock]);
+  }, [hasChecklist, updateDock]);
 
   useEffect(() => {
-    if (!desktopMd || !hasChecklist) {
+    if (!hasChecklist) {
       setHeroOpacity(1);
       setCompactOpacity(0);
       return;
@@ -157,16 +180,29 @@ const Section = ({ slug, title, description, children }) => {
     onScrollOrResize();
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize, { passive: true });
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (vv) {
+      vv.addEventListener('resize', onScrollOrResize, { passive: true });
+      vv.addEventListener('scroll', onScrollOrResize, { passive: true });
+    }
     return () => {
       window.removeEventListener('scroll', onScrollOrResize);
       window.removeEventListener('resize', onScrollOrResize);
+      if (vv) {
+        vv.removeEventListener('resize', onScrollOrResize);
+        vv.removeEventListener('scroll', onScrollOrResize);
+      }
     };
-  }, [desktopMd, hasChecklist, onScrollOrResize, updateDock]);
+  }, [hasChecklist, onScrollOrResize, updateDock]);
 
-  const useFloating = desktopMd && hasChecklist;
+  /** Sticky compact bar: all viewports (was md+ only; phones need it too). */
+  const useFloating = hasChecklist;
+
+  const expandTooltipLabel = isExpanded ? 'Collapse all' : 'Expand all';
 
   return (
     <SectionContext.Provider value={{ expandTrigger, triggerExpand }}>
+      <TooltipProvider delayDuration={400}>
       <section ref={sectionRef} className="relative">
         {useFloating && (
           <div
@@ -184,20 +220,60 @@ const Section = ({ slug, title, description, children }) => {
               pointerEvents: compactOpacity > 0.08 ? 'auto' : 'none',
             }}
           >
-            <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
-              <p className="text-base font-semibold tracking-tight text-foreground truncate m-0" aria-hidden="true">
-                {title}
-              </p>
-              {showExpandAll && (
-                <Button
-                  variant="defaultOutline"
-                  size="sm"
-                  className="gap-2 shrink-0"
-                  onClick={() => triggerExpand(!isExpanded)}
-                >
-                  {isExpanded ? 'Collapse all' : 'Expand all'}
-                </Button>
-              )}
+            <div className="flex items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-5 sm:py-3.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <p className="text-base font-semibold tracking-tight text-foreground truncate m-0" aria-hidden="true">
+                  {title}
+                </p>
+                {sectionRiskLevel != null && (
+                  <span aria-hidden className="inline-flex shrink-0">
+                    <RiskLevelBadge
+                      level={sectionRiskLevel}
+                      showLabel={mdUp}
+                      className="mr-0! shrink-0"
+                    />
+                  </span>
+                )}
+              </div>
+              {showExpandAll &&
+                (mdUp ? (
+                  <Button
+                    type="button"
+                    variant="defaultOutline"
+                    size="sm"
+                    className="h-8 shrink-0 gap-2 px-3"
+                    onClick={() => triggerExpand(!isExpanded)}
+                  >
+                    {isExpanded ? (
+                      <ChevronsUp className="size-4 shrink-0" aria-hidden />
+                    ) : (
+                      <ChevronsDown className="size-4 shrink-0" aria-hidden />
+                    )}
+                    <span>{expandTooltipLabel}</span>
+                  </Button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="defaultOutline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => triggerExpand(!isExpanded)}
+                        aria-label={isExpanded ? 'Collapse all checklist items in this section' : 'Expand all checklist items in this section'}
+                      >
+                        {isExpanded ? (
+                          <ChevronsUp className="size-4" aria-hidden />
+                        ) : (
+                          <ChevronsDown className="size-4" aria-hidden />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="end">
+                      {expandTooltipLabel}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
           </div>
         )}
@@ -205,26 +281,71 @@ const Section = ({ slug, title, description, children }) => {
         <div className="mb-4 prose prose-slate max-w-none">
           <div
             ref={titleRowRef}
-            className={cn(
-              'transition-opacity duration-200 ease-out',
-              useFloating && 'md:transition-opacity',
-            )}
+            className="transition-opacity duration-200 ease-out"
             style={useFloating ? { opacity: heroOpacity } : undefined}
           >
             <div className="relative flex flex-col sm:block">
-              <h2 id={slug} className={showExpandAll ? 'sm:pr-32' : ''}>
+              <h2
+                id={slug}
+                className={
+                  showExpandAll
+                    ? mdUp
+                      ? 'sm:pr-12 md:pr-[12.5rem]'
+                      : 'sm:pr-12'
+                    : ''
+                }
+              >
                 {title}
               </h2>
-              {showExpandAll && (
-                <Button
-                  variant="defaultOutline"
-                  size="sm"
-                  className="gap-2 print:hidden max-sm:w-full sm:w-fit sm:shrink-0 sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0"
-                  onClick={() => triggerExpand(!isExpanded)}
-                >
-                  {isExpanded ? 'Collapse all' : 'Expand all'}
-                </Button>
-              )}
+              {showExpandAll &&
+                (!smUp ? (
+                  <Button
+                    type="button"
+                    variant="defaultOutline"
+                    size="sm"
+                    className="print:hidden max-sm:w-full sm:w-fit sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0 sm:shrink-0"
+                    onClick={() => triggerExpand(!isExpanded)}
+                  >
+                    {expandTooltipLabel}
+                  </Button>
+                ) : mdUp ? (
+                  <Button
+                    type="button"
+                    variant="defaultOutline"
+                    size="sm"
+                    className="print:hidden max-sm:w-full sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0 sm:shrink-0 sm:flex sm:gap-2 sm:items-center"
+                    onClick={() => triggerExpand(!isExpanded)}
+                  >
+                    {isExpanded ? (
+                      <ChevronsUp className="size-4 shrink-0" aria-hidden />
+                    ) : (
+                      <ChevronsDown className="size-4 shrink-0" aria-hidden />
+                    )}
+                    <span>{expandTooltipLabel}</span>
+                  </Button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="defaultOutline"
+                        size="icon"
+                        className="print:hidden max-sm:w-full sm:absolute sm:bottom-0 sm:right-0 mt-2 sm:mt-0 sm:h-8 sm:w-8 sm:shrink-0"
+                        aria-label={isExpanded ? 'Collapse all checklist items in this section' : 'Expand all checklist items in this section'}
+                        onClick={() => triggerExpand(!isExpanded)}
+                      >
+                        {isExpanded ? (
+                          <ChevronsUp className="size-4" aria-hidden />
+                        ) : (
+                          <ChevronsDown className="size-4" aria-hidden />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="end">
+                      {expandTooltipLabel}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
           </div>
           {description && (
@@ -240,6 +361,7 @@ const Section = ({ slug, title, description, children }) => {
         </div>
         {checklistChildren}
       </section>
+      </TooltipProvider>
     </SectionContext.Provider>
   );
 };
