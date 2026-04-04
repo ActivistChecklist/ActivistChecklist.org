@@ -11,7 +11,7 @@
 [![GPL-3.0](https://img.shields.io/badge/GPL--3.0-blue?logo=gnu&logoColor=white)](LICENSE-CODE)
 [![CC BY-SA 4.0](https://img.shields.io/badge/CC%20BY--SA%204.0-ef9421?logo=creativecommons&logoColor=white)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Local development](#local-development) • [Repository layout](#repository-layout) •  [License](#license)
+[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Stack](#stack) • [Pull requests](#pull-requests) • [Community](#community) • [Security](#security) • [Local development](#local-development) • [Repository layout](#repository-layout) • [License](#license)
 
 </div>
 
@@ -27,7 +27,17 @@ You don't need to be a coder to make edits to this site. The site has a **visual
 
 Instructions: **[Contribute to Activist Checklist →](https://activistchecklist.org/contribute/)**
 
+## Contact
+
+- **[GitHub Issues](https://github.com/ActivistChecklist/ActivistChecklist/issues):** bugs, ideas, and public discussion about the project.
+- **[Contact](https://activistchecklist.org/contact/):** reach the maintainers directly when GitHub isn’t the right channel.
+- **Security:** Please do not open public issues for unfixed vulnerabilities. Report them privately through **[our contact page](https://activistchecklist.org/contact/)** (encrypted email and Signal is available).
+
 ## Local development
+
+### Stack
+
+[Next.js](https://nextjs.org/) (App Router), content lives in **MDX** files under `content/`, [**Keystatic**](https://keystatic.com/) for the visual editor, [**Tailwind CSS**](https://tailwindcss.com/), [**next-intl**](https://next-intl.dev/) for locales, and a small [**Fastify**](https://fastify.dev/) API (contact form, stats, newsletter) alongside Next’s own API routes. English is the default locale (no URL prefix); additional languages are rolling out — see `i18n/` and `messages/`.
 
 **Prerequisites (macOS):** Install [Homebrew](https://brew.sh) if you do not have it, then:
 
@@ -35,7 +45,7 @@ Instructions: **[Contribute to Activist Checklist →](https://activistchecklist
 brew install node yarn ffmpeg exiftool
 ```
 
-That gives you Node and Yarn for this project, plus **ffmpeg** and **exiftool** used by the image/video metadata scrubbing (`yarn metadata scrub`). On Linux or Windows, install the same tools with your package manager or each tool’s official packages.
+That gives you Node and Yarn for this project, plus **ffmpeg** and **exiftool** for image/video metadata scrubbing (e.g. `yarn metadata scrub`). On Linux or Windows, install the same tools with your package manager or each tool’s official packages.
 
 ```bash
 # Get started
@@ -45,6 +55,8 @@ yarn install
 cp .env.template .env   # defaults are fine for basic editing
 yarn dev
 ```
+
+**Keystatic & `.env`:** Editing uses **local filesystem** storage by default (no GitHub OAuth required). To use **GitHub-backed** storage, OAuth app values, or preview flows, set the optional variables documented in **`.env.template`**.
 
 - **Site:** You can view the site at [http://localhost:3000](http://localhost:3000)
 - **Fastify API (contact, stats, newsletter):** port `4321` by default (`API_PORT`), routes under `/api-server/` — The site runs fine without this API
