@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Search from "@/components/Search"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import { DarkModeToggle } from "@/components/layout/DarkModeToggle"
 import { navigationConfig, isNavItemActive, isSubItemActive } from "@/config/navigation"
 import {
   NavigationMenu,
@@ -152,6 +153,7 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                   </nav>
                   <div className="pt-4 border-t mt-4 flex items-center gap-2">
                     <Search variant="searchbar" />
+                    <DarkModeToggle />
                   </div>
                 </SheetContent>
               </Sheet>
@@ -261,8 +263,8 @@ const TopNav = ({ hideOnScroll = false, maxWidth }) => {
                     <social.icon className="h-5 w-5" aria-hidden="true" />
                   </a>
                 ))}
-                <LanguageSwitcher />
                 <Search variant="button" />
+                <LanguageSwitcher />
               </div>
             </div>
           </div>
