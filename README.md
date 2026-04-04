@@ -11,7 +11,7 @@
 [![GPL-3.0](https://img.shields.io/badge/GPL--3.0-blue?logo=gnu&logoColor=white)](LICENSE-CODE)
 [![CC BY-SA 4.0](https://img.shields.io/badge/CC%20BY--SA%204.0-ef9421?logo=creativecommons&logoColor=white)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Local development](#local-development) • [Repository layout](#repository-layout) • [License](#license)
+[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Internationalization](#internationalization) • [Contact](#contact) • [Local development](#local-development) • [Repository layout](#repository-layout) • [License](#license)
 
 </div>
 
@@ -27,17 +27,23 @@ You don't need to be a coder to make edits to this site. The site has a **visual
 
 Instructions: **[Contribute to Activist Checklist →](https://activistchecklist.org/contribute/)**
 
+## Internationalization & translation
+
+**[Crowdin](https://crowdin.com/) is coming soon**. Anyone will be able to contribute translations there. We’re starting with **Spanish**.
+
+All translation work goes through Crowdin. Only edit English site copy under `content/en/`. Do not add or change translated pages in this repo.
+
 ## Contact
 
 - **[GitHub Issues](https://github.com/ActivistChecklist/ActivistChecklist/issues):** bugs, ideas, and public discussion about the project.
 - **[Contact](https://activistchecklist.org/contact/):** reach the maintainers directly when GitHub isn’t the right channel.
-- **Security:** Please do not open public issues for unfixed vulnerabilities. Report them privately through **[our contact page](https://activistchecklist.org/contact/)** (encrypted email and Signal is available).
+- **Security:** Please do not open public issues for unfixed vulnerabilities. Report them privately through [our contact page](https://activistchecklist.org/contact/) (encrypted email and Signal is available).
 
 ## Local development
 
 ### Stack
 
-[Next.js](https://nextjs.org/) (App Router), content lives in **MDX** files under `content/`, [**Keystatic**](https://keystatic.com/) for the visual editor, [**Tailwind CSS**](https://tailwindcss.com/), [**next-intl**](https://next-intl.dev/) for locales, and a small [**Fastify**](https://fastify.dev/) API (contact form, stats, newsletter) alongside Next’s own API routes. English is the default locale (no URL prefix); additional languages are rolling out — see `i18n/` and `messages/`.
+[Next.js](https://nextjs.org/) (App Router), content lives in **MDX** files under `content/`, [**Keystatic**](https://keystatic.com/) for the visual editor, [**Tailwind CSS**](https://tailwindcss.com/), [**next-intl**](https://next-intl.dev/) for locales, and a small [**Fastify**](https://fastify.dev/) API (contact form, stats, newsletter) alongside Next’s own API routes.
 
 **Prerequisites (macOS):** Install [Homebrew](https://brew.sh) if you do not have it, then:
 
@@ -71,8 +77,9 @@ ActivistChecklist.org
 ├── config/        Navigation, icons, site config
 ├── content/       MDX source (English under content/en/, etc.)
 ├── hooks/         React hooks
-├── i18n/          Internationalization
+├── i18n/          Internationalization (routing, request config)
 ├── lib/           Shared libraries
+├── messages/      UI strings per locale (e.g. en.json, es.json)
 ├── public/        Static assets
 ├── scripts/       Build, deploy, and tooling
 ├── styles/        CSS
