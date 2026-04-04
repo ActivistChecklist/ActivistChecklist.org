@@ -4,10 +4,32 @@
  * next-intl `localePrefix: 'as-needed'`: English has no `/en/` prefix; Spanish stays `/es/...`.
  * postbuild mirrors `out/en/*` to the site root after sitemap generation; the sitemap should
  * list canonical public URLs, not internal `/en/` paths.
+ *
+ * When `NEXT_PUBLIC_SHOW_TRANSLATION_UI` is not `true` in production (same as LanguageSwitcher),
+ * `/es/*` URLs are omitted from the sitemap and hreflang omits `es`.
  */
+
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+
+['.env', '.env.local', '.env.production', '.env.production.local'].forEach((rel) => {
+  const abs = path.join(process.cwd(), rel);
+  if (fs.existsSync(abs)) dotenv.config({ path: abs, override: true });
+});
+
+const { buildLastmodByPath, lookupContentLastmod } = require('./scripts/sitemap-lastmod-map.cjs');
+const {
+  buildHreflangAlternateRefs,
+  seoPriorityAndChangefreq,
+  isTranslationUiVisible,
+} = require('./scripts/sitemap-seo-fields.cjs');
 
 /** Dedupe after canonicalization (e.g. if both `/en/foo/` and `/foo/` ever appeared). */
 const canonicalLocEmitted = new Set();
+
+/** Path → YYYY-MM-DD from guide/page/news/changelog MDX frontmatter (built once per run). */
+const lastmodByPath = buildLastmodByPath();
 
 module.exports = {
   siteUrl: 'https://activistchecklist.org',
@@ -16,6 +38,8 @@ module.exports = {
   generateIndexSitemap: false,
   output: 'export',
   trailingSlash: true,
+  /** Use content dates from frontmatter when available; do not stamp every URL with build time. */
+  autoLastmod: false,
   exclude: [
     '/api/*',
     '/keystatic*',
@@ -36,17 +60,31 @@ module.exports = {
     }
 
     const dedupeKey = loc.endsWith('/') || loc === '/' ? loc : `${loc}/`;
+
+    if (
+      !isTranslationUiVisible() &&
+      (dedupeKey.startsWith('/es/') || dedupeKey === '/es')
+    ) {
+      return null;
+    }
+
     if (canonicalLocEmitted.has(dedupeKey)) {
       return null;
     }
     canonicalLocEmitted.add(dedupeKey);
 
+    const contentLastmod = lookupContentLastmod(dedupeKey, lastmodByPath);
+    /** W3C date (YYYY-MM-DD) — valid for sitemap lastmod; avoids bogus "build time" stamps. */
+    const lastmod = contentLastmod || undefined;
+
+    const { priority, changefreq } = seoPriorityAndChangefreq(dedupeKey);
+
     return {
       loc,
-      lastmod: config.autoLastmod ? new Date().toISOString() : undefined,
-      changefreq: config.changefreq,
-      priority: config.priority,
-      alternateRefs: config.alternateRefs ?? [],
+      lastmod,
+      changefreq,
+      priority,
+      alternateRefs: buildHreflangAlternateRefs(dedupeKey),
       trailingSlash: config.trailingSlash,
     };
   },
