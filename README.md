@@ -11,7 +11,7 @@
 [![GPL-3.0](https://img.shields.io/badge/GPL--3.0-blue?logo=gnu&logoColor=white)](LICENSE-CODE)
 [![CC BY-SA 4.0](https://img.shields.io/badge/CC%20BY--SA%204.0-ef9421?logo=creativecommons&logoColor=white)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Stack](#stack) • [Pull requests](#pull-requests) • [Community](#community) • [Security](#security) • [Local development](#local-development) • [Repository layout](#repository-layout) • [License](#license)
+[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Local development](#local-development) • [Repository layout](#repository-layout) • [License](#license)
 
 </div>
 
