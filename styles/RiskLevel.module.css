@@ -75,12 +75,14 @@
   }
 }
 
+/* Dark styles for `ul li::before`: nested `:global(.dark) &` makes Tailwind v4 emit
+   invalid empty `:global(.dark) :is()` under CSS Modules; use flat selectors instead. */
 .everyone .riskLevelBody ul li::before {
   @apply text-green-800;
+}
 
-  :global(.dark) & {
-    @apply text-green-200;
-  }
+:global(.dark) .everyone .riskLevelBody ul li::before {
+  @apply text-green-200;
 }
 
 .everyone .riskLevelIntro {
@@ -136,10 +138,11 @@
 .medium_risk .riskLevelBody ul li::before,
 .medium .riskLevelBody ul li::before {
   @apply text-amber-800;
+}
 
-  :global(.dark) & {
-    @apply text-amber-200;
-  }
+:global(.dark) .medium_risk .riskLevelBody ul li::before,
+:global(.dark) .medium .riskLevelBody ul li::before {
+  @apply text-amber-200;
 }
 
 .medium_risk .riskLevelIntro,
@@ -172,10 +175,11 @@
 .high_risk .riskLevelBody ul li::before,
 .high .riskLevelBody ul li::before {
   @apply text-red-800;
+}
 
-  :global(.dark) & {
-    @apply text-red-200;
-  }
+:global(.dark) .high_risk .riskLevelBody ul li::before,
+:global(.dark) .high .riskLevelBody ul li::before {
+  @apply text-red-200;
 }
 
 .high_risk .riskLevelIntro,

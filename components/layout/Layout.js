@@ -32,7 +32,7 @@ const LayoutContent = ({ children, className, fullWidthMain = false, searchable 
   }
 
   return (
-    <ThemeProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <DebugProvider>
         <SidebarProvider>
           <TableOfContentsProvider>
