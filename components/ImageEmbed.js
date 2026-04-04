@@ -65,24 +65,24 @@ export const ImageEmbed = ({
     </Link>
   ) : imageElement;
 
-  const captionContent = children
-    ? <div className="text-sm text-muted-foreground prose-sm max-w-none">{children}</div>
-    : null;
+  const captionClasses =
+    'mt-2 block w-full max-w-full text-center text-sm text-muted-foreground prose-sm max-w-none muted-links px-2 sm:px-0';
 
   if (alignment === 'left' || alignment === 'right') {
     return (
       <>
         {wrappedImage}
-        {captionContent && <div className="mt-2 text-center max-w-full muted-links px-2 sm:px-0">{captionContent}</div>}
+        {children ? <span className={captionClasses}>{children}</span> : null}
       </>
     );
   }
 
+  // Use <span className="block"> (not <div>) so markdown images inside <p> stay valid HTML and hydrate cleanly.
   return (
-    <div className={cn("my-4", className)}>
+    <span className={cn('my-4 block', className)}>
       {wrappedImage}
-      {captionContent && <div className="mt-2 text-center max-w-full muted-links px-2 sm:px-0">{captionContent}</div>}
-    </div>
+      {children ? <span className={captionClasses}>{children}</span> : null}
+    </span>
   );
 };
 
