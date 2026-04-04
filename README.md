@@ -5,6 +5,12 @@
 
 **Practical digital security guides for activists and organizers.**
 
+[![PR checks](https://github.com/ActivistChecklist/ActivistChecklist/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/ActivistChecklist/ActivistChecklist/actions/workflows/pr-checks.yml)
+[![Deploy](https://github.com/ActivistChecklist/ActivistChecklist/actions/workflows/deploy-webhook.yml/badge.svg)](https://github.com/ActivistChecklist/ActivistChecklist/actions/workflows/deploy-webhook.yml)
+[![Node](https://img.shields.io/badge/node-%3E%3D22%20%3C23-339933?logo=node.js&logoColor=white)](https://github.com/ActivistChecklist/ActivistChecklist/blob/main/package.json)
+[![GPL-3.0](https://img.shields.io/badge/GPL--3.0-blue?logo=gnu&logoColor=white)](LICENSE-CODE)
+[![CC BY-SA 4.0](https://img.shields.io/badge/CC%20BY--SA%204.0-ef9421?logo=creativecommons&logoColor=white)](https://creativecommons.org/licenses/by-sa/4.0/)
+
 [Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Local development](#local-development) • [Repository layout](#repository-layout) •  [License](#license)
 
 </div>
@@ -17,7 +23,7 @@ You can view the live site here: **[ActivistChecklist.org →](https://activistc
 
 ## Edit content
 
-You don't need to be a coder to make edits to this site. The site has a **visual editor** so you can propose changes. All you need is a GitHub account and a few setup steps — no Git CLI required for the happy path.
+You don't need to be a coder to make edits to this site. The site has a **visual editor** so you can propose changes. All you need is a GitHub account.
 
 Instructions: **[Contribute to Activist Checklist →](https://activistchecklist.org/contribute/)**
 
@@ -40,7 +46,7 @@ cp .env.template .env   # defaults are fine for basic editing
 yarn dev
 ```
 
-- **Site:** You can view the site [http://localhost:3000](http://localhost:3000)
+- **Site:** You can view the site at [http://localhost:3000](http://localhost:3000)
 - **Fastify API (contact, stats, newsletter):** port `4321` by default (`API_PORT`), routes under `/api-server/` — The site runs fine without this API
 
 ## Repository layout
