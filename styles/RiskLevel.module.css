@@ -11,8 +11,26 @@
   border: none;
 }
 
+/* Pill colors (also used by floating section header; not only inside .riskLevel). */
+.badgeToneEveryone {
+  @apply bg-green-200 dark:bg-green-800/70 text-green-900 dark:text-green-100;
+}
+
+.badgeToneMedium {
+  @apply bg-amber-200 dark:bg-amber-800/70 text-amber-900 dark:text-amber-100;
+}
+
+.badgeToneHigh {
+  @apply bg-red-200 dark:bg-red-800/70 text-red-900 dark:text-red-100;
+}
+
 .riskLevelBadgeInline {
   @apply mr-2;
+}
+
+/* Signal bars only (e.g. floating section header on narrow viewports). */
+.riskLevelBadgeBarsOnly {
+  @apply gap-0 px-2 py-1;
 }
 
 .riskLevelFloatWrap {

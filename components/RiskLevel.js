@@ -20,6 +20,15 @@ const LEVEL_CONFIG = {
   },
 };
 
+/** Map MDX `level` values to LEVEL_CONFIG keys (same rules as the main callout). */
+function resolveLevelKey(level) {
+  const n = (level || "everyone").toLowerCase().replace(/-|\s/g, "_");
+  if (LEVEL_CONFIG[n]) return n;
+  if (n.includes("medium")) return "medium";
+  if (n.includes("high")) return "high";
+  return "everyone";
+}
+
 function SignalBars({ filledCount, className }) {
   const heights = [4, 8, 12];
   return (
@@ -38,12 +47,28 @@ function SignalBars({ filledCount, className }) {
   );
 }
 
-function RiskLevelBadge({ level }) {
-  const config = LEVEL_CONFIG[level] || LEVEL_CONFIG.everyone;
+export function RiskLevelBadge({ level, className, showLabel = true }) {
+  const key = resolveLevelKey(level);
+  const config = LEVEL_CONFIG[key];
+  const toneClass =
+    key === "high"
+      ? styles.badgeToneHigh
+      : key === "medium"
+        ? styles.badgeToneMedium
+        : styles.badgeToneEveryone;
   return (
-    <span className={cn(styles.riskLevelBadge, styles.riskLevelBadgeInline)}>
+    <span
+      className={cn(
+        styles.riskLevelBadge,
+        styles.riskLevelBadgeInline,
+        toneClass,
+        !showLabel && styles.riskLevelBadgeBarsOnly,
+        className,
+      )}
+      title={!showLabel ? config.label : undefined}
+    >
       <SignalBars filledCount={config.bars} />
-      {config.label}
+      {showLabel ? config.label : null}
     </span>
   );
 }
@@ -59,7 +84,7 @@ const INTRO_LINES = {
  */
 export function RiskLevel({ level, mode = "default", children, className, ...props }) {
   const normalizedLevel = (level || "everyone").toLowerCase().replace(/-|\s/g, "_");
-  const config = LEVEL_CONFIG[normalizedLevel] || LEVEL_CONFIG.everyone;
+  const config = LEVEL_CONFIG[resolveLevelKey(level)] || LEVEL_CONFIG.everyone;
   const levelClass = styles[normalizedLevel] || styles.everyone;
   const useDefaultText = (mode === "default" || !mode) && !children;
   const showHeader = mode === "for_you_if" || mode === "for_you";
@@ -105,3 +130,5 @@ export function RiskLevel({ level, mode = "default", children, className, ...pro
     </div>
   );
 }
+
+RiskLevel.isRiskLevel = true;
