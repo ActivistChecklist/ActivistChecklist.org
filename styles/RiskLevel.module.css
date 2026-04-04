@@ -11,8 +11,26 @@
   border: none;
 }
 
+/* Pill colors (also used by floating section header; not only inside .riskLevel). */
+.badgeToneEveryone {
+  @apply bg-green-200 dark:bg-green-800/70 text-green-900 dark:text-green-100;
+}
+
+.badgeToneMedium {
+  @apply bg-amber-200 dark:bg-amber-800/70 text-amber-900 dark:text-amber-100;
+}
+
+.badgeToneHigh {
+  @apply bg-red-200 dark:bg-red-800/70 text-red-900 dark:text-red-100;
+}
+
 .riskLevelBadgeInline {
   @apply mr-2;
+}
+
+/* Signal bars only (e.g. floating section header on narrow viewports). */
+.riskLevelBadgeBarsOnly {
+  @apply gap-0 px-2 py-1;
 }
 
 .riskLevelFloatWrap {
@@ -63,10 +81,6 @@
   @apply bg-green-50 dark:bg-green-950/40 text-green-900 dark:text-green-200;
 }
 
-.everyone .riskLevelBadge {
-  @apply bg-green-200 dark:bg-green-800/70 text-green-900 dark:text-green-100;
-}
-
 .everyone .riskLevelBody ul li::before {
   @apply text-green-800 dark:text-green-200;
 }
@@ -92,11 +106,6 @@
   @apply bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200;
 }
 
-.medium_risk .riskLevelBadge,
-.medium .riskLevelBadge {
-  @apply bg-amber-200 dark:bg-amber-800/70 text-amber-900 dark:text-amber-100;
-}
-
 .medium_risk .riskLevelBody ul li::before,
 .medium .riskLevelBody ul li::before {
   @apply text-amber-800 dark:text-amber-200;
@@ -110,11 +119,6 @@
 .high_risk,
 .high {
   @apply bg-red-50 dark:bg-red-950/40 text-red-900 dark:text-red-200;
-}
-
-.high_risk .riskLevelBadge,
-.high .riskLevelBadge {
-  @apply bg-red-200 dark:bg-red-800/70 text-red-900 dark:text-red-100;
 }
 
 .high_risk .riskLevelBody ul li::before,
