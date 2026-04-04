@@ -4,6 +4,10 @@
 
 * Use yarn to manage packages
 
+## Content writing ruels
+
+* Do not use em-dashes.
+
 ## Git commit rules
 
 * IMPORTANT: Do not do any automatic commits for this project unless explicitly instructed.
