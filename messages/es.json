@@ -1,167 +1,167 @@
 {
   "site": {
-    "title": "Listas de seguridad digital para activistas",
-    "description": "Pasos en lenguaje sencillo para la seguridad digital. Porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura."
+    "title": "Digital Security Checklists for Activists",
+    "description": "Plain language steps for digital security. Because protecting yourself helps keep your whole community safer."
   },
   "nav": {
-    "home": "Inicio",
-    "checklists": "Listas de seguridad",
-    "news": "Noticias",
-    "resources": "Recursos",
-    "about": "Acerca de",
-    "browseAllChecklists": "Ver todas las listas"
+    "home": "Home",
+    "checklists": "Security Checklists",
+    "news": "News",
+    "resources": "Resources",
+    "about": "About",
+    "browseAllChecklists": "Browse all checklists"
   },
   "navItems": {
     "essentials": {
-      "title": "Fundamentos de seguridad",
-      "description": "Prácticas básicas de seguridad que toda persona activista debería seguir."
+      "title": "Security essentials",
+      "description": "Core security practices every activist should follow."
     },
     "signal": {
-      "title": "Seguridad en Signal",
-      "description": "Asegura la app de mensajería Signal para comunicaciones más seguras."
+      "title": "Signal security",
+      "description": "Secure your Signal messaging app for safer communications."
     },
     "protest": {
-      "title": "Prepárate para una protesta",
-      "description": "Seguridad digital para cualquier persona que asista a una protesta."
+      "title": "Prepare for a protest",
+      "description": "Digital security for anyone attending a protest."
     },
     "ice": {
-      "title": "Seguridad digital para monitoreo de ICE",
-      "description": "Seguridad digital para redes de monitoreo de ICE y respuesta rápida."
+      "title": "ICE watch digital security",
+      "description": "Digital security for ICE watch and rapid response networks."
     },
     "doxxing": {
-      "title": "Defensa contra doxxing",
-      "description": "Protégete del doxxing y el acoso en línea."
+      "title": "Doxxing defense",
+      "description": "Protect yourself from doxxing and online harassment."
     },
     "travel": {
-      "title": "Seguridad en viajes y vuelos",
-      "description": "Prácticas de seguridad digital para activistas que viajan."
+      "title": "Travel & flight security",
+      "description": "Digital security practices for activists traveling."
     },
     "emergency": {
-      "title": "Planificación de emergencia",
-      "description": "Establece una red de apoyo de emergencia en caso de detención o amenazas."
+      "title": "Emergency planning",
+      "description": "Establish an emergency support network in case you're detained or threatened."
     },
     "secondary": {
-      "title": "Teléfono secundario",
-      "description": "Configura un teléfono extra para activismo y protestas."
+      "title": "Secondary phone",
+      "description": "Set up an extra phone for activism and protests."
     },
     "links": {
-      "title": "Eliminar rastreo de enlaces",
-      "label": "Eliminar rastreo de enlaces"
+      "title": "Remove link tracking",
+      "label": "Remove link tracking"
     },
     "policeDoorPoster": {
-      "title": "Póster \"Policía en la puerta\"",
-      "label": "Póster \"Policía en la puerta\""
+      "title": "Police at the door poster",
+      "label": "\"Police at the door\" poster"
     },
     "flyer": {
-      "title": "Volante imprimible",
-      "label": "Volante imprimible"
+      "title": "Printable flyer",
+      "label": "Printable flyer"
     },
     "movies": {
-      "title": "Películas, libros y pódcasts",
-      "label": "Películas, libros y pódcasts"
+      "title": "Movies, books, & podcasts",
+      "label": "Movies, books, & podcasts"
     },
     "resources": {
-      "title": "Recursos",
-      "label": "Recursos"
+      "title": "Resources",
+      "label": "Resources"
     },
     "about": {
-      "title": "Acerca de este sitio",
-      "label": "Acerca de"
+      "title": "About this site",
+      "label": "About"
     },
     "changelog": {
-      "title": "Actualizaciones recientes del sitio",
-      "label": "Actualizaciones recientes del sitio"
+      "title": "Recent site updates",
+      "label": "Recent site updates"
     },
     "contact": {
-      "title": "Contacto",
-      "label": "Contacto"
+      "title": "Contact",
+      "label": "Contact"
     },
     "privacy": {
-      "title": "Privacidad",
-      "label": "Privacidad"
+      "title": "Privacy",
+      "label": "Privacy"
     }
   },
   "hero": {
-    "title": "Listas de seguridad digital para activistas",
-    "description": "Pasos en lenguaje sencillo para la seguridad digital. Porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura.",
-    "primaryCta": "Fundamentos de seguridad digital",
-    "secondaryCta": "Ver todas las listas"
+    "title": "Digital Security Checklists for Activists",
+    "description": "Plain language steps for digital security. Because protecting yourself helps keep your whole community safer.",
+    "primaryCta": "Digital Security Essentials",
+    "secondaryCta": "See all checklists"
   },
   "trustPoints": {
-    "experienceTitle": "Construido desde la experiencia",
-    "experienceDescription": "Nuestras guías se basan en trabajo real de organización y comentarios directos de activistas. Aunque cada situación es única, buscamos compartir ideas prácticas que puedan ayudar a informar tus decisiones.",
-    "updatedTitle": "Actualizado regularmente",
-    "updatedDescription": "Nuestro contenido es revisado regularmente por organizadores que entienden las preocupaciones de seguridad. Trabajamos para mantener la información actualizada a medida que los riesgos y las tecnologías evolucionan."
+    "experienceTitle": "Built from experience",
+    "experienceDescription": "Our guides draw from real organizing work and direct feedback from activists. While every situation is unique, we aim to share practical insights that can help inform your decisions.",
+    "updatedTitle": "Regularly updated",
+    "updatedDescription": "Our content is regularly reviewed by organizers who understand security concerns. We work to keep information current as risks and technologies evolve."
   },
   "misconceptions": {
-    "sectionTitle": "Conceptos erróneos comunes",
-    "sectionDescription": "Cuando empezamos a hablar de seguridad digital, a menudo escuchamos estas preocupaciones. Creemos que hay más en la historia.",
-    "nothingToHideTitle": "\"No tengo nada que ocultar\"",
-    "nothingToHideDescription": "Cuanto más involucrado estés en cualquier trabajo de movimiento social, más se pueden usar tus datos para mapear redes de activistas. El mejor momento para empezar a protegerte es <b>antes</b> de estar tan profundamente involucrado.",
-    "alreadyKnowTitle": "\"Ya lo saben todo\"",
-    "alreadyKnowDescription": "Aunque la recopilación de datos es generalizada, puedes reducir significativamente tu huella digital y proteger tus actividades futuras.",
-    "dontCareTitle": "\"No les importa lo que estoy haciendo\"",
-    "dontCareDescription": "La vigilancia masiva afecta a todos. Tus datos pueden usarse para perfilar comunidades, predecir protestas o atacar a quienes te importan. Proteger tus comunicaciones ayuda a protegernos a todos."
+    "sectionTitle": "Common Misconceptions",
+    "sectionDescription": "When we start talking about digital security, we often hear these concerns. We think there's more to the story.",
+    "nothingToHideTitle": "\"I have nothing to hide\"",
+    "nothingToHideDescription": "The more engaged you are in any social movement work, the more your data can be used to map networks of activists. The best time to start protecting yourself is <b>before</b> you're as deeply involved.",
+    "alreadyKnowTitle": "\"They already know everything\"",
+    "alreadyKnowDescription": "While data collection is widespread, you can significantly reduce your digital footprint and protect future activities.",
+    "dontCareTitle": "\"They don't care about what I'm doing\"",
+    "dontCareDescription": "Mass surveillance affects everyone. Your data can be used to profile communities, predict protests, or target those you care about. Protecting your communications helps protect all of us."
   },
   "homepage": {
-    "checklistsHeading": "Listas de seguridad digital y seguridad física",
-    "browseAll": "Ver todas las listas",
-    "trustHeading": "Guías sencillas para mantenernos más seguros",
-    "trustDescription": "Creamos esto porque la seguridad digital no debería ser abrumadora. Adoptamos un enfoque de reducción de daños: comienza donde estés y haz lo que puedas.",
-    "latestNewsHeading": "Noticias recientes sobre vigilancia",
-    "viewAllNews": "Ver todas las noticias",
-    "recentUpdatesHeading": "Actualizaciones recientes del sitio",
-    "viewAllUpdates": "Ver todas las actualizaciones",
-    "noRecentChanges": "No hay cambios recientes disponibles"
+    "checklistsHeading": "Digital Security & Physical Safety Checklists",
+    "browseAll": "See all checklists",
+    "trustHeading": "Simple guides to keep us more safe",
+    "trustDescription": "We built this because digital security shouldn't be overwhelming. We take a harm reduction approach: start where you are and do what you can.",
+    "latestNewsHeading": "Latest Surveillance News",
+    "viewAllNews": "View all news",
+    "recentUpdatesHeading": "Recent Site Updates",
+    "viewAllUpdates": "View all updates",
+    "noRecentChanges": "No recent changes available"
   },
   "translationFallback": {
-    "message": "Esta página aún no está disponible en tu idioma. Estás viendo la versión en inglés.",
-    "suggest": "Puedes usar la función de traducción integrada de tu navegador para traducir esta página."
+    "message": "This page is not yet available in your language. You are viewing the English version.",
+    "suggest": "You can use your browser's built-in translation feature to translate this page."
   },
   "languageDetection": {
-    "message": "Este sitio está disponible en {language}.",
-    "switchButton": "Cambiar a {language}",
-    "dismiss": "Cerrar"
+    "message": "This site is available in {language}.",
+    "switchButton": "Switch to {language}",
+    "dismiss": "Dismiss"
   },
   "languageSwitcher": {
-    "ariaLabel": "Cambiar idioma"
+    "ariaLabel": "Switch language"
   },
   "meta": {
-    "lastUpdatedOn": "Última actualización:",
-    "lastReviewedOn": "Última revisión:",
-    "takesAbout": "Toma aproximadamente",
-    "viewLatestGuideAt": "Consulta la versión más reciente de esta guía en"
+    "lastUpdatedOn": "Last updated on",
+    "lastReviewedOn": "Last reviewed on",
+    "takesAbout": "Takes about",
+    "viewLatestGuideAt": "View the latest guide at"
   },
   "footer": {
     "branding": {
       "title": "Activist Checklist",
-      "description": "Pasos en lenguaje sencillo para la seguridad digital, porque protegerte a ti mismo ayuda a mantener a toda tu comunidad más segura."
+      "description": "Plain language steps for digital security, because protecting yourself helps keep your whole community safer."
     },
-    "stayUpdated": "Mantente al día",
+    "stayUpdated": "Stay Updated",
     "sections": {
-      "navigation": "Navegación",
-      "topChecklists": "Listas principales"
+      "navigation": "Navigation",
+      "topChecklists": "Top Checklists"
     },
-    "disclaimer": "Aviso: Compartimos información y recursos, no asesoría legal. Consulta con una abogada o abogado para tu situación específica.",
-    "licenseNotice": "Contenido disponible bajo <cc>Creative Commons BY-SA</cc>. Consulta nuestras <sources>fuentes</sources>. El código fuente está disponible en <github>GitHub</github>.",
+    "disclaimer": "Heads up: We provide info and resources, not legal advice. Consult an attorney for your specific situation.",
+    "licenseNotice": "Content available under <cc>Creative Commons BY-SA</cc>. See our <sources>sources</sources>. Source code available on <github>GitHub</github>.",
     "social": {
-      "blueskyAriaLabel": "Síguenos en Bluesky",
-      "githubAriaLabel": "Ver nuestro repositorio en GitHub",
-      "mastodonAriaLabel": "Síguenos en Mastodon"
+      "blueskyAriaLabel": "Follow us on Bluesky",
+      "githubAriaLabel": "View our GitHub repository",
+      "mastodonAriaLabel": "Follow us on Mastodon"
     }
   },
   "newsletter": {
-    "subscribe": "Suscribirse",
-    "successLong": "Ya estás suscrito. ¿Quieres avisarle por Signal a una amistad sobre este proyecto?",
-    "successShort": "Gracias por suscribirte.",
+    "subscribe": "Subscribe",
+    "successLong": "You're subscribed! Want to message a friend on Signal to let them know about this project?",
+    "successShort": "Thanks for subscribing!",
     "placeholders": {
-      "emailLong": "Ingresa tu correo",
-      "emailShort": "Correo"
+      "emailLong": "Enter your email",
+      "emailShort": "Email"
     }
   },
   "common": {
-    "loading": "Cargando...",
-    "error": "Algo salió mal",
-    "viewChecklist": "Ver lista"
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "viewChecklist": "View checklist"
   }
 }
