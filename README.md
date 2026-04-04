@@ -1,206 +1,67 @@
-# ActivistChecklist.org
+<div align="center">
 
-**Visit the live site: [ActivistChecklist.org](https://activistchecklist.org)**
+[![Activist Checklist](public/images/logo-bg-white.png)](https://activistchecklist.org/)
+[ActivistChecklist.org](https://activistchecklist.org)
 
-ActivistChecklist.org is a comprehensive digital security resource designed specifically for activists and organizers. The site provides practical, accessible security guidance that strikes a balance between oversimplified tips and overwhelming technical details. Our mission is to help activists protect their digital lives with clear, actionable checklists and guides that don't require advanced technical expertise. Whether you're new to digital security or looking to strengthen your practices, we offer step-by-step guidance that's both thorough and approachable.
+**Practical digital security guides for activists and organizers.**
 
-## Install the prerequisites
+[Visit the site](#visit-the-site) • [Edit content](#edit-content) • [Local development](#local-development) • [Repository layout](#repository-layout) •  [License](#license)
 
-A Next.js project with file-based MDX content.
+</div>
 
-If you're new to node and yarn, follow these steps to install the prerequisites:
+---
+
+## Visit the site
+
+You can view the live site here: **[ActivistChecklist.org →](https://activistchecklist.org)**
+
+## Edit content
+
+You don't need to be a coder to make edits to this site. The site has a **visual editor** so you can propose changes. All you need is a GitHub account and a few setup steps — no Git CLI required for the happy path.
+
+Instructions: **[Contribute to Activist Checklist →](https://activistchecklist.org/contribute/)**
+
+## Local development
+
+**Prerequisites (macOS):** Install [Homebrew](https://brew.sh) if you do not have it, then:
 
 ```bash
-# Install Homebrew first (if you don't have it already)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install Node.js, Yarn package manager, ffmpeg, and exiftool using Homebrew
 brew install node yarn ffmpeg exiftool
-
-# Enable Corepack (which enables yarn to install packages globally)
-corepack enable 
 ```
 
-## Setup
-
-1. Clone the repository:
+That gives you Node and Yarn for this project, plus **ffmpeg** and **exiftool** used by the image/video metadata scrubbing (`yarn metadata scrub`). On Linux or Windows, install the same tools with your package manager or each tool’s official packages.
 
 ```bash
+# Get started
 git clone https://github.com/ActivistChecklist/ActivistChecklist.git
-cd ActivistChecklist.org
-```
-
-1. Install dependencies:
-
-```bash
+cd ActivistChecklist
 yarn install
-```
-
-1. Copy the `.env.template` file to `.env` and set required environment variables.
-2. Start the development server:
-
-```bash
+cp .env.template .env   # defaults are fine for basic editing
 yarn dev
 ```
 
-The Next.js app will be at `http://localhost:3000` (API on the port in `API_PORT`, default `4321`).
+- **Site:** You can view the site [http://localhost:3000](http://localhost:3000)
+- **Fastify API (contact, stats, newsletter):** port `4321` by default (`API_PORT`), routes under `/api-server/` — The site runs fine without this API
 
-## VS Code extensions
+## Repository layout
 
-These VS Code / Cursor plugins will help you work with specific configuration of this project.
-
-- [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
-- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-- [ES7+ React/Redux/React-Native snippets](https://marketplace.visualstudio.com/items?itemName=dsznajder.es7-react-js-snippets)
-- [JavaScript (ES6) code snippets](https://marketplace.visualstudio.com/items?itemName=xabikos.javascriptsnippets)
-- [Babel JavaScript](https://marketplace.visualstudio.com/items?itemName=mgmcdermott.vscode-language-babel)
-- [Babel Colorization](https://marketplace.visualstudio.com/items?itemName=dzannotti.vscode-babel-coloring)
-- [npm Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.npm-intellisense)
-- [Path Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.path-intellisense)
-- [Search node_modules](https://marketplace.visualstudio.com/items?itemName=jasonnutter.search-node-modules)
-- [SCSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=mrmlnc.vscode-scss)
-- [DotENV](https://marketplace.visualstudio.com/items?itemName=mikestead.dotenv)
-- [i18n Ally](https://marketplace.visualstudio.com/items?itemName=lokalise.i18n-ally)
-- [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
-- [Markdown Table Formatter](https://marketplace.visualstudio.com/items?itemName=fcrespo82.markdown-table-formatter)
-- [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next)
-
-## Deployment to production server
-
-### Node installation
-
-You'll need to get Node running on your server if you intend to use the contact form, stats tracking, or other server side code.
-
-If you're hosting on May First, follow these instructions to get the [latest verison of Node.js installed](https://help.mayfirst.org/en/guide/how-to-install-node-js-using-nvm).
-
-```bash
-cd ~/include/
-mkdir .nvm
-export NVM_DIR="$HOME/include/.nvm"
-# Update this URL to be the latest version of nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-# Install the latest version of node (or specify your version)
-nvm install --lts
-npm install --global yarn
-yarn config set prefix ~/include/.yarn
-```
-
-You can run the API server with:
-
-```bash
-yarn api:start
-```
-
-You can test that it's working locally with:
-
-```bash
-curl http://localhost:4321/api-server/hello
-```
-
-You'll need to configure your server to proxy API requests to the Node server. If you're using Apache, you can add these lines to your Apache configuration:
-
-```apache
-ProxyPass /api-server http://localhost:4321/api-server
-ProxyPassReverse /api-server http://localhost:4321/api-server
-```
-
-This server side API needs to run in production (in our case, a LAMP server).
-
-Separately, we use built-in Next.js API routes for staging deployments on services like Vercel.
-
-### Interacting with API server
-
-You can interact with the API server using the following yarn commands:
-
-- `yarn api:start` - Start the API server using PM2 with auto-restart configuration
-- `yarn api:stop` - Stop the running API server
-- `yarn api:restart` - Restart the API server
-- `yarn api:status` - Check the current status of the API server
-- `yarn api:delete` - Delete the API server process from PM2
-- `yarn api:logs` - View the API server logs
-
-**Auto-Restart Features:**
-The API server is configured with PM2's ecosystem config (`ecosystem.config.js`) for robust production deployment:
-
-- Automatically restarts on crashes or unexpected exits
-- Uses exponential backoff to prevent restart storms
-- Restarts if memory usage exceeds 500MB
-- Survives system reboots (after running `pm2 startup` and `pm2 save`)
-
-**Auto-start after reboot:**
-
-If you can't use sudo but have cron access, you can set up a cron job to auto-restart after reboots and monitor the API. This will check every 5 minutes if the API is running and restart it if needed.
-
-1. Open your crontab:
-
-   ```bash
-   crontab -e
-   ```
-
-2. Add this line (replace with your actual path):
-
-   ```bash
-   */5 * * * * cd /your/full/path/to/ActivistChecklist.org && yarn api:status 2>/dev/null | grep -q "online" || yarn api:start
-   ```
-
-The API server runs on port 4321 by default (configurable via `API_PORT` environment variable) and is accessible at `/api-server/*` routes.
-
-### Building, uploading, running
-
-```bash
-yarn build && upload  # upload is a custom alias for rsync
-```
-
-## Available Scripts
-
-- `yarn dev` - Runs the development server with SSL proxy
-- `yarn build` - Builds the application for production
-- `yarn start` - Starts the production server
-- `yarn serve` - Serves the static production build of the site (from the `out` directory)
-
-## Project Directory Structure
-
-```md
+```text
 ActivistChecklist.org
-├── api - API server (Running on fastify at /api-server/ – Separate from Next.js)
-├── components - React components  
-├── content - Source content (MDX frontmatter + body) tracked in git
-├── lib - Core business logic
-├── out - Static build output (generated during static export flow)
-├── pages - Next.js pages
-│   └── api - Next.js API routes
-├── public - Public assets (images, fonts, etc.)
-│   └── scripts - Public PHP scripts (stats, contact form, etc.)
-├── scripts - Build and utility scripts (JS)
-├── styles - CSS
-└── utils - Utility functions  
+├── app/           Next.js App Router (pages, API routes, Keystatic)
+├── api/           Fastify server (/api-server/ — separate from the Next.js app)
+├── components/    React UI
+├── config/        Navigation, icons, site config
+├── content/       MDX source (English under content/en/, etc.)
+├── hooks/         React hooks
+├── i18n/          Internationalization
+├── lib/           Shared libraries
+├── public/        Static assets
+├── scripts/       Build, deploy, and tooling
+├── styles/        CSS
+└── utils/         Helpers
 ```
-
-## Contributing changes to the content
-
-Content lives in this repository under `content/`, so you can submit content updates directly via pull request.
-
-Typical workflow:
-
-1. Edit/add MDX files under `content/`.
-2. Run the site locally (`yarn dev`) and validate your changes.
-3. Run checks as needed (for example `yarn buildstatic` / `yarn check-links`).
-4. Open a PR with your content and/or code changes.
-
-## Where does the content live?
-
-Primary source of truth is file-based content in this repo:
-
-- `content/en/guides`
-- `content/en/checklist-items`
-- `content/en/pages`
-- `content/en/news`
-- `content/en/changelog`
-- `content/en/news-sources`
 
 ## License
 
-This repository uses dual licensing:
-
-- All source code is licensed under the [GNU General Public License v3.0](LICENSE-CODE)
-- All content, images, and other non-code assets are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International license](https://creativecommons.org/licenses/by-sa/4.0/)
+- **Code:** [GNU General Public License v3.0](LICENSE-CODE)
+- **Content and non-code assets:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
