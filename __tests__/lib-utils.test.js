@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn, formatRelativeDate } from '../lib/utils'
+import { cn, formatRelativeDate, parseContentDateOnly, formatContentDate } from '../lib/utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -29,6 +29,29 @@ describe('cn', () => {
 
   it('handles empty input', () => {
     expect(cn()).toBe('')
+  })
+})
+
+describe('parseContentDateOnly', () => {
+  it('interprets YYYY-MM-DD as local calendar date (not UTC midnight)', () => {
+    const d = parseContentDateOnly('2026-04-03')
+    expect(d.getFullYear()).toBe(2026)
+    expect(d.getMonth()).toBe(3)
+    expect(d.getDate()).toBe(3)
+  })
+
+  it('returns null for empty input', () => {
+    expect(parseContentDateOnly('')).toBe(null)
+    expect(parseContentDateOnly(null)).toBe(null)
+  })
+})
+
+describe('formatContentDate', () => {
+  it('formats YYYY-MM-DD without off-by-one vs local calendar', () => {
+    const s = formatContentDate('2026-04-03', 'en-US')
+    expect(s).toContain('2026')
+    expect(s).toContain('3')
+    expect(s.toLowerCase()).toContain('april')
   })
 })
 

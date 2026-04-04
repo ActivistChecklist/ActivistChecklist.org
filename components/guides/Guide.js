@@ -11,6 +11,7 @@ import { useLayout } from '@/contexts/LayoutContext';
 import { getGuideIcon } from '@/config/icons';
 import RelatedGuides from '@/components/RelatedGuides';
 import { LOCALES } from "@/lib/i18n-config";
+import { formatContentDate } from '@/lib/utils';
 
 function parseRelatedGuides(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -50,11 +51,7 @@ export default function Guide({ frontmatter, serializedIntro, serializedBody, ch
     metaBarItems.push({
       icon: <Calendar className="h-4 w-4 mr-1" />,
       label: t('meta.lastReviewedOn'),
-      value: new Date(frontmatter.lastUpdated).toLocaleDateString(dateLocale, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
+      value: formatContentDate(frontmatter.lastUpdated, dateLocale),
     });
   }
 

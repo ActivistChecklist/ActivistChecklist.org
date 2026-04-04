@@ -1,5 +1,5 @@
 'use client';
-import { cn } from "@/lib/utils";
+import { cn, formatContentDate } from "@/lib/utils";
 import { Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -8,11 +8,7 @@ export function getDateMetaItem(date, label = "Last updated on", dateLocale = 'e
   return {
     icon: <Calendar className="h-4 w-4 mr-1" />,
     label,
-    value: new Date(date).toLocaleDateString(dateLocale, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    value: formatContentDate(date, dateLocale),
   };
 }
 
