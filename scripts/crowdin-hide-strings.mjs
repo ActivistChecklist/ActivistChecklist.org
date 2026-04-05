@@ -212,7 +212,7 @@ async function crowdinPatch(path, data) {
   return res.json();
 }
 
-// --- Step 3: Find and hide slug strings in Crowdin ---
+// --- Step 3: Find and hide strings in Crowdin ---
 
 async function getAllStrings() {
   const strings = [];
