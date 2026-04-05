@@ -22,6 +22,8 @@
     "news": "node scripts/news-wizard.js",
     "metadata": "node scripts/metadata-cli.cjs",
     "keystatic:format-mdx": "node scripts/keystatic-format-mdx.mjs",
+    "crowdin:hide-strings": "node scripts/crowdin-hide-strings.mjs",
+    "crowdin:hide-strings:apply": "node scripts/crowdin-hide-strings.mjs --apply",
     "prebuild": "(yarn audit --level high || true)",
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "buildstatic": "BUILD_MODE=static yarn build && yarn check-build && yarn check-links && yarn validate-build",

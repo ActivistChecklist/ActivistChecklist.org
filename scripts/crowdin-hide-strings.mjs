@@ -9,11 +9,11 @@
  * This includes:
  *   - JSX attributes: slug, type, size, level, mode, alignment, target, variant, icon, href, src, className
  *   - Frontmatter arrays: relatedGuides, titleBadges
- *   - Frontmatter scalars: slug, type, date, firstPublished, lastUpdated, estimatedTime, image, imageOverride, url, source, tags
+ *   - Frontmatter scalars: slug, type, date, firstPublished, lastUpdated, image, imageOverride, url, source, tags
  *
  * Usage:
- *   CROWDIN_PERSONAL_TOKEN=xxx CROWDIN_PROJECT_ID=123 node crowdin-hide-slugs.mjs
- *   CROWDIN_PERSONAL_TOKEN=xxx CROWDIN_PROJECT_ID=123 node crowdin-hide-slugs.mjs --apply
+ *   yarn crowdin:hide-strings           (dry run — reads CROWDIN_* from .env)
+ *   yarn crowdin:hide-strings --apply   (hides strings and clears stray translations)
  *
  * Add to package.json:
  *   "scripts": {
@@ -25,6 +25,9 @@
 
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, extname, basename } from "path";
+
+// Load .env file if present (Node 22+ built-in)
+try { process.loadEnvFile(); } catch {}
 
 // --- Colors ---
 const c = {
@@ -74,7 +77,6 @@ const UNTRANSLATABLE_FRONTMATTER_SCALARS = [
   "date",           // ISO dates
   "firstPublished", // ISO dates
   "lastUpdated",    // ISO dates
-  "estimatedTime",  // durations: "30 minutes", "1 hour"
   "image",          // file paths
   "imageOverride",  // file paths
   "url",            // external URLs
@@ -182,37 +184,67 @@ function extractUntranslatableStrings(contentDir) {
 
 // --- Step 2: Crowdin API helpers ---
 
-async function crowdinGet(path) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Crowdin API error ${res.status}: ${body}`);
+async function crowdinFetch(path, { method = "GET", body } = {}) {
+  const url = `${BASE_URL}${path}`;
+  const headers = {
+    Authorization: `Bearer ${TOKEN}`,
+    "Content-Type": "application/json",
+  };
+
+  while (true) {
+    const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+
+    if (res.status === 429) {
+      const retryAfter = parseFloat(res.headers.get("Retry-After") || "1");
+      console.log(`  ${c.yellow}Rate limited — waiting ${retryAfter}s...${c.reset}`);
+      await new Promise((r) => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    if (method === "DELETE" && (res.status === 204 || res.status === 404)) return null;
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Crowdin API ${res.status}: ${text}`);
+    }
+    return res.status === 204 ? null : res.json();
   }
-  return res.json();
 }
 
-async function crowdinPatch(path, data) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Crowdin API error ${res.status}: ${body}`);
+const crowdinGet    = (path)         => crowdinFetch(path);
+const crowdinPatch  = (path, data)   => crowdinFetch(path, { method: "PATCH",  body: data });
+const crowdinDelete = (path)         => crowdinFetch(path, { method: "DELETE" });
+
+// --- Step 3: Find and hide strings / clear translations in Crowdin ---
+
+// Run up to `concurrency` async tasks at once
+async function runConcurrent(concurrency, tasks) {
+  let idx = 0;
+  async function worker() {
+    while (idx < tasks.length) {
+      const i = idx++;
+      await tasks[i]();
+    }
   }
-  return res.json();
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, worker));
 }
 
-// --- Step 3: Find and hide strings in Crowdin ---
+async function getTargetLanguages() {
+  const data = await crowdinGet(`/projects/${PROJECT_ID}`);
+  return data.data.targetLanguageIds || [];
+}
+
+// Fetch and delete all existing translations for a string in a given language.
+// Returns count of deleted translations.
+async function clearTranslationsForString(stringId, languageId) {
+  const data = await crowdinGet(
+    `/projects/${PROJECT_ID}/translations?stringId=${stringId}&languageId=${languageId}&limit=100`
+  );
+  const translations = data.data.map((t) => t.data);
+  for (const translation of translations) {
+    await crowdinDelete(`/projects/${PROJECT_ID}/translations/${translation.id}`);
+  }
+  return translations.length;
+}
 
 async function getAllStrings() {
   const strings = [];
@@ -288,9 +320,10 @@ async function run() {
   const allStrings = await getAllStrings();
   console.log(`${c.green}Found${c.reset} ${c.bold}${allStrings.length}${c.reset} total strings in project.\n`);
 
-  // Find matches
+  // Categorize all Crowdin strings
   const toHide = [];
   const alreadyHidden = [];
+  const toUnhide = []; // hidden in Crowdin but no longer in our untranslatable set
 
   for (const item of allStrings) {
     const { id, text, isHidden } = item.data;
@@ -300,6 +333,9 @@ async function run() {
       } else {
         toHide.push({ id, text });
       }
+    } else if (isHidden) {
+      // Was hidden (likely by a previous script run) but is no longer untranslatable
+      toUnhide.push({ id, text });
     }
   }
 
@@ -310,41 +346,103 @@ async function run() {
   console.log(`  ${c.gray}Matched in Crowdin:${c.reset}  ${c.bold}${totalFound}${c.reset}`);
   console.log(`  ${c.gray}Already hidden:${c.reset}      ${c.green}${alreadyHidden.length}${c.reset}`);
   console.log(`  ${c.gray}Need to hide:${c.reset}        ${toHide.length > 0 ? c.yellow : c.green}${toHide.length}${c.reset}`);
+  console.log(`  ${c.gray}Need to unhide:${c.reset}      ${toUnhide.length > 0 ? c.magenta : c.green}${toUnhide.length}${c.reset}`);
   console.log(`  ${c.gray}Not in Crowdin:${c.reset}      ${c.dim}${notInCrowdin}${c.reset}\n`);
 
-  if (toHide.length === 0) {
+  const allMatched = [...toHide, ...alreadyHidden];
+
+  // --- Unhide strings that are no longer untranslatable ---
+  if (toUnhide.length > 0) {
+    console.log(`${c.bold}${DRY_RUN ? "Would unhide" : "Unhiding"} ${toUnhide.length} string(s) no longer in the untranslatable set:${c.reset}\n`);
+
+    for (const { id, text } of toUnhide) {
+      if (DRY_RUN) {
+        console.log(`  ${c.magenta}○${c.reset} ${c.white}"${text}"${c.reset}`);
+      } else {
+        try {
+          await crowdinPatch(`/projects/${PROJECT_ID}/strings/${id}`, [
+            { op: "replace", path: "/isHidden", value: false },
+          ]);
+          console.log(`  ${c.magenta}✓${c.reset} ${c.white}"${text}"${c.reset}`);
+        } catch (err) {
+          console.log(`  ${c.red}✗${c.reset} ${c.white}"${text}"${c.reset} ${c.red}— ${err.message}${c.reset}`);
+        }
+      }
+    }
+
+    console.log();
+  }
+
+  // --- Hide strings that should be hidden ---
+  if (toHide.length > 0) {
+    console.log(`${c.bold}${DRY_RUN ? "Would hide" : "Hiding"} ${toHide.length} strings:${c.reset}\n`);
+
+    for (const { id, text } of toHide) {
+      const sourceInfo = stringsMap.has(text) ? formatSource(stringsMap.get(text)) : "";
+
+      if (DRY_RUN) {
+        console.log(`  ${c.yellow}○${c.reset} ${c.white}"${text}"${c.reset} ${c.gray}← ${sourceInfo}${c.reset}`);
+      } else {
+        try {
+          await crowdinPatch(`/projects/${PROJECT_ID}/strings/${id}`, [
+            { op: "replace", path: "/isHidden", value: true },
+          ]);
+          console.log(`  ${c.green}✓${c.reset} ${c.white}"${text}"${c.reset} ${c.gray}← ${sourceInfo}${c.reset}`);
+        } catch (err) {
+          console.log(`  ${c.red}✗${c.reset} ${c.white}"${text}"${c.reset} ${c.red}— ${err.message}${c.reset}`);
+        }
+      }
+    }
+
+    console.log();
+  }
+
+  if (allMatched.length === 0 && toUnhide.length === 0) {
     console.log(`${c.green}${c.bold}✓ Nothing to do!${c.reset}\n`);
     return;
   }
 
-  // List what we'll hide
-  console.log(`${c.bold}${DRY_RUN ? "Would hide" : "Hiding"} ${toHide.length} strings:${c.reset}\n`);
+  console.log();
 
-  for (const { id, text } of toHide) {
-    const sourceInfo = stringsMap.has(text) ? formatSource(stringsMap.get(text)) : "";
+  // --- Pass 2: Clear any existing translations for all matched strings ---
+  console.log(`${c.bold}${DRY_RUN ? "Would clear" : "Clearing"} translations for ${allMatched.length} matched strings across all languages:${c.reset}\n`);
 
-    if (DRY_RUN) {
-      console.log(`  ${c.yellow}○${c.reset} ${c.white}"${text}"${c.reset} ${c.gray}← ${sourceInfo}${c.reset}`);
-    } else {
-      try {
-        await crowdinPatch(`/projects/${PROJECT_ID}/strings/${id}`, [
-          { op: "replace", path: "/isHidden", value: true },
-        ]);
-        console.log(`  ${c.green}✓${c.reset} ${c.white}"${text}"${c.reset} ${c.gray}← ${sourceInfo}${c.reset}`);
-      } catch (err) {
-        console.log(`  ${c.red}✗${c.reset} ${c.white}"${text}"${c.reset} ${c.red}— ${err.message}${c.reset}`);
+  if (DRY_RUN) {
+    console.log(`  ${c.gray}(skipped in dry run — run with --apply to clear translations)${c.reset}\n`);
+  } else {
+    const languages = await getTargetLanguages();
+    console.log(`  ${c.gray}Target languages: ${languages.join(", ")}${c.reset}\n`);
+
+    let totalCleared = 0;
+    const clearTasks = [];
+    for (const lang of languages) {
+      for (const { id, text } of allMatched) {
+        clearTasks.push(async () => {
+          try {
+            const count = await clearTranslationsForString(id, lang);
+            if (count > 0) {
+              console.log(`  ${c.green}✓${c.reset} [${lang}] cleared ${count} translation(s) for ${c.white}"${text}"${c.reset}`);
+              totalCleared += count;
+            }
+          } catch (err) {
+            console.log(`  ${c.red}✗${c.reset} [${lang}] ${c.white}"${text}"${c.reset} ${c.red}— ${err.message}${c.reset}`);
+          }
+        });
       }
+    }
+    await runConcurrent(8, clearTasks);
 
-      // Small delay to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 100));
+    if (totalCleared === 0) {
+      console.log(`  ${c.gray}No existing translations found to clear.${c.reset}\n`);
+    } else {
+      console.log(`\n${c.green}${c.bold}✓ Cleared ${totalCleared} translation(s) total.${c.reset}\n`);
     }
   }
 
-  console.log();
   if (DRY_RUN) {
-    console.log(`${c.yellow}${c.bold}Dry run complete.${c.reset} Run with ${c.cyan}--apply${c.reset} to hide the strings.\n`);
+    console.log(`${c.yellow}${c.bold}Dry run complete.${c.reset} Run with ${c.cyan}--apply${c.reset} to hide strings and clear translations.\n`);
   } else {
-    console.log(`${c.green}${c.bold}✓ Done!${c.reset} Hidden ${c.bold}${toHide.length}${c.reset} untranslatable strings.\n`);
+    console.log(`${c.green}${c.bold}✓ Done!${c.reset} Hidden ${c.bold}${toHide.length}${c.reset} strings, cleared existing translations.\n`);
   }
 }
 
