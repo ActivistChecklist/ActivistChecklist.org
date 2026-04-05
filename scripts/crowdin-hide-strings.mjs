@@ -8,7 +8,8 @@
  *
  * This includes:
  *   - JSX attributes: slug, type, size, level, mode, alignment, target, variant, icon, href, src, className
- *   - Frontmatter: relatedGuides array values
+ *   - Frontmatter arrays: relatedGuides, titleBadges
+ *   - Frontmatter scalars: slug, type, date, firstPublished, lastUpdated, estimatedTime, image, imageOverride, url, source, tags
  *
  * Usage:
  *   CROWDIN_PERSONAL_TOKEN=xxx CROWDIN_PROJECT_ID=123 node crowdin-hide-slugs.mjs
@@ -66,6 +67,21 @@ Example:
 
 // --- Step 1: Extract untranslatable values from MDX files ---
 
+// Frontmatter scalar fields whose values should not be translated
+const UNTRANSLATABLE_FRONTMATTER_SCALARS = [
+  "slug",           // URL identifiers
+  "type",           // enum: major, minor, info, etc.
+  "date",           // ISO dates
+  "firstPublished", // ISO dates
+  "lastUpdated",    // ISO dates
+  "estimatedTime",  // durations: "30 minutes", "1 hour"
+  "image",          // file paths
+  "imageOverride",  // file paths
+  "url",            // external URLs
+  "source",         // publication/author attribution
+  "tags",           // comma-separated tag identifiers
+];
+
 // JSX attributes whose values should not be translated
 const UNTRANSLATABLE_ATTRIBUTES = [
   "slug", // ChecklistItem, Section - references to other content
@@ -104,9 +120,12 @@ function extractUntranslatableStrings(contentDir) {
   const attrPattern = UNTRANSLATABLE_ATTRIBUTES.join("|");
   const attrRegex = new RegExp(`\\b(${attrPattern})=["']([^"']+)["']`, "g");
 
-  // Frontmatter array patterns (relatedGuides, etc.)
-  const frontmatterArrayRegex = /^(relatedGuides):\s*\n((?:\s+-\s+.+\n?)+)/gm;
+  // Frontmatter array patterns (relatedGuides, titleBadges, etc.)
+  const frontmatterArrayRegex = /^(relatedGuides|titleBadges):\s*\n((?:\s+-\s+.+\n?)+)/gm;
   const arrayItemRegex = /^\s+-\s+(.+)$/gm;
+
+  const scalarFieldPattern = UNTRANSLATABLE_FRONTMATTER_SCALARS.join("|");
+  const frontmatterScalarRegex = new RegExp(`^(${scalarFieldPattern}):\\s*["']?(.+?)["']?\\s*$`, "gm");
 
   for (const file of files) {
     const content = readFileSync(file, "utf-8");
@@ -122,6 +141,20 @@ function extractUntranslatableStrings(contentDir) {
         strings.set(value, new Set());
       }
       strings.get(value).add(JSON.stringify({ attr: attrName, file: fileName }));
+    }
+
+    // Extract frontmatter scalar values
+    frontmatterScalarRegex.lastIndex = 0;
+    let scalarMatch;
+    while ((scalarMatch = frontmatterScalarRegex.exec(content)) !== null) {
+      const fieldName = scalarMatch[1];
+      const value = scalarMatch[2].trim();
+      if (value && !value.startsWith("#")) {
+        if (!strings.has(value)) {
+          strings.set(value, new Set());
+        }
+        strings.get(value).add(JSON.stringify({ attr: fieldName, file: fileName }));
+      }
     }
 
     // Extract frontmatter array values
@@ -179,7 +212,7 @@ async function crowdinPatch(path, data) {
   return res.json();
 }
 
-// --- Step 3: Find and hide slug strings in Crowdin ---
+// --- Step 3: Find and hide strings in Crowdin ---
 
 async function getAllStrings() {
   const strings = [];
@@ -225,7 +258,8 @@ async function run() {
 
   // Extract untranslatable strings from source
   console.log(`${c.blue}Scanning${c.reset} ${c.white}${CONTENT_DIR}${c.reset} for untranslatable attribute values...`);
-  console.log(`${c.gray}Attributes: ${UNTRANSLATABLE_ATTRIBUTES.join(", ")}${c.reset}\n`);
+  console.log(`${c.gray}JSX attributes: ${UNTRANSLATABLE_ATTRIBUTES.join(", ")}${c.reset}`);
+  console.log(`${c.gray}Frontmatter scalars: ${UNTRANSLATABLE_FRONTMATTER_SCALARS.join(", ")}${c.reset}\n`);
 
   const stringsMap = extractUntranslatableStrings(CONTENT_DIR);
   const untranslatableValues = new Set(stringsMap.keys());
